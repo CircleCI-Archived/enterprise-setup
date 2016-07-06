@@ -1,6 +1,14 @@
 # Configure the AWS Provider
 
 # AWS Specific configuration
+variable "aws_access_key" {
+    description = "Access key used to create instances"
+}
+
+variable "aws_secret_key" {
+    description = "Secret key used to create instances"
+}
+
 variable "aws_region" {
     description = "Region where instances get created"
 }
@@ -32,14 +40,21 @@ variable "max_builders_count" {
     default = "2"
 }
 
+variable "prefix" {
+    description = "prefix for resource names"
+    default = "circleci"
+}
+
 provider "aws" {
+    access_key = "${var.aws_access_key}"
+    secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
 }
 
 ## Configure the role
 
 resource "aws_iam_role" "circleci_role" {
-    name = "circleci_role"
+    name = "${var.prefix}_role"
     path = "/"
     assume_role_policy = <<EOF
 {
@@ -58,7 +73,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
-  name = "circleci_policy"
+  name = "${var.prefix}_policy"
   role = "${aws_iam_role.circleci_role.id}"
   policy = <<EOF
 {
@@ -84,7 +99,8 @@ resource "aws_iam_role_policy" "circleci_policy" {
               "ec2:Describe*",
               "ec2:CreateTags",
 	      "cloudwatch:*",
-              "iam:GetUser"
+              "iam:GetUser",
+              "autoscaling:CompleteLifecycleAction"
           ],
           "Resource": ["*"],
           "Effect": "Allow"
@@ -95,7 +111,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "circleci_profile" {
-  name = "circleci_profile"
+  name = "${var.prefix}_profile"
   roles = ["${aws_iam_role.circleci_role.name}"]
 }
 
@@ -103,7 +119,7 @@ resource "aws_iam_instance_profile" "circleci_profile" {
 ## Configure the services machine
 
 resource "aws_security_group" "circleci_builders_sg" {
-    name = "circleci_builders_sg"
+    name = "${var.prefix}_builders_sg"
     description = "SG for CircleCI Builder instances"
 
     vpc_id = "${var.aws_vpc_id}"
@@ -122,7 +138,7 @@ resource "aws_security_group" "circleci_builders_sg" {
 }
 
 resource "aws_security_group" "circleci_services_sg" {
-    name = "circleci_services_sg"
+    name = "${var.prefix}_services_sg"
     description = "SG for CircleCI services/database instances"
 
     vpc_id = "${var.aws_vpc_id}"
@@ -157,7 +173,7 @@ resource "aws_security_group" "circleci_services_sg" {
 }
 
 resource "aws_security_group" "circleci_builders_admin_sg" {
-    name = "circleci_builders_admin_sg"
+    name = "${var.prefix}_builders_admin_sg"
     description = "SG for services to masters communication - avoids circular dependency"
 
     vpc_id = "${var.aws_vpc_id}"
@@ -174,7 +190,7 @@ resource "aws_security_group" "circleci_builders_admin_sg" {
 # TODO: Make this more extensible
 #
 resource "aws_security_group" "circleci_users_sg" {
-    name = "circleci_users_sg"
+    name = "${var.prefix}_users_sg"
     description = "SG representing users of CircleCI Enterprise"
 
     vpc_id = "${var.aws_vpc_id}"
@@ -225,22 +241,29 @@ variable "base_services_image" {
       us-east-1       = "ami-edc7cb87"
       us-west-1       = "ami-ade597cd"
       us-west-2       = "ami-934ca4f3"
+      # Just plain ubuntu images here for now
+      # From https://cloud-images.ubuntu.com/locator/ec2/
+      cn-north-1      = "ami-0679b06b"
+      us-gov-west-1   = "ami-30b8da13"
     }
 }
 
 variable "builder_image" {
     default = {
-      ap-northeast-1  = "ami-e12d2c8f"
-      ap-northeast-2  = "ami-3931f857"
-      ap-southeast-1  = "ami-a7ec39c4"
-      ap-southeast-2  = "ami-2694b345"
-      eu-central-1    = "ami-69a14106"
-      eu-west-1       = "ami-a02597d3"
-      sa-east-1       = "ami-9a3db2f6"
-      us-east-1       = "ami-6658690c"
-      us-west-1       = "ami-a9abdac9"
-      us-west-2       = "ami-2932d149"
-      ap-southeast-2  = "ami-2694b345"
+      ap-northeast-1  = "ami-c7c838a6"
+      ap-northeast-2  = "ami-b477bcda"
+      ap-southeast-1  = "ami-5775a734"
+      ap-southeast-2  = "ami-654e6506"
+      eu-central-1    = "ami-3401ea5b"
+      eu-west-1       = "ami-2237ad51"
+      sa-east-1       = "ami-8360f5ef"
+      us-east-1       = "ami-564df541"
+      us-west-1       = "ami-0b4a0d6b"
+      us-west-2       = "ami-b1a667d1"
+      # Just plain ubuntu images here for now
+      # From https://cloud-images.ubuntu.com/locator/ec2/
+      cn-north-1      = "ami-0679b06b"
+      us-gov-west-1   = "ami-30b8da13"
     }
 }
 
@@ -259,7 +282,7 @@ resource "aws_instance" "services" {
 
     iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
     tags {
-        Name = "circleci_services"
+        Name = "${var.prefix}_services"
     }
 
 
@@ -268,6 +291,14 @@ resource "aws_instance" "services" {
 	volume_size = "150"
 	delete_on_termination = false
     }
+
+    user_data = <<EOF
+#!/bin/bash
+
+replicated -version || curl https://s3.amazonaws.com/circleci-enterprise/init-services.sh | bash
+
+EOF
+
 
 }
 
@@ -289,6 +320,8 @@ resource "aws_launch_configuration" "builder_lc" {
 
     user_data = <<EOF
 #!/bin/bash
+
+apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
 curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
     SERVICES_PRIVATE_IP=${aws_instance.services.private_ip} \
     bash
@@ -305,7 +338,7 @@ EOF
 }
 
 resource "aws_autoscaling_group" "builder_asg" {
-    name = "circleci_builders_asg"
+    name = "${var.prefix}_builders_asg"
 
     vpc_zone_identifier = ["${var.aws_subnet_id}"]
     launch_configuration = "${aws_launch_configuration.builder_lc.name}"
@@ -315,7 +348,7 @@ resource "aws_autoscaling_group" "builder_asg" {
     force_delete = true
     tag {
       key = "Name"
-      value = "circleci_builder"
+      value = "${var.prefix}_builder"
       propagate_at_launch = "true"
     }
 }
@@ -323,14 +356,14 @@ resource "aws_autoscaling_group" "builder_asg" {
 # SQS queue for hook
 
 resource "aws_sqs_queue" "shutdown_queue" {
-  name = "circleci_shutdown_queue"
+  name = "${var.prefix}_shutdown_queue"
 }
 
 
 # IAM for shutdown queue
 
 resource "aws_iam_role" "shutdown_queue_role" {
-    name = "circleci_shutdown_queue_role"
+    name = "${var.prefix}_shutdown_queue_role"
     assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -349,7 +382,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
-    name = "circleci_shutdown_queue_role"
+    name = "${var.prefix}_shutdown_queue_role"
     role = "${aws_iam_role.shutdown_queue_role.id}"
     policy = <<EOF
 {
