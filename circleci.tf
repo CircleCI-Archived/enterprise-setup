@@ -25,6 +25,10 @@ variable "aws_ssh_key_name" {
     description = "The SSH key to be used for the instances"
 }
 
+variable "circle_secret_passphrase" {
+    description = "Decryption key for secrets used by CircleCI machines"
+}
+
 variable "services_instance_type" {
     description = "instance type for the centralized services box.  We recommend a c4 instance"
     default = "c4.2xlarge"
@@ -51,7 +55,67 @@ provider "aws" {
     region = "${var.aws_region}"
 }
 
-## Configure the role
+# SQS queue for hook
+
+resource "aws_sqs_queue" "shutdown_queue" {
+    name = "${var.prefix}_shutdown_queue_${uuid()}"
+    lifecycle {
+        ignore_changes = ["name"]
+    }
+}
+
+
+# IAM for shutdown queue
+
+resource "aws_iam_role" "shutdown_queue_role" {
+    name = "${var.prefix}_shutdown_queue_role"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "autoscaling.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
+    name = "${var.prefix}_shutdown_queue_role"
+    role = "${aws_iam_role.shutdown_queue_role.id}"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "sqs:GetQueueUrl",
+        "sqs:SendMessage"
+      ],
+      "Effect": "Allow",
+      "Resource": [ "${aws_sqs_queue.shutdown_queue.arn}" ]
+    }
+  ]
+}
+EOF
+}
+
+# Single general-purpose bucket
+
+resource "aws_s3_bucket" "circleci_bucket" {
+    bucket = "${var.prefix}_bucket_${uuid()}"
+    lifecycle {
+        ignore_changes = ["name"]
+    }
+}
+
+## IAM for instances
 
 resource "aws_iam_role" "circleci_role" {
     name = "${var.prefix}_role"
@@ -83,8 +147,8 @@ resource "aws_iam_role_policy" "circleci_policy" {
          "Action" : ["s3:*"],
          "Effect" : "Allow",
          "Resource" : [
-            "arn:aws:s3:::circleci-*",
-            "arn:aws:s3:::circleci-*/*"
+            "${aws_s3_bucket.circleci_bucket.arn}",
+            "${aws_s3_bucket.circleci_bucket.arn}/*"
          ]
       },
       {
@@ -297,8 +361,18 @@ resource "aws_instance" "services" {
 
 replicated -version || curl https://s3.amazonaws.com/circleci-enterprise/init-services.sh | bash
 
+config_dir=/etc/circle-config
+mkdir -p $config_dir
+echo ${var.circle_secret_passphrase} > $config_dir/circle_secret_passphrase
+echo ${aws_sqs_queue.shutdown_queue.id} > $config_dir/sqs_queue_url
+echo ${aws_s3_bucket.circleci_bucket.id} > $config_dir/s3_bucket
+
 EOF
 
+    lifecycle {
+        prevent_destroy = true
+        ignore_changes = ["tags", "user_data"]
+    }
 
 }
 
@@ -324,6 +398,7 @@ resource "aws_launch_configuration" "builder_lc" {
 apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
 curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
     SERVICES_PRIVATE_IP=${aws_instance.services.private_ip} \
+    CIRCLE_SECRET_PASSPHRASE=${var.circle_secret_passphrase} \
     bash
 
 EOF
@@ -353,54 +428,6 @@ resource "aws_autoscaling_group" "builder_asg" {
     }
 }
 
-# SQS queue for hook
-
-resource "aws_sqs_queue" "shutdown_queue" {
-  name = "${var.prefix}_shutdown_queue"
-}
-
-
-# IAM for shutdown queue
-
-resource "aws_iam_role" "shutdown_queue_role" {
-    name = "${var.prefix}_shutdown_queue_role"
-    assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "autoscaling.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
-    name = "${var.prefix}_shutdown_queue_role"
-    role = "${aws_iam_role.shutdown_queue_role.id}"
-    policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "sqs:GetQueueUrl",
-        "sqs:SendMessage"
-      ],
-      "Effect": "Allow",
-      "Resource": [ "${aws_sqs_queue.shutdown_queue.arn}" ]
-    }
-  ]
-}
-EOF
-}
-
 # Shutdown hooks
 
 resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
@@ -414,8 +441,4 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
 
 output "installation_wizard_url" {
     value = "http://${aws_instance.services.public_ip}/"
-}
-
-output "shutdown_hook_queue_url" {
-    value = "${aws_sqs_queue.shutdown_queue.id}"
 }
