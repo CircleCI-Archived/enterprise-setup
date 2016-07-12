@@ -335,8 +335,10 @@ resource "aws_instance" "services" {
 
     subnet_id = "${var.aws_subnet_id}"
     associate_public_ip_address = true
-    security_groups = ["${aws_security_group.circleci_services_sg.id}",
-                       "${aws_security_group.circleci_users_sg.id}"]
+    vpc_security_group_ids = [
+        "${aws_security_group.circleci_services_sg.id}",
+        "${aws_security_group.circleci_users_sg.id}"
+    ]
 
     iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
     tags {
