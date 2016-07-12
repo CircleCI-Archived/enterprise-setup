@@ -58,10 +58,7 @@ provider "aws" {
 # SQS queue for hook
 
 resource "aws_sqs_queue" "shutdown_queue" {
-    name = "${var.prefix}_shutdown_queue_${uuid()}"
-    lifecycle {
-        ignore_changes = ["name"]
-    }
+    name = "${var.prefix}_queue"
 }
 
 
@@ -109,10 +106,7 @@ EOF
 # Single general-purpose bucket
 
 resource "aws_s3_bucket" "circleci_bucket" {
-    bucket = "${var.prefix}_bucket_${uuid()}"
-    lifecycle {
-        ignore_changes = ["name"]
-    }
+    bucket = "${var.prefix}_bucket"
 }
 
 ## IAM for instances
@@ -371,7 +365,6 @@ EOF
 
     lifecycle {
         prevent_destroy = true
-        ignore_changes = ["tags", "user_data"]
     }
 
 }
