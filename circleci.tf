@@ -107,6 +107,11 @@ EOF
 
 resource "aws_s3_bucket" "circleci_bucket" {
     bucket = "${var.prefix}_bucket"
+    cors_rule {
+        allowed_methods = ["GET"]
+        allowed_origins = ["*"]
+        max_age_seconds = 3600
+    }
 }
 
 ## IAM for instances
