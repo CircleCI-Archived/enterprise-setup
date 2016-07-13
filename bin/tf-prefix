@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -e
+set -o pipefail
+
+# Convenience tool for dealing with multiple stacks. Must run from directory with .tf file.
+
+bin/terraform "${@:2}" --state=secret/${1}.tfstate --var-file=secret/${1}.tfvars --var "prefix=${1}"
