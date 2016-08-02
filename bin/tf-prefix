@@ -3,6 +3,19 @@
 set -e
 set -o pipefail
 
-# Convenience tool for dealing with multiple stacks. Must run from directory with .tf file.
+# Convenience tool for dealing with multiple stacks.
 
-bin/terraform "${@:2}" --state=secret/${1}.tfstate --var-file=secret/${1}.tfvars --var "prefix=${1}"
+[[ $STATE_DIR ]] || STATE_DIR="secret"
+
+get_resource_id() {
+    bin/terraform show $STATE_DIR/${1}.tfstate | grep $2 -A1 | tail -n 1 | awk '{print $3}'
+}
+
+# Because https://github.com/hashicorp/terraform/issues/3116
+if [[ $2 = force-destroy ]]; then
+    aws ec2 terminate-instances --instance-ids "$(get_resource_id $1 aws_instance.services)"
+    aws s3 rb "s3://$(get_resource_id $1 aws_s3_bucket.circleci_bucket)" --force
+    bin/terraform destroy --state=$STATE_DIR/${1}.tfstate --var-file=$STATE_DIR/${1}.tfvars --var "prefix=${1}"
+else
+    bin/terraform "${@:2}" --state=$STATE_DIR/${1}.tfstate --var-file=$STATE_DIR/${1}.tfvars --var "prefix=${1}"
+fi
