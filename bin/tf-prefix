@@ -11,10 +11,14 @@ get_resource_id() {
     bin/terraform show $STATE_DIR/${1}.tfstate | grep $2 -A1 | tail -n 1 | awk '{print $3}'
 }
 
+get_region() {
+    grep region $STATE_DIR/${1}.tfvars | awk '{print $3}' | sed 's/"//g'
+}
+
 # Because https://github.com/hashicorp/terraform/issues/3116
 if [[ $2 = force-destroy ]]; then
-    aws ec2 terminate-instances --instance-ids "$(get_resource_id $1 aws_instance.services)"
-    aws s3 rb "s3://$(get_resource_id $1 aws_s3_bucket.circleci_bucket)" --force
+    aws ec2 terminate-instances --instance-ids "$(get_resource_id $1 aws_instance.services)" --region $(get_region $1) || true
+    aws s3 rb "s3://$(get_resource_id $1 aws_s3_bucket.circleci_bucket)" --force --region $(get_region $1) || true
     bin/terraform destroy --state=$STATE_DIR/${1}.tfstate --var-file=$STATE_DIR/${1}.tfvars --var "prefix=${1}"
 else
     bin/terraform "${@:2}" --state=$STATE_DIR/${1}.tfstate --var-file=$STATE_DIR/${1}.tfvars --var "prefix=${1}"
