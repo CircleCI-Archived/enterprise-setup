@@ -71,7 +71,7 @@ terraform_wrapper() {
         terraform_wrapper "$@"
     elif ! is_valid_version $version; then
         handle_unsupported_version $version
-        terraform_wrapper"$@"
+        terraform_wrapper "$@"
     else
         echo "Using system Terraform" >&2
         terraform "$@"
