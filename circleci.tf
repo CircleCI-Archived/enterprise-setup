@@ -36,12 +36,42 @@ variable "services_instance_type" {
 
 variable "builder_instance_type" {
     description = "instance type for the builder machines.  We recommend a r3 instance"
-    default = "r3.2xlarge"
+    default = "r3.4xlarge"
+}
+
+variable "circle_container_cpus" {
+    description = "CPUs allocated per container"
+    default = "2"
+}
+
+variable "circle_container_image_id" {
+    description = "Container image ID"
+    default = "circleci-precise-container_0.0.1338"
+}
+
+variable "circle_container_memory_limit" {
+    description = "Memory limit per container"
+    default = "4G"
+}
+
+variable "circle_num_containers" {
+    description = "Number of builder containers"
+    default = "7"
+}
+
+variable "min_builders_count" {
+    description = "Min number of builders"
+    default = "0"
 }
 
 variable "max_builders_count" {
     description = "max number of builders"
     default = "2"
+}
+
+variable "desired_builders_count" {
+    description = "desired number of builders"
+    default = "1"
 }
 
 variable "prefix" {
@@ -417,6 +447,10 @@ apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterpr
 curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
     SERVICES_PRIVATE_IP='${aws_instance.services.private_ip}' \
     CIRCLE_SECRET_PASSPHRASE='${var.circle_secret_passphrase}' \
+    CIRCLE_CONTAINER_CPUS=${var.circle_container_cpus} \
+    CIRCLE_CONTAINER_IMAGE_ID=${var.circle_container_image_id} \
+    CIRCLE_CONTAINER_MEMORY_LIMIT=${var.circle_container_memory_limit} \
+    CIRCLE_NUM_CONTAINERS=${var.circle_num_containers} \
     bash
 
 EOF
@@ -436,8 +470,8 @@ resource "aws_autoscaling_group" "builder_asg" {
     vpc_zone_identifier = ["${var.aws_subnet_id}"]
     launch_configuration = "${aws_launch_configuration.builder_lc.name}"
     max_size = "${var.max_builders_count}"
-    min_size = 0
-    desired_capacity = 1
+    min_size = "${var.min_builders_count}"
+    desired_capacity = "${var.desired_builders_count}"
     force_delete = true
     tag {
       key = "Name"
