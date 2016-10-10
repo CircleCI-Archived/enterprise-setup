@@ -54,11 +54,6 @@ variable "circle_container_memory_limit" {
     default = ""
 }
 
-variable "circle_num_containers" {
-    description = "Number of builder containers"
-    default = ""
-}
-
 variable "min_builders_count" {
     description = "Min number of builders"
     default = "0"
@@ -450,7 +445,6 @@ curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
     CIRCLE_CONTAINER_CPUS=${var.circle_container_cpus} \
     CIRCLE_CONTAINER_IMAGE_ID=${var.circle_container_image_id} \
     CIRCLE_CONTAINER_MEMORY_LIMIT=${var.circle_container_memory_limit} \
-    CIRCLE_NUM_CONTAINERS=${var.circle_num_containers} \
     bash
 
 EOF
