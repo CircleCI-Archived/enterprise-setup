@@ -41,22 +41,22 @@ variable "builder_instance_type" {
 
 variable "circle_container_cpus" {
     description = "CPUs allocated per container"
-    default = "2"
+    default = ""
 }
 
 variable "circle_container_image_id" {
     description = "Container image ID"
-    default = "circleci-precise-container_0.0.1338"
+    default = ""
 }
 
 variable "circle_container_memory_limit" {
     description = "Memory limit per container"
-    default = "4G"
+    default = ""
 }
 
 variable "circle_num_containers" {
     description = "Number of builder containers"
-    default = "7"
+    default = ""
 }
 
 variable "min_builders_count" {
