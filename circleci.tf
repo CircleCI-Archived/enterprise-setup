@@ -327,11 +327,8 @@ variable "builder_image" {
       us-west-2 = "ami-938420f3"
       # Just plain ubuntu images here for now
       # From https://cloud-images.ubuntu.com/locator/ec2/
-      # Note: these were commented out when we updated our builder_images to
-      # patch CVE-2016-5195 (http://dirtycow.ninja/)
-
-      # cn-north-1      = "ami-0679b06b"
-      # us-gov-west-1   = "ami-30b8da13"
+      cn-north-1      = "ami-92f622ff"
+      us-gov-west-1   = "ami-34df6755"
     }
 }
 
