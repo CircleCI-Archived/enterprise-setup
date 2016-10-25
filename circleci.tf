@@ -306,10 +306,6 @@ variable "base_services_image" {
       us-east-1 = "ami-610a5676"
       us-west-1 = "ami-c87b30a8"
       us-west-2 = "ami-1ae4437a"
-      # Just plain ubuntu images here for now
-      # From https://cloud-images.ubuntu.com/locator/ec2/
-      cn-north-1      = "ami-0679b06b"
-      us-gov-west-1   = "ami-30b8da13"
     }
 }
 
@@ -325,10 +321,6 @@ variable "builder_image" {
       us-east-1 = "ami-d0396bc7"
       us-west-1 = "ami-76226916"
       us-west-2 = "ami-938420f3"
-      # Just plain ubuntu images here for now
-      # From https://cloud-images.ubuntu.com/locator/ec2/
-      cn-north-1      = "ami-92f622ff"
-      us-gov-west-1   = "ami-34df6755"
     }
 }
 
