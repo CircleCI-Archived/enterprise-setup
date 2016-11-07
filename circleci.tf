@@ -324,6 +324,11 @@ variable "builder_image" {
     }
 }
 
+resource "aws_eip" "services_eip" {
+    instance = "${aws_instance.services.id}"
+    vpc = true
+}
+
 resource "aws_instance" "services" {
     # Instance type - any of the c4 should do for now
     instance_type = "${var.services_instance_type}"
