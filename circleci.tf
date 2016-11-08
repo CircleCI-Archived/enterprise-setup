@@ -439,5 +439,5 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
 }
 
 output "installation_wizard_url" {
-    value = "http://${aws_instance.services.public_ip}/"
+    value = "http://${aws_eip.services_eip.public_ip}/"
 }
