@@ -376,6 +376,7 @@ resource "aws_launch_configuration" "builder_lc" {
     # 4x or 8x are best
     instance_type = "${var.builder_instance_type}"
 
+    associate_public_ip_address = true
 
     image_id = "${lookup(var.builder_image, var.aws_region)}"
     key_name = "${var.aws_ssh_key_name}"
