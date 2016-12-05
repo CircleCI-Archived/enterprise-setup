@@ -389,8 +389,8 @@ resource "aws_launch_configuration" "builder_lc" {
     user_data = <<EOF
 #!/bin/bash
 
-apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
-curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
+apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder-lxc.sh | bash
+curl https://s3.amazonaws.com/circleci-enterprise/init-builder-lxc.sh | \
     SERVICES_PRIVATE_IP=${aws_instance.services.private_ip} \
     CIRCLE_SECRET_PASSPHRASE=${var.circle_secret_passphrase} \
     bash
