@@ -296,16 +296,17 @@ resource "aws_security_group" "circleci_users_sg" {
 
 variable "base_services_image" {
     default = {
-      ap-northeast-1 = "ami-e5f09d82"
-      ap-northeast-2 = "ami-7c598e12"
-      ap-southeast-1 = "ami-2b55f948"
-      ap-southeast-2 = "ami-3a0b3359"
-      eu-central-1 = "ami-2a62a445"
-      eu-west-1 = "ami-f5062386"
-      sa-east-1 = "ami-956ef7f9"
-      us-east-1 = "ami-774f4f60"
-      us-west-1 = "ami-1e1f497e"
-      us-west-2 = "ami-2555fe45"
+      ap-northeast-1 = "ami-bd4133da"
+      ap-northeast-2 = "ami-1b70a675"
+      ap-southeast-1 = "ami-f808a09b"
+      ap-southeast-2 = "ami-d1f7f2b2"
+      eu-central-1 = "ami-6713de08"
+      eu-west-1 = "ami-d70e26a4"
+      sa-east-1 = "ami-8c9802e0"
+      us-east-1 = "ami-b6b455a0"
+      us-east-2 = "ami-c86144ad"
+      us-west-1 = "ami-3c194a5c"
+      us-west-2 = "ami-13df6d73"
     }
 }
 
@@ -319,6 +320,7 @@ variable "builder_image" {
       eu-west-1 = "ami-d70421a4"
       sa-east-1 = "ami-2e6bf242"
       us-east-1 = "ami-e68f89f1"
+      us-east-2 = "ami-2f60454a"
       us-west-1 = "ami-901c4af0"
       us-west-2 = "ami-0c57fc6c"
     }
