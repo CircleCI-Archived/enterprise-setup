@@ -71,3 +71,11 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
 output "installation_wizard_url" {
     value = "http://${aws_instance.services.public_ip}/"
 }
+
+#-----------------------------------------------
+# SQS queue for hook
+#-----------------------------------------------
+
+resource "aws_sqs_queue" "shutdown_queue" {
+    name = "${var.prefix}_queue"
+}

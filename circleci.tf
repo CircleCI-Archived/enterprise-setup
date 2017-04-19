@@ -4,11 +4,7 @@ provider "aws" {
     region = "${var.aws_region}"
 }
 
-# SQS queue for hook
 
-resource "aws_sqs_queue" "shutdown_queue" {
-    name = "${var.prefix}_queue"
-}
 
 # Single general-purpose bucket
 
@@ -22,10 +18,3 @@ resource "aws_s3_bucket" "circleci_bucket" {
         max_age_seconds = 3600
     }
 }
-
-
-
-
-
-
-
