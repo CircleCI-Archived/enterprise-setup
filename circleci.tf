@@ -49,6 +49,14 @@ variable "prefix" {
     default = "circleci"
 }
 
+variable "accepts_connection" {
+    default = ["0.0.0.0/0"]
+}
+
+variable "accepts_seacret_connection" {
+    default = ["0.0.0.0/0"]
+}
+
 provider "aws" {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
@@ -250,47 +258,52 @@ resource "aws_security_group" "circleci_builders_admin_sg" {
     }
 }
 
-#
-# This should be configured by admins to restrict access to machines
-# TODO: Make this more extensible
-#
+# Rewriting Security Groups with Reference to
+# https://circleci.com/docs/enterprise/overview/#architecture
 resource "aws_security_group" "circleci_users_sg" {
-    name = "${var.prefix}_users_sg"
+    name        = "${var.prefix}_users_sg"
     description = "SG representing users of CircleCI Enterprise"
+    vpc_id      = "${var.aws_vpc_id}"
 
-    vpc_id = "${var.aws_vpc_id}"
+    # HTTP used only for End Users and GHE, Administrators
     ingress {
-        cidr_blocks = ["0.0.0.0/0"]
-        protocol = "tcp"
-        from_port = 22
-        to_port = 22
+        protocol    = "tcp"
+        from_port   = 80
+        to_port     = 80
+        cidr_blocks = "${var.accepts_connection}"
     }
-    # For Web traffic to services
+
+    # HTTPS used only for End Users and GHE
     ingress {
-        cidr_blocks = ["0.0.0.0/0"]
-        protocol = "tcp"
-        from_port = 80
-        to_port = 80
+        protocol    = "tcp"
+        from_port   = 443
+        to_port     = 443
+        cidr_blocks = "${var.accepts_connection}"
     }
+
+    # SSH used only for Administrators
     ingress {
-        cidr_blocks = ["0.0.0.0/0"]
-        protocol = "tcp"
-        from_port = 443
-        to_port = 443
+        protocol    = "tcp"
+        from_port   = 22
+        to_port     = 22
+        cidr_blocks = "${var.accepts_seacret_connection}"
     }
+
+    # Admin Console used only for Administrators
     ingress {
-        cidr_blocks = ["0.0.0.0/0"]
-        protocol = "tcp"
-        from_port = 8800
-        to_port = 8800
+        protocol    = "tcp"
+        from_port   = 8800
+        to_port     = 8800
+        cidr_blocks = "${concat(var.accepts_connection)}"
     }
+
     # For SSH traffic to builder boxes
     # TODO: Update once services box has ngrok
     ingress {
-        cidr_blocks = ["0.0.0.0/0"]
-        protocol = "tcp"
-        from_port = 64535
-        to_port = 65535
+        cidr_blocks = "${var.accepts_connection}"
+        protocol    = "tcp"
+        from_port   = 64535
+        to_port     = 65535
     }
 }
 
