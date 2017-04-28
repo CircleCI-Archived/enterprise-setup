@@ -83,7 +83,7 @@ variable "postgres_db_master_password" {
 }
 
 variable "postgres_db_name" {
-    default = "postgres_rds"
+    default = "circle"
 }
 
 variable "postgres_port" {
@@ -401,7 +401,7 @@ echo '${aws_s3_bucket.circleci_bucket.id}' > $config_dir/s3_bucket
 
 cat << 'EOF' >> /etc/circle-installation-customizations
 export CIRCLE_SECRETS_POSTGRES_MAIN_URI='postgres://"${var.postgres_db_master_user}":"${var.postgres_db_master_password}"@"${aws_db_instance.circle_postgres.address}":5432/"${var.postgres_db_master_user}"'
-`EOF`
+EOF
 
 EOF
 
