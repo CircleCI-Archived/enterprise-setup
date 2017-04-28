@@ -38,8 +38,8 @@ resource "aws_security_group" "circle_postgres_sg" {
   # Only postgres in
   ingress {
     security_groups = ["${aws_security_group.circleci_builders_sg.id}","${aws_security_group.circleci_services_sg.id}"]
-    from_port   = 5432
-    to_port     = 5432
+    from_port   = "${var.postgres_port}"
+    to_port     = "${var.postgres_port}"
     protocol    = "tcp"
     #cidr_blocks = ["${var.cidr}"]
   }
