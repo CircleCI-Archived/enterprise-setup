@@ -13,6 +13,7 @@ resource "aws_db_instance" "circle_postgres" {
   password                = "${var.postgres_db_master_password}"
   name                    = "${var.postgres_db_name}"
   port                    = 5432
+  skip_final_snapshot     = true  ## CHANGE THIS TO FALSE IN PRODUCTION
   publicly_accessible     = false
   storage_encrypted       = true
   storage_type            = "io1"
