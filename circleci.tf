@@ -55,6 +55,33 @@ provider "aws" {
     region = "${var.aws_region}"
 }
 
+#-------------------------------------
+# Postgresql RDS Variables
+#-------------------------------------
+
+variable "postgres_db_size" {
+    default = "100"  #gigabytes
+}
+
+variable "postgres_db_iops" {
+    default = "1000"  
+}
+
+variable "postgres_db_backup_retention" {
+    default = "7"    # in days
+}
+
+variable "postgres_db_master_user" {
+    default = "circle"
+}
+variable "postgres_db_master_password" {
+    description = "Password for Postgresql"
+}
+
+variable "postgres_db_name" {
+    default = "postgres_rds"
+}
+
 # SQS queue for hook
 
 resource "aws_sqs_queue" "shutdown_queue" {
