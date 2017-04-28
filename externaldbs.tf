@@ -11,7 +11,7 @@ resource "aws_db_instance" "circle_postgres" {
   multi_az                = true
   username                = "${var.postgres_db_master_user}"
   password                = "${var.postgres_db_master_password}"
-  name                    = "${var.postgres_db_name}"
+  name                    = "${var.prefix}-${var.postgres_db_name}"
   port                    = 5432
   skip_final_snapshot     = true  ## CHANGE THIS TO FALSE IN PRODUCTION
   publicly_accessible     = false
