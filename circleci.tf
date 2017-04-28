@@ -21,6 +21,10 @@ variable "aws_subnet_id" {
     description = "The subnet-id to be used for the instance"
 }
 
+variable "aws_subnet_id_2" {
+    description = "2nd Subnet in separate AZ for Postgres RDS"
+}
+
 variable "aws_ssh_key_name" {
     description = "The SSH key to be used for the instances"
 }
