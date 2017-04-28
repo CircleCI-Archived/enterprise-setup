@@ -86,6 +86,10 @@ variable "postgres_db_name" {
     default = "postgres_rds"
 }
 
+variable "postgres_port" {
+    default = "5432"
+}
+
 # SQS queue for hook
 
 resource "aws_sqs_queue" "shutdown_queue" {
