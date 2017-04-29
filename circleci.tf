@@ -399,9 +399,7 @@ echo '${var.circle_secret_passphrase}' > $config_dir/circle_secret_passphrase
 echo '${aws_sqs_queue.shutdown_queue.id}' > $config_dir/sqs_queue_url
 echo '${aws_s3_bucket.circleci_bucket.id}' > $config_dir/s3_bucket
 
-cat << 'EOF' >> /etc/circle-installation-customizations
-export CIRCLE_SECRETS_POSTGRES_MAIN_URI='postgres://${var.postgres_db_master_user}:${var.postgres_db_master_password}@${aws_db_instance.circle_postgres.address}:${var.postgres_port}/${var.postgres_db_name}'
-'EOF'
+echo export CIRCLE_SECRETS_POSTGRES_MAIN_URI='postgres://${var.postgres_db_master_user}:${var.postgres_db_master_password}@${aws_db_instance.circle_postgres.address}:${var.postgres_port}/${var.postgres_db_name}' > /etc/circle-installation-customizations
 
 EOF
 
