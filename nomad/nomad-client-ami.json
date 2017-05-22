@@ -8,11 +8,11 @@
         "type": "amazon-ebs",
         "access_key": "{{user `aws_access_key`}}",
         "secret_key": "{{user `aws_secret_key`}}",
-        "region": "eu-central-1",
-        "source_ami": "ami-25a97a4a",
+        "region": "us-west-1",
+        "source_ami": "ami-1da8f27d",
         "instance_type": "t2.micro",
         "ssh_username": "ubuntu",
-        "ami_name": "nomad-{{timestamp}}"
+        "ami_name": "nomad-client-{{timestamp}}"
     }],
 
     "provisioners": [
@@ -22,6 +22,16 @@
                 "sleep 30",
                 "mkdir -p /tmp/circleci-provisioner"
             ]
+        },
+        {
+            "type": "file",
+            "source": "./nomad-client.hcl",
+            "destination": "/tmp/circleci-provisioner/nomad-config.hcl"
+        },
+        {
+            "type": "file",
+            "source": "./nomad-upstart.conf",
+            "destination": "/tmp/circleci-provisioner/nomad-upstart.conf"
         },
         {
             "type": "file",

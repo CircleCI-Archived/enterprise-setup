@@ -11,8 +11,13 @@ apt-get -y install docker-ce
 echo "Creating ci-privileged network"
 docker network create --driver=bridge --opt com.docker.network.bridge.name=ci-privileged ci-privileged
 
-echo "Intalling nomad"
+echo "Installing nomad"
 apt-get install -y zip
 curl -o nomad.zip https://releases.hashicorp.com/nomad/0.5.6/nomad_0.5.6_linux_amd64.zip
 unzip nomad.zip
 mv nomad /usr/bin
+
+echo "Initing Nomad service"
+mkdir -p /etc/nomad
+cp nomad-config.hcl /etc/nomad/config.hcl
+cp nomad-upstart.conf /etc/init/nomad.conf
