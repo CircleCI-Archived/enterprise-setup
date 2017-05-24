@@ -5,47 +5,47 @@ provider "aws" {
 }
 
 variable "aws_access_key" {
-    description = "Access key used to create instances"
+  description = "Access key used to create instances"
 }
 
 variable "aws_secret_key" {
-    description = "Secret key used to create instances"
+  description = "Secret key used to create instances"
 }
 
 variable "aws_region" {
-    description = "Region where instances get created"
+  description = "Region where instances get created"
 }
 
 variable "aws_vpc_id" {
-    description = "The VPC ID where the instances should reside"
+  description = "The VPC ID where the instances should reside"
 }
 
 variable "aws_subnet_id" {
-    description = "The subnet-id to be used for the instance"
+  description = "The subnet-id to be used for the instance"
 }
 
 variable "aws_ssh_key_name" {
-    description = "The SSH key to be used for the instances"
+  description = "The SSH key to be used for the instances"
 }
 
 variable "server_instance_type" {
-    description = "instance type for the nomad servers. We recommend a XYZ instance"
-    default = "t2.medium"
+  description = "instance type for the nomad servers. We recommend a XYZ instance"
+  default = "t2.medium"
 }
 
 variable "client_instance_type" {
-    description = "instance type for the nomad clients. We recommend a XYZ instance"
-    default = "m4.large"
+  description = "instance type for the nomad clients. We recommend a XYZ instance"
+  default = "m4.large"
 }
 
 variable "max_clients_count" {
-    description = "max number of nomad clients"
-    default = "2"
+  description = "max number of nomad clients"
+  default = "2"
 }
 
 variable "prefix" {
-    description = "prefix for resource names"
-    default = "circleci"
+  description = "prefix for resource names"
+  default = "circleci"
 }
 
 variable "client_amis" {
@@ -65,43 +65,40 @@ data "aws_subnet" "subnet" {
 }
 
 resource "aws_security_group" "nomad_sg" {
-    name = "${var.prefix}_nomad_sg"
-    description = "SG for CircleCI nomad server/client"
-
-    vpc_id = "${var.aws_vpc_id}"
-    ingress {
-        # self = true
-        from_port = 4646
-        to_port = 4648
-        protocol = "tcp"
-        cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    }
-    egress {
-        from_port = 0
-        to_port = 0
-        protocol = "-1"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  name = "${var.prefix}_nomad_sg"
+  description = "SG for CircleCI nomad server/client"
+  vpc_id = "${var.aws_vpc_id}"
+  ingress {
+    from_port = 4646
+    to_port = 4648
+    protocol = "tcp"
+    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_security_group" "ssh_sg" {
-    name = "${var.prefix}_ssh_sg"
-    description = "SG for SSH access"
+  name = "${var.prefix}_ssh_sg"
+  description = "SG for SSH access"
 
-    vpc_id = "${var.aws_vpc_id}"
-    ingress {
-        # self = true
-        from_port = 22
-        to_port = 22
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-    egress {
-        from_port = 0
-        to_port = 0
-        protocol = "-1"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  vpc_id = "${var.aws_vpc_id}"
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+}
 }
 
 resource "aws_route53_zone" "local" {
