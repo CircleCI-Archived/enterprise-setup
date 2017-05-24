@@ -130,14 +130,31 @@ resource "aws_instance" "server" {
   }
 }
 
-resource "aws_instance" "client" {
-  ami = "${lookup(var.client_amis, var.aws_region)}"
-  instance_type = "${var.server_instance_type}"
-  subnet_id = "${var.aws_subnet_id}"
+resource "aws_launch_configuration" "clients_lc" {
+  instance_type = "${var.client_instance_type}"
+  image_id = "${lookup(var.client_amis, var.aws_region)}"
   key_name = "${var.aws_ssh_key_name}"
   security_groups = ["${aws_security_group.nomad_sg.id}", "${aws_security_group.ssh_sg.id}"]
+}
 
-  tags {
-       Name = "${var.prefix}-nomad-client"
+resource "aws_autoscaling_group" "clients_asg" {
+  name = "${var.prefix}_nomad_clients_asg"
+  vpc_zone_identifier = ["${var.aws_subnet_id}"]
+  launch_configuration = "${aws_launch_configuration.clients_lc.name}"
+  max_size = "${var.max_clients_count}"
+  min_size = 0
+  desired_capacity = 1
+  force_delete = true
+  tag {
+    key = "Name"
+    value = "${var.prefix}-nomad-client"
+    propagate_at_launch = "true"
   }
+  # ASG should be created after DNS record for nomad server, otherwise
+  # clients would start before DNS exists and would ignore this record indefinetelly
+  depends_on = ["aws_route53_record.nomad_server"]
+}
+
+output "nomad cluster" {
+  value = "http://${aws_route53_record.nomad_server.name}:4646"
 }
