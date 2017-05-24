@@ -1,0 +1,8 @@
+aws_access_key = ""
+aws_secret_key = ""
+aws_region     = ""
+aws_vpc_id = ""
+aws_subnet_id = ""
+aws_ssh_key_name = ""
+server_instance_type = ""
+client_instance_type = ""
