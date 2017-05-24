@@ -50,12 +50,14 @@ variable "prefix" {
 
 variable "client_amis" {
   default = {
+    # TODO: build AMIs for all other regions
     "us-west-1" = "ami-03456563"
   }
 }
 
 variable "server_amis" {
   default = {
+    # TODO: build AMIs for all other regions
     "us-west-1" = "ami-24476744"
   }
 }
