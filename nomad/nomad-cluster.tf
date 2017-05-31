@@ -28,11 +28,6 @@ variable "aws_ssh_key_name" {
   description = "The SSH key to be used for the instances"
 }
 
-variable "server_instance_type" {
-  description = "instance type for the nomad servers. We recommend a XYZ instance"
-  default = "t2.medium"
-}
-
 variable "client_instance_type" {
   description = "instance type for the nomad clients. We recommend a XYZ instance"
   default = "m4.large"
@@ -48,17 +43,15 @@ variable "prefix" {
   default = "circleci"
 }
 
+variable "service_box_private_ip" {
+  description = "private IP address of the service box"
+}
+
 variable "client_amis" {
   default = {
     # TODO: build AMIs for all other regions
-    "us-west-1" = "ami-03456563"
-  }
-}
-
-variable "server_amis" {
-  default = {
-    # TODO: build AMIs for all other regions
-    "us-west-1" = "ami-24476744"
+    "us-west-1" = "ami-12476472"
+    "us-east-1" = "ami-ce82d7d8"
   }
 }
 
@@ -103,29 +96,11 @@ resource "aws_security_group" "ssh_sg" {
 }
 }
 
-resource "aws_route53_zone" "local" {
-  name = "circleci.vpc"
-  vpc_id = "${var.aws_vpc_id}"
-  force_destroy = true
-}
+data "template_file" "nomad_client_config" {
+  template = "${file("nomad-client.hcl.tpl")}"
 
-resource "aws_route53_record" "nomad_server" {
-  zone_id = "${aws_route53_zone.local.zone_id}"
-  name    = "nomad-server.circleci.vpc"
-  type    = "A"
-  ttl     = "300"
-  records = ["${aws_instance.server.private_ip}"]
-}
-
-resource "aws_instance" "server" {
-  ami = "${lookup(var.server_amis, var.aws_region)}"
-  instance_type = "${var.server_instance_type}"
-  subnet_id = "${var.aws_subnet_id}"
-  key_name = "${var.aws_ssh_key_name}"
-  security_groups = ["${aws_security_group.nomad_sg.id}", "${aws_security_group.ssh_sg.id}"]
-
-  tags {
-       Name = "${var.prefix}-nomad-server"
+  vars {
+    nomad_server = "${var.service_box_private_ip}"
   }
 }
 
@@ -133,7 +108,23 @@ resource "aws_launch_configuration" "clients_lc" {
   instance_type = "${var.client_instance_type}"
   image_id = "${lookup(var.client_amis, var.aws_region)}"
   key_name = "${var.aws_ssh_key_name}"
+  root_block_device = {
+    volume_type = "gp2"
+    volume_size = "200"
+  }
   security_groups = ["${aws_security_group.nomad_sg.id}", "${aws_security_group.ssh_sg.id}"]
+  user_data = <<EOF
+#! /bin/bash
+cat <<EOT > /etc/nomad/config.hcl
+${data.template_file.nomad_client_config.rendered}
+EOT
+
+sudo service nomad restart
+EOF
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "aws_autoscaling_group" "clients_asg" {
@@ -149,11 +140,4 @@ resource "aws_autoscaling_group" "clients_asg" {
     value = "${var.prefix}-nomad-client"
     propagate_at_launch = "true"
   }
-  # ASG should be created after DNS record for nomad server, otherwise
-  # clients would start before DNS exists and would ignore this record indefinetelly
-  depends_on = ["aws_route53_record.nomad_server"]
-}
-
-output "nomad cluster" {
-  value = "http://${aws_route53_record.nomad_server.name}:4646"
 }

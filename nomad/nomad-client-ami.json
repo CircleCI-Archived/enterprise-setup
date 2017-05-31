@@ -25,11 +25,6 @@
         },
         {
             "type": "file",
-            "source": "./nomad-client.hcl",
-            "destination": "/tmp/circleci-provisioner/nomad-config.hcl"
-        },
-        {
-            "type": "file",
             "source": "./nomad-upstart.conf",
             "destination": "/tmp/circleci-provisioner/nomad-upstart.conf"
         },

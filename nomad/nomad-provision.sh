@@ -19,5 +19,4 @@ mv nomad /usr/bin
 
 echo "Initing Nomad service"
 mkdir -p /etc/nomad
-cp nomad-config.hcl /etc/nomad/config.hcl
 cp nomad-upstart.conf /etc/init/nomad.conf
