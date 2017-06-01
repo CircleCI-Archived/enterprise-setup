@@ -50,8 +50,8 @@ variable "service_box_private_ip" {
 variable "client_amis" {
   default = {
     # TODO: build AMIs for all other regions
-    "us-west-1" = "ami-12476472"
-    "us-east-1" = "ami-ce82d7d8"
+    "us-west-1" = "ami-963d1ef6"
+    "us-east-1" = "ami-2ebeeb38"
   }
 }
 
