@@ -49,6 +49,10 @@ variable "prefix" {
     default = "circleci"
 }
 
+data "aws_subnet" "subnet" {
+  id = "${var.aws_subnet_id}"
+}
+
 provider "aws" {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
@@ -284,6 +288,23 @@ resource "aws_security_group" "circleci_users_sg" {
         from_port = 8800
         to_port = 8800
     }
+
+    # For Nomad server in 2.0 clustered installation
+    ingress {
+        cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+        protocol = "tcp"
+        from_port = 4647
+        to_port = 4647
+    }
+
+    # For output-processor in 2.0 clustered installation
+    ingress {
+        cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+        protocol = "tcp"
+        from_port = 8585
+        to_port = 8585
+    }
+
     # For SSH traffic to builder boxes
     # TODO: Update once services box has ngrok
     ingress {
