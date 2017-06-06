@@ -412,11 +412,13 @@ resource "aws_launch_configuration" "builder_lc" {
     user_data = <<EOF
 #!/bin/bash
 
-apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
-curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
-    SERVICES_PRIVATE_IP='${aws_instance.services.private_ip}' \
-    CIRCLE_SECRET_PASSPHRASE='${var.circle_secret_passphrase}' \
-    bash
+curl -sSL https://get.docker.com | sh
+sudo docker pull circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4
+sudo docker run -d -v /var/run/docker.sock:/var/run/docker.sock \
+    -e CIRCLE_CONTAINER_IMAGE_URI="docker://circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4" \
+    -e CIRCLE_SECRET_PASSPHRASE='${var.circle_secret_passphrase}' \
+    -e SERVICES_PRIVATE_IP='${aws_instance.services.private_ip}'  \
+    circleci/builder-base:1.1
 
 EOF
 
