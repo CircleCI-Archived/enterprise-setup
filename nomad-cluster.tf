@@ -1,36 +1,6 @@
-provider "aws" {
-  access_key = "${var.aws_access_key}"
-  secret_key = "${var.aws_secret_key}"
-  region = "${var.aws_region}"
-}
-
-variable "aws_access_key" {
-  description = "Access key used to create instances"
-}
-
-variable "aws_secret_key" {
-  description = "Secret key used to create instances"
-}
-
-variable "aws_region" {
-  description = "Region where instances get created"
-}
-
-variable "aws_vpc_id" {
-  description = "The VPC ID where the instances should reside"
-}
-
-variable "aws_subnet_id" {
-  description = "The subnet-id to be used for the instance"
-}
-
-variable "aws_ssh_key_name" {
-  description = "The SSH key to be used for the instances"
-}
-
-variable "client_instance_type" {
+variable "nomad_client_instance_type" {
   description = "instance type for the nomad clients. We recommend a XYZ instance"
-  default = "m4.large"
+  default = "m4.xlarge"
 }
 
 variable "max_clients_count" {
@@ -38,27 +8,14 @@ variable "max_clients_count" {
   default = "2"
 }
 
-variable "prefix" {
-  description = "prefix for resource names"
-  default = "circleci"
-}
-
-variable "service_box_private_ip" {
-  description = "private IP address of the service box"
-}
-
 variable "client_amis" {
   default = {
     # TODO: build AMIs for all other regions
     #
-    # DON'T FORGET TO UPDATE nomad-cluster.tf IN THE ROOT FOLDER ALSO
+    # DON'T FORGET TO UPDATE nomad/nomad-cluster.tf ALSO
     "us-west-1" = "ami-963d1ef6"
     "us-east-1" = "ami-2ebeeb38"
   }
-}
-
-data "aws_subnet" "subnet" {
-  id = "${var.aws_subnet_id}"
 }
 
 resource "aws_security_group" "nomad_sg" {
@@ -102,12 +59,12 @@ data "template_file" "nomad_client_config" {
   template = "${file("nomad-client.hcl.tpl")}"
 
   vars {
-    nomad_server = "${var.service_box_private_ip}"
+    nomad_server = "${aws_instance.services.private_ip}"
   }
 }
 
 resource "aws_launch_configuration" "clients_lc" {
-  instance_type = "${var.client_instance_type}"
+  instance_type = "${var.nomad_client_instance_type}"
   image_id = "${lookup(var.client_amis, var.aws_region)}"
   key_name = "${var.aws_ssh_key_name}"
   root_block_device = {
