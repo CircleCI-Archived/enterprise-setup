@@ -10,11 +10,18 @@ variable "max_clients_count" {
 
 variable "client_amis" {
   default = {
-    # TODO: build AMIs for all other regions
-    #
     # DON'T FORGET TO UPDATE nomad/nomad-cluster.tf ALSO
-    "us-west-1" = "ami-963d1ef6"
+    "ap-northeast-1" = "ami-2faaa348"
+    "ap-northeast-2" = "ami-5289563c"
+    "ap-southeast-1" = "ami-4ca2202f"
+    "ap-southeast-2" = "ami-a73524c4"
+    "eu-central-1" = "ami-352e8a5a"
+    "eu-west-1" = "ami-728e9114"
+    "sa-east-1" = "ami-512d463d"
     "us-east-1" = "ami-2ebeeb38"
+    "us-east-2" = "ami-31b79154"
+    "us-west-1" = "ami-963d1ef6"
+    "us-west-2" = "ami-78515a01"
   }
 }
 
