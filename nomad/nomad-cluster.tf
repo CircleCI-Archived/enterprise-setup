@@ -49,6 +49,7 @@ variable "service_box_private_ip" {
 
 variable "client_amis" {
   default = {
+    # DON'T FORGET TO UPDATE nomad-cluster.tf IN THE ROOT FOLDER ALSO
     "ap-northeast-1" = "ami-2faaa348"
     "ap-northeast-2" = "ami-5289563c"
     "ap-southeast-1" = "ami-4ca2202f"

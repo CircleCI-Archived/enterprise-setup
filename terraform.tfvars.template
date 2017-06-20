@@ -8,3 +8,6 @@ circle_secret_passphrase = "..."
 services_instance_type = "c4.2xlarge"
 builder_instance_type = "r3.4xlarge"
 nomad_client_instance_type = "..."
+
+# Use this var if you have multiple installation within one AWS region
+# prefix = "..."
