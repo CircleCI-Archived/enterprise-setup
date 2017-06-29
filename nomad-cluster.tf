@@ -67,7 +67,7 @@ resource "aws_security_group" "ssh_sg" {
 }
 
 data "template_file" "nomad_client_config" {
-  template = "${file("nomad-client.hcl.tpl")}"
+  template = "${file("templates/nomad-client.hcl.tpl")}"
 
   vars {
     nomad_server = "${aws_instance.services.private_ip}"

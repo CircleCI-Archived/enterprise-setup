@@ -49,8 +49,50 @@ variable "prefix" {
   default     = "circleci"
 }
 
+variable "services_delete_on_termination" {
+  description = "Configures AWS to delete the ELB volume for the Services box upon instance termination."
+  default     = "false"
+}
+
 data "aws_subnet" "subnet" {
   id = "${var.aws_subnet_id}"
+}
+
+data "template_file" "services_user_data" {
+  template = "${file("templates/services_user_data.tpl")}"
+
+  vars {
+    circle_secret_passphrase = "${var.circle_secret_passphrase}"
+    sqs_queue_url            = "${aws_sqs_queue.shutdown_queue.id}"
+    s3_bucket                = "${aws_s3_bucket.circleci_bucket.id}"
+    aws_region               = "${var.aws_region}"
+  }
+}
+
+data "template_file" "builders_user_data" {
+  template = "${file("templates/builders_user_data.tpl")}"
+
+  vars {
+    services_private_ip      = "${aws_instance.services.private_ip}"
+    circle_secret_passphrase = "${var.circle_secret_passphrase}"
+  }
+}
+
+data "template_file" "circleci_policy" {
+  template = "${file("templates/circleci_policy.tpl")}"
+
+  vars {
+    bucket_arn    = "${aws_s3_bucket.circleci_bucket.arn}"
+    sqs_queue_arn = "${aws_sqs_queue.shutdown_queue.arn}"
+  }
+}
+
+data "template_file" "shutdown_queue_role_policy" {
+  template = "${file("templates/shutdown_queue_role_policy.tpl")}"
+
+  vars {
+    sqs_queue_arn = "${aws_sqs_queue.shutdown_queue.arn}"
+  }
 }
 
 provider "aws" {
@@ -70,42 +112,14 @@ resource "aws_sqs_queue" "shutdown_queue" {
 resource "aws_iam_role" "shutdown_queue_role" {
   name = "${var.prefix}_shutdown_queue_role"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "autoscaling.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = "${file("files/shutdown_queue_role.json")}"
 }
 
 resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
   name = "${var.prefix}_shutdown_queue_role"
   role = "${aws_iam_role.shutdown_queue_role.id}"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "sqs:GetQueueUrl",
-        "sqs:SendMessage"
-      ],
-      "Effect": "Allow",
-      "Resource": [ "${aws_sqs_queue.shutdown_queue.arn}" ]
-    }
-  ]
-}
-EOF
+  policy = "${data.template_file.shutdown_queue_role_policy.rendered}"
 }
 
 # Single general-purpose bucket
@@ -128,63 +142,18 @@ resource "aws_iam_role" "circleci_role" {
   name = "${var.prefix}_role"
   path = "/"
 
-  assume_role_policy = <<EOF
-{
-   "Version": "2012-10-17",
-    "Statement" : [
-       {
-          "Action" : ["sts:AssumeRole"],
-          "Effect" : "Allow",
-          "Principal" : {
-            "Service": ["ec2.amazonaws.com"]
-          }
-       }
-    ]
-}
-EOF
+  assume_role_policy = "${file("files/circleci_role.json")}"
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
   name = "${var.prefix}_policy"
   role = "${aws_iam_role.circleci_role.id}"
 
-  policy = <<EOF
-{
-   "Version": "2012-10-17",
-   "Statement" : [
-      {
-         "Action" : ["s3:*"],
-         "Effect" : "Allow",
-         "Resource" : [
-            "${aws_s3_bucket.circleci_bucket.arn}",
-            "${aws_s3_bucket.circleci_bucket.arn}/*"
-         ]
-      },
-      {
-          "Action" : [
-              "sqs:*"
-          ],
-          "Effect" : "Allow",
-          "Resource" : ["${aws_sqs_queue.shutdown_queue.arn}"]
-      },
-      {
-          "Action": [
-              "ec2:Describe*",
-              "ec2:CreateTags",
-	      "cloudwatch:*",
-              "iam:GetUser",
-              "autoscaling:CompleteLifecycleAction"
-          ],
-          "Resource": ["*"],
-          "Effect": "Allow"
-      }
-   ]
-}
-EOF
+  policy = "${data.template_file.circleci_policy.rendered}"
 }
 
 resource "aws_iam_instance_profile" "circleci_profile" {
-  name  = "${var.prefix}_profile"
+  name = "${var.prefix}_profile"
   role = "${aws_iam_role.circleci_role.name}"
 }
 
@@ -384,22 +353,10 @@ resource "aws_instance" "services" {
   root_block_device {
     volume_type           = "gp2"
     volume_size           = "150"
-    delete_on_termination = false
+    delete_on_termination = "${var.services_delete_on_termination}"
   }
 
-  user_data = <<EOF
-#!/bin/bash
-
-replicated -version || curl https://s3.amazonaws.com/circleci-enterprise/init-services.sh | bash
-
-config_dir=/var/lib/replicated/circle-config
-mkdir -p $config_dir
-echo '${var.circle_secret_passphrase}' > $config_dir/circle_secret_passphrase
-echo '${aws_sqs_queue.shutdown_queue.id}' > $config_dir/sqs_queue_url
-echo '${aws_s3_bucket.circleci_bucket.id}' > $config_dir/s3_bucket
-echo '${var.aws_region}' > $config_dir/aws_region
-
-EOF
+  user_data = "${data.template_file.services_user_data.rendered}"
 
   lifecycle {
     prevent_destroy = true
@@ -421,16 +378,7 @@ resource "aws_launch_configuration" "builder_lc" {
 
   iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
 
-  user_data = <<EOF
-#!/bin/bash
-
-apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
-curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
-    SERVICES_PRIVATE_IP='${aws_instance.services.private_ip}' \
-    CIRCLE_SECRET_PASSPHRASE='${var.circle_secret_passphrase}' \
-    bash
-
-EOF
+  user_data = "${data.template_file.builders_user_data.rendered}"
 
   # To enable using spots
   # spot_price = "1.00"
@@ -459,7 +407,6 @@ resource "aws_autoscaling_group" "builder_asg" {
 }
 
 # Shutdown hooks
-
 resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
   name                    = "builder_shutdown_hook"
   autoscaling_group_name  = "${aws_autoscaling_group.builder_asg.name}"
