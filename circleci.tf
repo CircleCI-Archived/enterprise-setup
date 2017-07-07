@@ -381,6 +381,7 @@ replicated -version || curl https://s3.amazonaws.com/circleci-enterprise/init-se
 
 config_dir=/var/lib/replicated/circle-config
 mkdir -p $config_dir
+echo '${var.aws_region}' > $config_dir/aws_region
 echo '${var.circle_secret_passphrase}' > $config_dir/circle_secret_passphrase
 echo '${aws_sqs_queue.shutdown_queue.id}' > $config_dir/sqs_queue_url
 echo '${aws_s3_bucket.circleci_bucket.id}' > $config_dir/s3_bucket
