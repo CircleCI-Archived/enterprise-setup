@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: hashicorp/terraform:latest
+    working_directory: ~/terraform
+    steps:
+      - checkout
+      - run:
+          name: Generate the tfvars file
+          command: |
+            echo "aws_access_key = \"$CCIE_AWS_ACCESS_KEY\"" >> terraform.tfvars
+            echo "aws_secret_key = \"$CCIE_AWS_SECRET_KEY\"" >> terraform.tfvars
+            echo "aws_region = \"us-west-2\"" >> terraform.tfvars
+            echo "aws_vpc_id = \"vpc-09e3a36c\"" >> terraform.tfvars
+            echo "aws_subnet_id = \"subnet-495dd410\"" >> terraform.tfvars
+            echo "aws_ssh_key_name = \"$CCIE_AWS_SSH_KEY\"" >> terraform.tfvars
+            echo "prefix = \"enterprise_setup_test\"" >> terraform.tfvars
+            echo "services_instance_type = \"m4.xlarge\"" >> terraform.tfvars
+            echo "builder_instance_type = \"r3.2xlarge\"" >> terraform.tfvars
+            echo "nomad_client_instance_type = \"m4.xlarge\"" >> terraform.tfvars
+            echo "circle_secret_passphrase = \"$CCIE_SECRET_PASSPHRASE\"" >> terraform.tfvars
+            echo "services_delete_on_termination = true" >> terraform.tfvars
+      - run:
+          name: Validate the configuration
+          command: terraform validate
+      - run:
+          name: Run the plan
+          command: terraform plan
