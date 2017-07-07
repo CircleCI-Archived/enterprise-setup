@@ -21,6 +21,10 @@ variable "aws_subnet_id" {
     description = "The subnet-id to be used for the instance"
 }
 
+variable "aws_subnet_id_2" {
+    description = "2nd Subnet in separate AZ for Postgres RDS"
+}
+
 variable "aws_ssh_key_name" {
     description = "The SSH key to be used for the instances"
 }
@@ -57,6 +61,37 @@ provider "aws" {
     access_key = "${var.aws_access_key}"
     secret_key = "${var.aws_secret_key}"
     region = "${var.aws_region}"
+}
+
+#-------------------------------------
+# Postgresql RDS Variables
+#-------------------------------------
+
+variable "postgres_db_size" {
+    default = "100"  #gigabytes
+}
+
+variable "postgres_db_iops" {
+    default = "1000"  
+}
+
+variable "postgres_db_backup_retention" {
+    default = "7"    # in days
+}
+
+variable "postgres_db_master_user" {
+    default = "circle"
+}
+variable "postgres_db_master_password" {
+    description = "Password for Postgresql"
+}
+
+variable "postgres_db_name" {
+    default = "circle"
+}
+
+variable "postgres_port" {
+    default = "5432"
 }
 
 # SQS queue for hook
@@ -385,6 +420,8 @@ echo '${var.aws_region}' > $config_dir/aws_region
 echo '${var.circle_secret_passphrase}' > $config_dir/circle_secret_passphrase
 echo '${aws_sqs_queue.shutdown_queue.id}' > $config_dir/sqs_queue_url
 echo '${aws_s3_bucket.circleci_bucket.id}' > $config_dir/s3_bucket
+
+echo export CIRCLE_SECRETS_POSTGRES_MAIN_URI='postgres://${var.postgres_db_master_user}:${var.postgres_db_master_password}@${aws_db_instance.circle_postgres.address}:${var.postgres_port}/${var.postgres_db_name}' > /etc/circle-installation-customizations
 
 EOF
 
