@@ -4,16 +4,6 @@ set -e
 set -o pipefail
 
 
-is_valid_version() {
-    valid=('v0.6.14' 'v0.6.15' 'v0.6.16' 'v0.7.0')
-    for v in "${valid[@]}"; do
-        if [[ $1 = $v ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
 brew_install_terraform() {
     brew -v &> /dev/null || return 1
     echo "It looks like you have homebrew installed. Would you like to use it to install Terraform?" >&2
@@ -49,18 +39,6 @@ install_terraform() {
     fi
 }
 
-handle_unsupported_version() {
-    echo "It looks like you have an unsupported version (${1}) of Terraform installed. How would you like to proceed?" >&2
-    echo "1: Install a separate, local Terraform version without touching the system version." >&2
-    echo "2: Exit. I'll upgrade on my own." >&2
-    read selection
-    case "$selection" in
-        1) local=true install_terraform;;
-        2) exit 1;;
-        *) echo "Please enter \"1\" or \"2\" then hit ENTER" >&2; handle_unsupported_version "$1";;
-    esac
-}
-
 terraform_wrapper() {
     version=$(terraform -v 2>/dev/null | awk '{print $2}') || true
     if [[ -x .dependencies/terraform ]]; then
@@ -68,9 +46,6 @@ terraform_wrapper() {
         .dependencies/terraform "$@"
     elif [[ -z $version ]]; then
         install_terraform
-        terraform_wrapper "$@"
-    elif ! is_valid_version $version; then
-        handle_unsupported_version $version
         terraform_wrapper "$@"
     else
         echo "Using system Terraform" >&2
