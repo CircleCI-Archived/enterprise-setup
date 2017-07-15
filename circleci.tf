@@ -66,6 +66,8 @@ data "template_file" "services_user_data" {
     sqs_queue_url            = "${aws_sqs_queue.shutdown_queue.id}"
     s3_bucket                = "${aws_s3_bucket.circleci_bucket.id}"
     aws_region               = "${var.aws_region}"
+    subnet_id                = "${var.aws_subnet_id}"
+    vm_sg_id                 = "${aws_security_group.circleci_vm_sg.id}"
   }
 }
 
@@ -286,6 +288,14 @@ resource "aws_security_group" "circleci_users_sg" {
     to_port     = 8585
   }
 
+  # For build-agent to talk to vm-service
+  ingress {
+    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+    protocol    = "tcp"
+    from_port   = 3001
+    to_port     = 3001
+  }
+
   # For SSH traffic to builder boxes
   # TODO: Update once services box has ngrok
   ingress {
@@ -293,6 +303,43 @@ resource "aws_security_group" "circleci_users_sg" {
     protocol    = "tcp"
     from_port   = 64535
     to_port     = 65535
+  }
+}
+
+resource "aws_security_group" "circleci_vm_sg" {
+  name        = "${var.prefix}_vm_sg"
+  description = "SG form VMs allocated by CircleCI for Remote Docker and machine executor"
+
+  vpc_id = "${var.aws_vpc_id}"
+
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+  }
+
+  # For Web traffic to services
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 2376
+    to_port     = 2376
+  }
+
+  # For SSHing into 2.0 build
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 32768
+    to_port     = 61000
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
