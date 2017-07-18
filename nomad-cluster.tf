@@ -43,6 +43,14 @@ resource "aws_security_group" "nomad_sg" {
     cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
   }
 
+  # For SSHing into 2.0 build
+  ingress {
+    from_port   = 32768
+    to_port     = 61000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

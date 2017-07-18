@@ -27,3 +27,9 @@ jobs:
       - run:
           name: Run the plan
           command: terraform plan
+      - run:
+          name: Enable nomad orchestration
+          command: echo "enable_nomad = 1" >> terraform.tfvars
+      - run:
+          name: Run the plan
+          command: terraform plan
