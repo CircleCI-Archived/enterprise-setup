@@ -29,6 +29,11 @@ variable "circle_secret_passphrase" {
   description = "Decryption key for secrets used by CircleCI machines"
 }
 
+variable "services_ami" {
+  description = "Override AMI lookup with provided AMI ID"
+  default     = ""
+}
+
 variable "services_instance_type" {
   description = "instance type for the centralized services box.  We recommend a c4 instance"
   default     = "c4.2xlarge"
@@ -334,7 +339,7 @@ variable "builder_image" {
 resource "aws_instance" "services" {
   # Instance type - any of the c4 should do for now
   instance_type               = "${var.services_instance_type}"
-  ami                         = "${lookup(var.base_services_image, var.aws_region)}"
+  ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.base_services_image, var.aws_region)}"
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
   associate_public_ip_address = true
@@ -372,11 +377,11 @@ resource "aws_instance" "services" {
   }
 
   provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "echo '${jsonencode(merge(var.ansible_extra_vars, map("services_ip",aws_instance.services.public_ip,"secret_passphrase",var.circle_secret_passphrase,"aws_region",var.aws_region,"s3_bucket",aws_s3_bucket.circleci_bucket.id,"sqs_queue_url",aws_sqs_queue.shutdown_queue.id)))}' > .ansible/extra_vars.json" : "" }"
+    command = "${ var.enable_ansible_provisioning ? "echo '${jsonencode(merge(var.ansible_extra_vars, map("services_ip",aws_instance.services.public_ip,"secret_passphrase",var.circle_secret_passphrase,"aws_region",var.aws_region,"s3_bucket",aws_s3_bucket.circleci_bucket.id,"sqs_queue_url",aws_sqs_queue.shutdown_queue.id,"circle_version_2",var.enable_nomad)))}' > .ansible/extra_vars.json" : "" }"
   }
 
   provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "" }"
+    command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -v -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "" }"
   }
 
   lifecycle {
