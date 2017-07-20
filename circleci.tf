@@ -70,16 +70,18 @@ variable "services_delete_on_termination" {
 }
 
 variable "enable_route" {
-  description = ""
-  default = 0
+  description = "enable creating a Route53 route for the Services box"
+  default     = 0
 }
 
 variable "route_name" {
-  description = ""
+  description = "Route name to configure for Services box"
+  default     = ""
 }
 
 variable "route_zone_id" {
-  description = ""
+  description = "Zone to configure route in"
+  default     = ""
 }
 
 data "aws_subnet" "subnet" {
@@ -130,9 +132,9 @@ data "template_file" "output" {
 
   vars {
     services_public_ip = "${aws_instance.services.public_ip}"
-    ssh_key = "${var.aws_ssh_key_name}"
-    ansible = "${var.enable_ansible_provisioning}"
-    nomad = "${var.enable_nomad}"
+    ssh_key            = "${var.aws_ssh_key_name}"
+    ansible            = "${var.enable_ansible_provisioning}"
+    nomad              = "${var.enable_nomad}"
   }
 }
 
@@ -456,12 +458,12 @@ resource "aws_instance" "services" {
 }
 
 resource "aws_route53_record" "services_route" {
-  count = "${var.enable_route}"
+  count   = "${var.enable_route}"
   zone_id = "${var.route_zone_id}"
   name    = "${var.route_name}"
   type    = "A"
   ttl     = "300"
-  records        = ["${aws_instance.services.private_ip}"]
+  records = ["${aws_instance.services.private_ip}"]
 }
 
 ## Builders ASG

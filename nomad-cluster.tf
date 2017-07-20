@@ -1,6 +1,6 @@
 variable "enable_nomad" {
   description = "Nomad builder fleet is used for CCIE v2. It is disabled by default."
-  default = "0"
+  default     = "0"
 }
 
 variable "nomad_client_instance_type" {
@@ -31,7 +31,7 @@ variable "client_amis" {
 }
 
 resource "aws_security_group" "nomad_sg" {
-  count = "${var.enable_nomad}"
+  count       = "${var.enable_nomad}"
   name        = "${var.prefix}_nomad_sg"
   description = "SG for CircleCI nomad server/client"
   vpc_id      = "${var.aws_vpc_id}"
@@ -60,10 +60,10 @@ resource "aws_security_group" "nomad_sg" {
 }
 
 resource "aws_security_group" "ssh_sg" {
-  count = "${var.enable_nomad}"
+  count       = "${var.enable_nomad}"
   name        = "${var.prefix}_ssh_sg"
   description = "SG for SSH access"
-  vpc_id = "${var.aws_vpc_id}"
+  vpc_id      = "${var.aws_vpc_id}"
 
   ingress {
     from_port   = 22
@@ -89,7 +89,7 @@ data "template_file" "nomad_client_config" {
 }
 
 resource "aws_launch_configuration" "clients_lc" {
-  count = "${var.enable_nomad}"
+  count         = "${var.enable_nomad}"
   instance_type = "${var.nomad_client_instance_type}"
   image_id      = "${lookup(var.client_amis, var.aws_region)}"
   key_name      = "${var.aws_ssh_key_name}"
@@ -116,7 +116,7 @@ EOF
 }
 
 resource "aws_autoscaling_group" "clients_asg" {
-  count = "${var.enable_nomad}"
+  count                = "${var.enable_nomad}"
   name                 = "${var.prefix}_nomad_clients_asg"
   vpc_zone_identifier  = ["${var.aws_subnet_id}"]
   launch_configuration = "${aws_launch_configuration.clients_lc.name}"
