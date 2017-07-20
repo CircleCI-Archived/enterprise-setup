@@ -69,6 +69,19 @@ variable "services_delete_on_termination" {
   default     = "false"
 }
 
+variable "enable_route" {
+  description = ""
+  default = 0
+}
+
+variable "route_name" {
+  description = ""
+}
+
+variable "route_zone_id" {
+  description = ""
+}
+
 data "aws_subnet" "subnet" {
   id = "${var.aws_subnet_id}"
 }
@@ -440,6 +453,15 @@ resource "aws_instance" "services" {
   lifecycle {
     prevent_destroy = false
   }
+}
+
+resource "aws_route53_record" "services_route" {
+  count = "${var.enable_route}"
+  zone_id = "${var.route_zone_id}"
+  name    = "${var.route_name}"
+  type    = "A"
+  ttl     = "300"
+  records        = ["${aws_instance.services.private_ip}"]
 }
 
 ## Builders ASG
