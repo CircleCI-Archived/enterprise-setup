@@ -14,7 +14,7 @@
           hostname:
             value: "{{ services_hostname | default(services_ip) }}"
           allow_cluster:
-            value: 1
+            value: "1"
           secret_passphrase:
             value: "{{ secret_passphrase }}"
           ghe_type:
@@ -33,6 +33,8 @@
         replicated_app_settings:
           hostname:
             value: "{{ services_hostname | default(services_ip) }}"
+          allow_cluster:
+            value: "1"
           ghe_type:
             value: "{{ ghe_type | default(replicated_default_app_settings.ghe_type.value) }}"
           ghe_domain:
@@ -69,3 +71,4 @@
         name: ubuntu
         groups: docker
         append: yes
+      become: yes
