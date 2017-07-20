@@ -407,28 +407,23 @@ resource "aws_instance" "services" {
     delete_on_termination = "${var.services_delete_on_termination}"
   }
 
-  user_data = "${ var.enable_ansible_provisioning ? "curl -o /tmp/1EAA813E.pub https://circleci-enterprise.s3.amazonaws.com/1EAA813E.pub && sudo apt-key add /tmp/1EAA813E.pub" : data.template_file.services_user_data.rendered }"
+  user_data = "${ var.enable_ansible_provisioning ? "" : data.template_file.services_user_data.rendered }"
 
   provisioner "local-exec" {
-    command    = "${ var.enable_ansible_provisioning ? "mkdir .ansible || true" : "" }"
+    command    = "${ var.enable_ansible_provisioning ? "make ansible-setup" : "echo skipped" }"
     on_failure = "continue"
   }
 
   provisioner "local-exec" {
-    command    = "${ var.enable_ansible_provisioning ? "make ansible-dependencies" : "" }"
-    on_failure = "continue"
+    command = "${ var.enable_ansible_provisioning ? "echo '\n[services]\n${aws_instance.services.public_ip} ansible_user=ubuntu ansible_ssh_common_args=\"-o ConnectionAttempts=30 -o StrictHostKeyChecking=no\"' > .ansible/hosts" : "echo skipped" }"
   }
 
   provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "echo '\n[services]\n${aws_instance.services.public_ip} ansible_user=ubuntu ansible_ssh_common_args=\"-o ConnectionAttempts=30 -o StrictHostKeyChecking=no\"' > .ansible/hosts" : "" }"
+    command = "${ var.enable_ansible_provisioning ? "echo '${jsonencode(merge(var.ansible_extra_vars, map("services_ip",aws_instance.services.private_ip,"secret_passphrase",var.circle_secret_passphrase,"aws_region",var.aws_region,"s3_bucket",aws_s3_bucket.circleci_bucket.id,"sqs_queue_url",aws_sqs_queue.shutdown_queue.id,"circle_version_2",var.enable_nomad)))}' > .ansible/extra_vars.json" : "echo skipped" }"
   }
 
   provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "echo '${jsonencode(merge(var.ansible_extra_vars, map("services_ip",aws_instance.services.public_ip,"secret_passphrase",var.circle_secret_passphrase,"aws_region",var.aws_region,"s3_bucket",aws_s3_bucket.circleci_bucket.id,"sqs_queue_url",aws_sqs_queue.shutdown_queue.id,"circle_version_2",var.enable_nomad)))}' > .ansible/extra_vars.json" : "" }"
-  }
-
-  provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -v -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "" }"
+    command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -v -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "echo skipped" }"
   }
 
   lifecycle {
@@ -488,4 +483,8 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
 
 output "installation_wizard_url" {
   value = "http://${aws_instance.services.public_ip}/"
+}
+
+output "ssh" {
+  value = "ubuntu@${aws_instance.services.public_ip}"
 }
