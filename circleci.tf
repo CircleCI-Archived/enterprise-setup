@@ -112,6 +112,17 @@ data "template_file" "shutdown_queue_role_policy" {
   }
 }
 
+data "template_file" "output" {
+  template = "${file("templates/output.tpl")}"
+
+  vars {
+    services_public_ip = "${aws_instance.services.public_ip}"
+    ssh_key = "${var.aws_ssh_key_name}"
+    ansible = "${var.enable_ansible_provisioning}"
+    nomad = "${var.enable_nomad}"
+  }
+}
+
 provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -481,10 +492,14 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
   role_arn                = "${aws_iam_role.shutdown_queue_role.arn}"
 }
 
-output "installation_wizard_url" {
+output "success_message" {
+  value = "${data.template_file.output.rendered}"
+}
+
+output "install_url" {
   value = "http://${aws_instance.services.public_ip}/"
 }
 
-output "ssh" {
-  value = "ubuntu@${aws_instance.services.public_ip}"
+output "ssh-services" {
+  value = "ssh ubuntu@${aws_instance.services.public_ip}"
 }
