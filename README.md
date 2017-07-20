@@ -19,9 +19,24 @@ This package allows you to easily orchestrate your CCIE cluster in AWS using Ter
 
 ### Advanced: Ansible provisioning
 
-Advanced install involves using Ansible to fully configure your services box without having to use the user interface. This installation uses a Terraform plugin that adds Ansible as a provisioner.
+Advanced install involves using Ansible to fully configure your services box without having to configure it via the user interface. This installation method requires having Ansible locally installed on the machine you will be running Terraform on.
 
-https://github.com/jonmorehouse/terraform-provisioner-ansible/releases/download/0.0.2/terraform-provisioner-ansible
+To enable Ansible provisioning, set `enable_ansible_provisioning = true` in your tfvars file. Then add a dictionary to your tfvars file called `ansible_extra_vars` containing the extra variables that will be passed to the Ansible playbook in this project.
+
+Example:
+
+```json
+enable_ansible_provisioning = true
+ansible_extra_vars = {
+  license_file_path = "/path/to/my/CircleCILicense.rli"
+  ghe_type = "github_type_enterprise"
+  ghe_domain = "ghe.example.com"
+  github_client_id = "insertclientidfromghe"
+  github_client_secret = "insertclientsecretfromghe"
+  aws_access_key_id = "insertawskey"
+  aws_access_secret_key = "insertawssecretkey"
+}
+```
 
 ## Configuration
 
