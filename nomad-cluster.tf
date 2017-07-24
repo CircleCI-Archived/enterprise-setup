@@ -15,18 +15,20 @@ variable "max_clients_count" {
 
 variable "client_amis" {
   default = {
-    # DON'T FORGET TO UPDATE nomad/nomad-cluster.tf ALSO
-    "ap-northeast-1" = "ami-2faaa348"
-    "ap-northeast-2" = "ami-5289563c"
-    "ap-southeast-1" = "ami-4ca2202f"
-    "ap-southeast-2" = "ami-a73524c4"
-    "eu-central-1"   = "ami-352e8a5a"
-    "eu-west-1"      = "ami-728e9114"
-    "sa-east-1"      = "ami-512d463d"
-    "us-east-1"      = "ami-2ebeeb38"
-    "us-east-2"      = "ami-31b79154"
-    "us-west-1"      = "ami-963d1ef6"
-    "us-west-2"      = "ami-78515a01"
+	"ap-northeast-1" = "ami-52cf2f34"
+	"ap-northeast-2" = "ami-499c4527"
+	"ap-south-1"     = "ami-6fb1c900"
+	"ap-southeast-1" = "ami-4da5362e"
+	"ap-southeast-2" = "ami-85647be6"
+	"ca-central-1"   = "ami-492b942d"
+	"eu-central-1"   = "ami-7553fe1a"
+	"eu-west-1"      = "ami-3833da41"
+	"eu-west-2"      = "ami-564c5d32"
+	"sa-east-1"      = "ami-7e295e12"
+	"us-east-1"      = "ami-92f6a7e9"
+	"us-east-2"      = "ami-984363fd"
+	"us-west-1"      = "ami-c3cae3a3"
+	"us-west-2"      = "ami-b7b1a9ce"
   }
 }
 
