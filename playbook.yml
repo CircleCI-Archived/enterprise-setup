@@ -8,6 +8,10 @@
     replicated_tls_bootstrap_hostname: "{{ services_ip }}"
 
   pre_tasks:
+    - name: update apt-cache
+      command: "apt-get update"
+      become: yes
+      
     - name: Set application settings for v1 install
       set_fact:
         replicated_app_settings:

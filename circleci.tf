@@ -463,7 +463,7 @@ resource "aws_route53_record" "services_route" {
   name    = "${var.route_name}"
   type    = "A"
   ttl     = "300"
-  records = ["${aws_instance.services.private_ip}"]
+  records = ["${aws_instance.services.public_ip}"]
 }
 
 ## Builders ASG
