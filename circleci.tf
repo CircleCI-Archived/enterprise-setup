@@ -433,7 +433,7 @@ resource "aws_instance" "services" {
     delete_on_termination = "${var.services_delete_on_termination}"
   }
 
-  user_data = "${ var.enable_ansible_provisioning ? "" : data.template_file.services_user_data.rendered }"
+  user_data = "${ var.enable_ansible_provisioning ? "sudo apt-get update" : data.template_file.services_user_data.rendered }"
 
   provisioner "local-exec" {
     command    = "${ var.enable_ansible_provisioning ? "make ansible-setup" : "echo skipped" }"
