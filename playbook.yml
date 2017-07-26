@@ -11,12 +11,12 @@
     - name: update apt-cache
       command: "apt-get update"
       become: yes
-      
+
     - name: Set application settings for v1 install
       set_fact:
         replicated_app_settings:
           hostname:
-            value: "{{ services_hostname | default(services_ip) }}"
+            value: "{{ services_hostname | default(ansible_default_ipv4.address) }}"
           allow_cluster:
             value: "1"
           secret_passphrase:

@@ -3,7 +3,7 @@ Your installation is complete. It may take several minutes until it is ready.
 
 ${ ansible ? "Get started by visiting:" : "Continue the installation by visiting:" }
 
-    http://${services_public_ip}/
+    http://${hostname != "" ? hostname : services_public_ip}/
 
 To ssh into the Services box of your installation using your `${ssh_key}` private key:
 

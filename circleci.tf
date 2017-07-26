@@ -135,6 +135,7 @@ data "template_file" "output" {
     ssh_key            = "${var.aws_ssh_key_name}"
     ansible            = "${var.enable_ansible_provisioning}"
     nomad              = "${var.enable_nomad}"
+    hostname           = "${var.ansible_extra_vars["services_hostname"]}"
   }
 }
 
