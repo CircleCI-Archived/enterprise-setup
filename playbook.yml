@@ -39,6 +39,8 @@
             value: "{{ services_hostname | default(ansible_default_ipv4.address) }}"
           allow_cluster:
             value: "1"
+          secret_passphrase:
+            value: "{{ secret_passphrase }}"
           ghe_type:
             value: "{{ ghe_type | default(replicated_default_app_settings.ghe_type.value) }}"
           ghe_domain:
