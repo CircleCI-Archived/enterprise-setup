@@ -1,0 +1,80 @@
+---
+- hosts: services
+
+  vars:
+    replicated_cli: 'replicated'
+    replicated_install_params: 'local-address="{{ services_ip }}" no-proxy no-docker'
+    replicated_license_file_path: "{{ license_file_path | default('') }}"
+    replicated_tls_bootstrap_hostname: "{{ services_ip }}"
+
+  pre_tasks:
+    - name: update apt-cache
+      command: "apt-get update"
+      become: yes
+
+    - name: Set application settings for v1 install
+      set_fact:
+        replicated_app_settings:
+          hostname:
+            value: "{{ services_hostname | default(ansible_default_ipv4.address) }}"
+          allow_cluster:
+            value: "1"
+          secret_passphrase:
+            value: "{{ secret_passphrase }}"
+          ghe_type:
+            value: "{{ ghe_type | default(replicated_default_app_settings.ghe_type.value) }}"
+          ghe_domain:
+            value: "{{ ghe_domain | default('') }}"
+          ghe_client_id:
+            value: "{{ github_client_id | default('') }}"
+          ghe_client_secret:
+            value: "{{ github_client_secret | default('') }}"
+      when:
+        - circle_version_2 is not defined or circle_version_2 == "0"
+
+    - name: Set application settings for v2 install
+      set_fact:
+        replicated_app_settings:
+          hostname:
+            value: "{{ services_hostname | default(ansible_default_ipv4.address) }}"
+          allow_cluster:
+            value: "1"
+          secret_passphrase:
+            value: "{{ secret_passphrase }}"
+          ghe_type:
+            value: "{{ ghe_type | default(replicated_default_app_settings.ghe_type.value) }}"
+          ghe_domain:
+            value: "{{ ghe_domain | default('') }}"
+          ghe_client_id:
+            value: "{{ github_client_id | default('') }}"
+          ghe_client_secret:
+            value: "{{ github_client_secret | default('') }}"
+          iam_auth_type:
+            value: "user"
+          aws_region:
+            value: "{{ aws_region }}"
+          aws_access_key_id:
+            value: "{{ aws_access_key_id }}"
+          aws_secret_access_key:
+            value: "{{ aws_access_secret_key }}"
+          cloudwatch_enabled:
+            value: "0"
+          s3_bucket:
+            value: "{{ s3_bucket }}"
+          storage_backend:
+            value: "storage_backend_s3"
+          sqs_queue_url:
+            value: "{{ sqs_queue_url }}"
+      when:
+        - circle_version_2 is defined and circle_version_2 == "1"
+
+  roles:
+    - { role: ccie-roles/replicated }
+
+  tasks:
+    - name: Add Vagrant user to Docker Group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+      become: yes

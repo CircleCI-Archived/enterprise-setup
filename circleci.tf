@@ -29,6 +29,11 @@ variable "circle_secret_passphrase" {
   description = "Decryption key for secrets used by CircleCI machines"
 }
 
+variable "services_ami" {
+  description = "Override AMI lookup with provided AMI ID"
+  default     = ""
+}
+
 variable "services_instance_type" {
   description = "instance type for the centralized services box.  We recommend a c4 instance"
   default     = "c4.2xlarge"
@@ -49,9 +54,34 @@ variable "prefix" {
   default     = "circleci"
 }
 
+variable "enable_ansible_provisioning" {
+  description = "Enables Ansible provisioning of the Services box for automatic / no-touch installation / configuration."
+  default     = 0
+}
+
+variable "ansible_extra_vars" {
+  type    = "map"
+  default = {}
+}
+
 variable "services_delete_on_termination" {
   description = "Configures AWS to delete the ELB volume for the Services box upon instance termination."
   default     = "false"
+}
+
+variable "enable_route" {
+  description = "enable creating a Route53 route for the Services box"
+  default     = 0
+}
+
+variable "route_name" {
+  description = "Route name to configure for Services box"
+  default     = ""
+}
+
+variable "route_zone_id" {
+  description = "Zone to configure route in"
+  default     = ""
 }
 
 data "aws_subnet" "subnet" {
@@ -97,6 +127,18 @@ data "template_file" "shutdown_queue_role_policy" {
   }
 }
 
+data "template_file" "output" {
+  template = "${file("templates/output.tpl")}"
+
+  vars {
+    services_public_ip = "${aws_instance.services.public_ip}"
+    ssh_key            = "${var.aws_ssh_key_name}"
+    ansible            = "${var.enable_ansible_provisioning}"
+    nomad              = "${var.enable_nomad}"
+    hostname           = "${lookup(var.ansible_extra_vars, "services_hostname", "")}"
+  }
+}
+
 provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
@@ -112,15 +154,13 @@ resource "aws_sqs_queue" "shutdown_queue" {
 # IAM for shutdown queue
 
 resource "aws_iam_role" "shutdown_queue_role" {
-  name = "${var.prefix}_shutdown_queue_role"
-
+  name               = "${var.prefix}_shutdown_queue_role"
   assume_role_policy = "${file("files/shutdown_queue_role.json")}"
 }
 
 resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
-  name = "${var.prefix}_shutdown_queue_role"
-  role = "${aws_iam_role.shutdown_queue_role.id}"
-
+  name   = "${var.prefix}_shutdown_queue_role"
+  role   = "${aws_iam_role.shutdown_queue_role.id}"
   policy = "${data.template_file.shutdown_queue_role_policy.rendered}"
 }
 
@@ -141,16 +181,14 @@ resource "aws_s3_bucket" "circleci_bucket" {
 ## IAM for instances
 
 resource "aws_iam_role" "circleci_role" {
-  name = "${var.prefix}_role"
-  path = "/"
-
+  name               = "${var.prefix}_role"
+  path               = "/"
   assume_role_policy = "${file("files/circleci_role.json")}"
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
-  name = "${var.prefix}_policy"
-  role = "${aws_iam_role.circleci_role.id}"
-
+  name   = "${var.prefix}_policy"
+  role   = "${aws_iam_role.circleci_role.id}"
   policy = "${data.template_file.circleci_policy.rendered}"
 }
 
@@ -164,8 +202,7 @@ resource "aws_iam_instance_profile" "circleci_profile" {
 resource "aws_security_group" "circleci_builders_sg" {
   name        = "${var.prefix}_builders_sg"
   description = "SG for CircleCI Builder instances"
-
-  vpc_id = "${var.aws_vpc_id}"
+  vpc_id      = "${var.aws_vpc_id}"
 
   ingress {
     self      = true
@@ -185,8 +222,7 @@ resource "aws_security_group" "circleci_builders_sg" {
 resource "aws_security_group" "circleci_services_sg" {
   name        = "${var.prefix}_services_sg"
   description = "SG for CircleCI services/database instances"
-
-  vpc_id = "${var.aws_vpc_id}"
+  vpc_id      = "${var.aws_vpc_id}"
 
   ingress {
     security_groups = ["${aws_security_group.circleci_builders_sg.id}"]
@@ -222,8 +258,7 @@ resource "aws_security_group" "circleci_services_sg" {
 resource "aws_security_group" "circleci_builders_admin_sg" {
   name        = "${var.prefix}_builders_admin_sg"
   description = "SG for services to masters communication - avoids circular dependency"
-
-  vpc_id = "${var.aws_vpc_id}"
+  vpc_id      = "${var.aws_vpc_id}"
 
   ingress {
     security_groups = ["${aws_security_group.circleci_services_sg.id}"]
@@ -377,21 +412,17 @@ variable "builder_image" {
 
 resource "aws_instance" "services" {
   # Instance type - any of the c4 should do for now
-  instance_type = "${var.services_instance_type}"
-
-  ami = "${lookup(var.base_services_image, var.aws_region)}"
-
-  key_name = "${var.aws_ssh_key_name}"
-
+  instance_type               = "${var.services_instance_type}"
+  ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.base_services_image, var.aws_region)}"
+  key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
   associate_public_ip_address = true
+  iam_instance_profile        = "${aws_iam_instance_profile.circleci_profile.name}"
 
   vpc_security_group_ids = [
     "${aws_security_group.circleci_services_sg.id}",
     "${aws_security_group.circleci_users_sg.id}",
   ]
-
-  iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
 
   tags {
     Name = "${var.prefix}_services"
@@ -403,27 +434,51 @@ resource "aws_instance" "services" {
     delete_on_termination = "${var.services_delete_on_termination}"
   }
 
-  user_data = "${data.template_file.services_user_data.rendered}"
+  user_data = "${ var.enable_ansible_provisioning ? "sudo apt-get update" : data.template_file.services_user_data.rendered }"
+
+  provisioner "local-exec" {
+    command    = "${ var.enable_ansible_provisioning ? "make ansible-setup" : "echo skipped" }"
+    on_failure = "continue"
+  }
+
+  provisioner "local-exec" {
+    command = "${ var.enable_ansible_provisioning ? "echo '\n[services]\n${aws_instance.services.public_ip} ansible_user=ubuntu ansible_ssh_common_args=\"-o ConnectionAttempts=30 -o StrictHostKeyChecking=no\"' > .ansible/hosts" : "echo skipped" }"
+  }
+
+  provisioner "local-exec" {
+    command = "${ var.enable_ansible_provisioning ? "echo '${jsonencode(merge(var.ansible_extra_vars, map("services_ip",aws_instance.services.private_ip,"secret_passphrase",var.circle_secret_passphrase,"aws_region",var.aws_region,"s3_bucket",aws_s3_bucket.circleci_bucket.id,"sqs_queue_url",aws_sqs_queue.shutdown_queue.id,"circle_version_2",var.enable_nomad)))}' > .ansible/extra_vars.json" : "echo skipped" }"
+  }
+
+  provisioner "local-exec" {
+    command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -v -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "echo skipped" }"
+  }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
+}
+
+resource "aws_route53_record" "services_route" {
+  count   = "${var.enable_route}"
+  zone_id = "${var.route_zone_id}"
+  name    = "${var.route_name}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${aws_instance.services.public_ip}"]
 }
 
 ## Builders ASG
 resource "aws_launch_configuration" "builder_lc" {
   # 4x or 8x are best
-  instance_type = "${var.builder_instance_type}"
-
-  image_id = "${lookup(var.builder_image, var.aws_region)}"
-  key_name = "${var.aws_ssh_key_name}"
+  instance_type        = "${var.builder_instance_type}"
+  image_id             = "${lookup(var.builder_image, var.aws_region)}"
+  key_name             = "${var.aws_ssh_key_name}"
+  iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
 
   security_groups = ["${aws_security_group.circleci_builders_sg.id}",
     "${aws_security_group.circleci_builders_admin_sg.id}",
     "${aws_security_group.circleci_users_sg.id}",
   ]
-
-  iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
 
   user_data = "${data.template_file.builders_user_data.rendered}"
 
@@ -437,8 +492,7 @@ resource "aws_launch_configuration" "builder_lc" {
 }
 
 resource "aws_autoscaling_group" "builder_asg" {
-  name = "${var.prefix}_builders_asg"
-
+  name                 = "${var.prefix}_builders_asg"
   vpc_zone_identifier  = ["${var.aws_subnet_id}"]
   launch_configuration = "${aws_launch_configuration.builder_lc.name}"
   max_size             = "${var.max_builders_count}"
@@ -463,6 +517,14 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
   role_arn                = "${aws_iam_role.shutdown_queue_role.arn}"
 }
 
-output "installation_wizard_url" {
+output "success_message" {
+  value = "${data.template_file.output.rendered}"
+}
+
+output "install_url" {
   value = "http://${aws_instance.services.public_ip}/"
+}
+
+output "ssh-services" {
+  value = "ssh ubuntu@${aws_instance.services.public_ip}"
 }
