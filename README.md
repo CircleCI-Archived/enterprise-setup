@@ -25,7 +25,7 @@ To enable Ansible provisioning, set `enable_ansible_provisioning = true` in your
 
 Example:
 
-```json
+```
 enable_ansible_provisioning = true
 ansible_extra_vars = {
   license_file_path = "/path/to/my/CircleCILicense.rli"
