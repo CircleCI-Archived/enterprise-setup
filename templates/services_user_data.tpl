@@ -2,7 +2,7 @@
 
 export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 
-curl -sSL -o /tmp/get_replicated.sh https://get.replicated.com/docker
+curl -sSL -o /tmp/get_replicated.sh https://get.replicated.com/docker?replicated_tag=2.8.1&replicated_ui_tag=2.8.1&replicated_operator_tag=2.8.1
 
 bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy docker-version="17.06.0-ce"
 
