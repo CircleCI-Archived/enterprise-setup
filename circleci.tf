@@ -307,6 +307,22 @@ resource "aws_security_group" "circleci_users_sg" {
     to_port     = 8800
   }
 
+  # For Logging Dashboard
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 8801
+    to_port     = 8801
+  }
+
+  # For StatsD Dashboard
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 8802
+    to_port     = 8802
+  }
+
   # For Nomad server in 2.0 clustered installation
   ingress {
     cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
