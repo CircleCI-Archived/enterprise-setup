@@ -47,8 +47,8 @@ resource "aws_security_group" "nomad_sg" {
 
   # For SSHing into 2.0 build
   ingress {
-    from_port   = 32768
-    to_port     = 61000
+    from_port   = 64535
+    to_port     = 65535
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
