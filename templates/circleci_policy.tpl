@@ -22,7 +22,8 @@
               "ec2:CreateTags",
 	      "cloudwatch:*",
               "iam:GetUser",
-              "autoscaling:CompleteLifecycleAction"
+              "autoscaling:CompleteLifecycleAction",
+              "sts:AssumeRole"
           ],
           "Resource": ["*"],
           "Effect": "Allow"

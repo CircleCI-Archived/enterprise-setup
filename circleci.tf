@@ -366,8 +366,8 @@ resource "aws_security_group" "circleci_vm_sg" {
   ingress {
     cidr_blocks = ["0.0.0.0/0"]
     protocol    = "tcp"
-    from_port   = 32768
-    to_port     = 61000
+    from_port   = 54782
+    to_port     = 54782
   }
 
   egress {
