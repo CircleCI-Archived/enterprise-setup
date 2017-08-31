@@ -380,33 +380,33 @@ resource "aws_security_group" "circleci_vm_sg" {
 
 variable "base_services_image" {
   default = {
-    ap-northeast-1 = "ami-23fcc944"
-    ap-northeast-2 = "ami-6f6cbe01"
-    ap-southeast-1 = "ami-7949f21a"
-    ap-southeast-2 = "ami-23fff740"
-    eu-central-1   = "ami-e55a868a"
-    eu-west-1      = "ami-995053ff"
-    sa-east-1      = "ami-59d6bb35"
-    us-east-1      = "ami-edf793fb"
-    us-east-2      = "ami-2c2c0b49"
-    us-west-1      = "ami-0e50776e"
-    us-west-2      = "ami-d43fa1b4"
+    ap-northeast-1 = "ami-0a16e26c"
+    ap-northeast-2 = ""
+    ap-southeast-1 = "ami-5929b23a"
+    ap-southeast-2 = "ami-40180023"
+    eu-central-1   = "ami-488e2727"
+    eu-west-1      = "ami-a142b2d8"
+    sa-east-1      = "ami-ec1b6a80"
+    us-east-1      = "ami-845367ff"
+    us-east-2      = ""
+    us-west-1      = "ami-5185ae31"
+    us-west-2      = "ami-103fdc68"
   }
 }
 
 variable "builder_image" {
   default = {
-    ap-northeast-1 = "ami-38d8fa5f"
-    ap-northeast-2 = "ami-5ff22031"
-    ap-southeast-1 = "ami-381aa45b"
-    ap-southeast-2 = "ami-76bab415"
-    eu-central-1   = "ami-46d50729"
-    eu-west-1      = "ami-c8b288ae"
-    sa-east-1      = "ami-af5c3ec3"
-    us-east-1      = "ami-4d75f85b"
-    us-east-2      = "ami-b78ca8d2"
-    us-west-1      = "ami-8d0124ed"
-    us-west-2      = "ami-feef7c9e"
+    ap-northeast-1 = "ami-0a16e26c"
+    ap-northeast-2 = ""
+    ap-southeast-1 = "ami-5929b23a"
+    ap-southeast-2 = "ami-40180023"
+    eu-central-1   = "ami-488e2727"
+    eu-west-1      = "ami-a142b2d8"
+    sa-east-1      = "ami-ec1b6a80"
+    us-east-1      = "ami-845367ff"
+    us-east-2      = ""
+    us-west-1      = "ami-5185ae31"
+    us-west-2      = "ami-103fdc68"
   }
 }
 
@@ -479,6 +479,12 @@ resource "aws_launch_configuration" "builder_lc" {
     "${aws_security_group.circleci_builders_admin_sg.id}",
     "${aws_security_group.circleci_users_sg.id}",
   ]
+
+  root_block_device {
+    volume_type           = "gp2"
+    volume_size           = "150"
+    delete_on_termination = "${var.services_delete_on_termination}"
+  }
 
   user_data = "${data.template_file.builders_user_data.rendered}"
 
