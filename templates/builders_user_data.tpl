@@ -8,11 +8,13 @@
 
 BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4"
 
-echo "-------------------------------------------"
-echo "     Performing OS Update and Upgrade"
-echo "-------------------------------------------"
-apt-get update and apt-get -y upgrade
-
+echo "--------------------------------------------"
+echo "         Performing OS Updates"
+echo "--------------------------------------------"
+if [ $(cat /etc/*-release | grep ID_LIKE | cut -c9-) == "debian" ]
+then
+apt-get update && apt-get -y upgrade
+fi
 
 echo "-------------------------------------------"
 echo "         Installing Docker"

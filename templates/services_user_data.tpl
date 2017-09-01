@@ -3,6 +3,14 @@
 REPLICATED_VERSION="2.10.3"
 
 echo "--------------------------------------------"
+echo "         Performing OS Updates"
+echo "--------------------------------------------"
+if [ $(cat /etc/*-release | grep ID_LIKE | cut -c9-) == "debian" ]
+then
+apt-get update && apt-get -y upgrade
+fi
+
+echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
 export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"

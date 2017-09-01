@@ -1,5 +1,13 @@
 #! /bin/sh
 
+echo "--------------------------------------------"
+echo "         Performing OS Updates"
+echo "--------------------------------------------"
+if [ $(cat /etc/*-release | grep ID_LIKE | cut -c9-) == "debian" ]
+then
+apt-get update && apt-get -y upgrade
+fi
+
 echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
