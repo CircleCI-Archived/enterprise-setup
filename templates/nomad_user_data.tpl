@@ -5,7 +5,7 @@ set -exu
 echo "-------------------------------------------"
 echo "     Performing System Updates"
 echo "-------------------------------------------"
-apt-get update and apt-get -y upgrade
+apt-get update && apt-get -y upgrade
 
 echo "--------------------------------------"
 echo "        Installing Docker"
@@ -61,6 +61,13 @@ script
     exec nomad agent -config /etc/nomad/config.hcl
 end script
 EOT
+
+echo "--------------------------------------"
+echo "      Configure Firewall Rules	    "
+echo "--------------------------------------"
+iptables -I FORWARD -d ${services_private_ip} -p tcp -i ci-privileged -j ACCEPT
+iptables -I FORWARD -d ${services_private_ip} -p tcp -i eth0 -j ACCEPT
+iptables -I FORWARD -d ${services_private_ip} -p tcp -i eth0 -m multiport ! --dports 80,443 -j DROP
 
 echo "--------------------------------------"
 echo "      Starting Nomad service"

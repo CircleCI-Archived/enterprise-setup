@@ -13,7 +13,7 @@ BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4"
 echo "-------------------------------------------"
 echo "     Performing System Updates"
 echo "-------------------------------------------"
-apt-get update and apt-get -y upgrade
+apt-get update && apt-get -y upgrade
 
 echo "--------------------------------------"
 echo "        Installing Docker"
