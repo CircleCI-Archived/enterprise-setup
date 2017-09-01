@@ -1,5 +1,5 @@
 variable "enable_nomad" {
-  description = "Nomad builder fleet is used for CCIE v2. It is disabled by default."
+  description = "Nomad builder fleet is used for CCIE v2. It is enabled by default."
   default     = "1"
 }
 
