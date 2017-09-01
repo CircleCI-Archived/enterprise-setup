@@ -13,23 +13,6 @@ variable "max_clients_count" {
   default     = "2"
 }
 
-# NOTE: should match the same ID as circleci.tf 
-variable "ubuntu_ami" {
-  default = {
-    ap-northeast-1 = "ami-0a16e26c"
-    ap-northeast-2 = "ami-ed6fb783"
-    ap-southeast-1 = "ami-5929b23a"
-    ap-southeast-2 = "ami-40180023"
-    eu-central-1   = "ami-488e2727"
-    eu-west-1      = "ami-a142b2d8"
-    sa-east-1      = "ami-ec1b6a80"
-    us-east-1      = "ami-845367ff"
-    us-east-2      = "ami-1680a373"
-    us-west-1      = "ami-5185ae31"
-    us-west-2      = "ami-103fdc68"
-  }
-}
-
 resource "aws_security_group" "nomad_sg" {
   count       = "${var.enable_nomad}"
   name        = "${var.prefix}_nomad_sg"
