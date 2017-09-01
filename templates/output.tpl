@@ -13,4 +13,4 @@ ${ ansible ? "To rerun the Ansible provisioner using your `${ssh_key}` private k
 
     ansible-playbook playbook.yml -v -i ./.ansible/hosts -e '@./.ansible/extra_vars.json'" : "" }
 
-Thank you and enjoy using CircleCI Server!
+Thank you and enjoy using CircleCI! 
