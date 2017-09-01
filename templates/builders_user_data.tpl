@@ -8,6 +8,20 @@
 
 BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4"
 
+<<<<<<< HEAD
+echo "--------------------------------------------"
+echo "         Performing OS Updates"
+echo "--------------------------------------------"
+if [ $(cat /etc/*-release | grep ID_LIKE | cut -c9-) == "debian" ]
+then
+apt-get update && apt-get -y upgrade
+fi
+
+echo "-------------------------------------------"
+echo "         Installing Docker"
+echo "-------------------------------------------"
+curl -sSL https://get.docker.com | sh
+=======
 echo "-------------------------------------------"
 echo "     Performing System Updates"
 echo "-------------------------------------------"
@@ -22,6 +36,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
 apt-get -y install docker-ce=17.06.0~ce-0~ubuntu cgmanager
+>>>>>>> ca3d37e38b5b1967163d5f095f8a397378fbe246
 
 echo "-------------------------------------------"
 echo "      Pulling Server Builder Image"
