@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -exu
 REPLICATED_VERSION="2.10.3"
 
 echo "-------------------------------------------"

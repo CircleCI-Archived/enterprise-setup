@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -exu
+
 #apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
 #curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
 #    SERVICES_PRIVATE_IP='${services_private_ip}' \
@@ -35,7 +37,7 @@ docker network create -d bridge -o "com.docker.network.bridge.name"="circle0" ci
 iptables -I FORWARD -d 169.254.169.254 -p tcp -i docker0 -j DROP
 
 # Block traffic from build containers to non-whitelisted ports on the services box
-iptables -I FORWARD -d $SERVICES_PRIVATE_IP -p tcp -i docker0 -m multiport ! --dports 80,443 -j DROP
+iptables -I FORWARD -d ${services_private_ip} -p tcp -i docker0 -m multiport ! --dports 80,443 -j DROP
 
 echo "-------------------------------------------"
 echo "           Starting Builder"
