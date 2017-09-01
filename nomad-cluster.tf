@@ -1,6 +1,6 @@
 variable "enable_nomad" {
   description = "Nomad builder fleet is used for CCIE v2. It is disabled by default."
-  default     = "0"
+  default     = "1"
 }
 
 variable "nomad_client_instance_type" {
