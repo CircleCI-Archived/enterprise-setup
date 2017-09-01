@@ -378,33 +378,17 @@ resource "aws_security_group" "circleci_vm_sg" {
   }
 }
 
-variable "base_services_image" {
+variable "ubuntu_ami" {
   default = {
     ap-northeast-1 = "ami-0a16e26c"
-    ap-northeast-2 = ""
+    ap-northeast-2 = "ami-ed6fb783"
     ap-southeast-1 = "ami-5929b23a"
     ap-southeast-2 = "ami-40180023"
     eu-central-1   = "ami-488e2727"
     eu-west-1      = "ami-a142b2d8"
     sa-east-1      = "ami-ec1b6a80"
     us-east-1      = "ami-845367ff"
-    us-east-2      = ""
-    us-west-1      = "ami-5185ae31"
-    us-west-2      = "ami-103fdc68"
-  }
-}
-
-variable "builder_image" {
-  default = {
-    ap-northeast-1 = "ami-0a16e26c"
-    ap-northeast-2 = ""
-    ap-southeast-1 = "ami-5929b23a"
-    ap-southeast-2 = "ami-40180023"
-    eu-central-1   = "ami-488e2727"
-    eu-west-1      = "ami-a142b2d8"
-    sa-east-1      = "ami-ec1b6a80"
-    us-east-1      = "ami-845367ff"
-    us-east-2      = ""
+    us-east-2      = "ami-1680a373"
     us-west-1      = "ami-5185ae31"
     us-west-2      = "ami-103fdc68"
   }
@@ -413,7 +397,7 @@ variable "builder_image" {
 resource "aws_instance" "services" {
   # Instance type - any of the c4 should do for now
   instance_type               = "${var.services_instance_type}"
-  ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.base_services_image, var.aws_region)}"
+  ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
   associate_public_ip_address = true
@@ -471,7 +455,7 @@ resource "aws_route53_record" "services_route" {
 resource "aws_launch_configuration" "builder_lc" {
   # 4x or 8x are best
   instance_type        = "${var.builder_instance_type}"
-  image_id             = "${lookup(var.builder_image, var.aws_region)}"
+  image_id             = "${lookup(var.ubuntu_ami, var.aws_region)}"
   key_name             = "${var.aws_ssh_key_name}"
   iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
 
