@@ -2,6 +2,11 @@
 
 REPLICATED_VERSION="2.10.3"
 
+echo "-------------------------------------------"
+echo "     Performing System Updates"
+echo "-------------------------------------------"
+apt-get update and apt-get -y upgrade
+
 echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
