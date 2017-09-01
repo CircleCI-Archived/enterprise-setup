@@ -28,6 +28,15 @@ echo "      Pulling Server Builder Image"
 echo "-------------------------------------------"
 sudo docker pull $BUILDER_IMAGE
 
+# Make a new docker network
+docker network create -d bridge -o "com.docker.network.bridge.name"="circle0" circle-bridge
+
+# Block traffic from build containers to the EC2 metadata API
+iptables -I FORWARD -d 169.254.169.254 -p tcp -i docker0 -j DROP
+
+# Block traffic from build containers to non-whitelisted ports on the services box
+iptables -I FORWARD -d $SERVICES_PRIVATE_IP -p tcp -i docker0 -m multiport ! --dports 80,443 -j DROP
+
 echo "-------------------------------------------"
 echo "           Starting Builder"
 echo "-------------------------------------------"
@@ -35,4 +44,5 @@ sudo docker run -d -p 443:443 -v /var/run/docker.sock:/var/run/docker.sock \
       -e CIRCLE_CONTAINER_IMAGE_URI="docker://$BUILDER_IMAGE" \
       -e CIRCLE_SECRET_PASSPHRASE='${circle_secret_passphrase}' \
       -e SERVICES_PRIVATE_IP='${services_private_ip}'  \
+      --net circle-bridge \
       circleci/builder-base:1.1
