@@ -116,6 +116,8 @@ data "template_file" "circleci_policy" {
   vars {
     bucket_arn    = "${aws_s3_bucket.circleci_bucket.arn}"
     sqs_queue_arn = "${aws_sqs_queue.shutdown_queue.arn}"
+    role_name     = "${aws_iam_role.circleci_role.name}"
+    aws_region    = "${var.aws_region}"
   }
 }
 
