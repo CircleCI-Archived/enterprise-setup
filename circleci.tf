@@ -403,6 +403,7 @@ resource "aws_instance" "services" {
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
   associate_public_ip_address = true
+  disable_api_termination     = true
   iam_instance_profile        = "${aws_iam_instance_profile.circleci_profile.name}"
 
   vpc_security_group_ids = [
