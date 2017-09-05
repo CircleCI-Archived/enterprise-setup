@@ -1,0 +1,2 @@
+[${host_group}]
+${host}
