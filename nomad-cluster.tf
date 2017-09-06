@@ -13,25 +13,6 @@ variable "max_clients_count" {
   default     = "2"
 }
 
-variable "client_amis" {
-  default = {
-	"ap-northeast-1" = "ami-52cf2f34"
-	"ap-northeast-2" = "ami-499c4527"
-	"ap-south-1"     = "ami-6fb1c900"
-	"ap-southeast-1" = "ami-4da5362e"
-	"ap-southeast-2" = "ami-85647be6"
-	"ca-central-1"   = "ami-492b942d"
-	"eu-central-1"   = "ami-7553fe1a"
-	"eu-west-1"      = "ami-3833da41"
-	"eu-west-2"      = "ami-564c5d32"
-	"sa-east-1"      = "ami-7e295e12"
-	"us-east-1"      = "ami-92f6a7e9"
-	"us-east-2"      = "ami-984363fd"
-	"us-west-1"      = "ami-c3cae3a3"
-	"us-west-2"      = "ami-b7b1a9ce"
-  }
-}
-
 resource "aws_security_group" "nomad_sg" {
   count       = "${var.enable_nomad}"
   name        = "${var.prefix}_nomad_sg"
@@ -82,8 +63,16 @@ resource "aws_security_group" "ssh_sg" {
   }
 }
 
-data "template_file" "nomad_client_config" {
-  template = "${file("templates/nomad-client.hcl.tpl")}"
+# data "template_file" "nomad_client_config" {
+#   template = "${file("templates/nomad-client.hcl.tpl")}"
+
+#   vars {
+#     nomad_server = "${aws_instance.services.private_ip}"
+#   }
+# }
+
+data "template_file" "nomad_user_data"{
+  template = "${file("templates/nomad_user_data.tpl")}"
 
   vars {
     nomad_server = "${aws_instance.services.private_ip}"
@@ -93,7 +82,7 @@ data "template_file" "nomad_client_config" {
 resource "aws_launch_configuration" "clients_lc" {
   count         = "${var.enable_nomad}"
   instance_type = "${var.nomad_client_instance_type}"
-  image_id      = "${lookup(var.client_amis, var.aws_region)}"
+  image_id      = "${lookup(var.ubuntu_ami, var.aws_region)}"
   key_name      = "${var.aws_ssh_key_name}"
 
   root_block_device = {
@@ -103,14 +92,7 @@ resource "aws_launch_configuration" "clients_lc" {
 
   security_groups = ["${aws_security_group.nomad_sg.id}", "${aws_security_group.ssh_sg.id}"]
 
-  user_data = <<EOF
-#! /bin/bash
-cat <<EOT > /etc/nomad/config.hcl
-${data.template_file.nomad_client_config.rendered}
-EOT
-
-sudo service nomad restart
-EOF
+  user_data = "${data.template_file.nomad_user_data.rendered}"
 
   lifecycle {
     create_before_destroy = true
