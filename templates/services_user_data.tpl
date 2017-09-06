@@ -1,18 +1,32 @@
 #!/bin/bash
 
+set -exu
+REPLICATED_VERSION="2.10.3"
+
+echo "-------------------------------------------"
+echo "     Performing System Updates"
+echo "-------------------------------------------"
+apt-get update && apt-get -y upgrade
+
+echo "--------------------------------------------"
+echo "       Setting Private IP"
+echo "--------------------------------------------"
 export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 
-curl -sSL -o /tmp/get_replicated.sh https://get.replicated.com/docker?replicated_tag=2.8.1&replicated_ui_tag=2.8.1&replicated_operator_tag=2.8.1
+echo "--------------------------------------------"
+echo "          Download Replicated"
+echo "--------------------------------------------"
+curl -sSk -o /tmp/get_replicated.sh "https://get.replicated.com/docker?replicated_tag=$REPLICATED_VERSION&replicated_ui_tag=$REPLICATED_VERSION&replicated_operator_tag=$REPLICATED_VERSION"
 
-bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy docker-version="17.06.0-ce"
+echo "--------------------------------------------"
+echo "       Installing Replicated"
+echo "--------------------------------------------"
+sleep 3
+bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy docker-version="17.06.0"
 
-curl -o /tmp/1EAA813E.pub https://circleci-enterprise.s3.amazonaws.com/1EAA813E.pub
-apt-key add /tmp/1EAA813E.pub
-echo "deb http://circleci-enterprise.s3.amazonaws.com/debs stable main" > /etc/apt/sources.list.d/circle.list
-apt-get update
-apt-get install -y circle-replicated
-service circle-splash start
-
+echo "--------------------------------------------"
+echo "       Passing Variables"
+echo "--------------------------------------------"
 config_dir=/var/lib/replicated/circle-config
 mkdir -p $config_dir
 echo '${circle_secret_passphrase}' > $config_dir/circle_secret_passphrase
