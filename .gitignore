@@ -1,2 +1,7 @@
 /secret/
 /.dependencies/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.ansible/
+**.retry
