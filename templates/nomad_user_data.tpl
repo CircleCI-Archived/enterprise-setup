@@ -63,13 +63,6 @@ end script
 EOT
 
 echo "--------------------------------------"
-echo "      Configure Firewall Rules	    "
-echo "--------------------------------------"
-iptables -I FORWARD -d ${nomad_server} -p tcp -i ci-privileged -j ACCEPT
-iptables -I FORWARD -d ${nomad_server} -p tcp -i eth0 -j ACCEPT
-iptables -I FORWARD -d ${nomad_server} -p tcp -i eth0 -m multiport ! --dports 80,443 -j DROP
-
-echo "--------------------------------------"
 echo "      Starting Nomad service"
 echo "--------------------------------------"
 service nomad restart
