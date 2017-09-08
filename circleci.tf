@@ -390,7 +390,7 @@ variable "ubuntu_ami" {
     eu-west-1      = "ami-a142b2d8"
     sa-east-1      = "ami-ec1b6a80"
     us-east-1      = "ami-845367ff"
-    us-east-2      = "ami-1680a373"
+    us-east-2      = "ami-43391926"
     us-west-1      = "ami-5185ae31"
     us-west-2      = "ami-103fdc68"
   }
