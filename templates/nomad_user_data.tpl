@@ -2,6 +2,9 @@
 
 set -exu
 
+export http_proxy="${http_proxy}"
+export https_proxy="${https_proxy}"
+
 echo "-------------------------------------------"
 echo "     Performing System Updates"
 echo "-------------------------------------------"
@@ -17,10 +20,9 @@ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(
 apt-get update
 apt-get -y install docker-ce=17.06.0~ce-0~ubuntu cgmanager
 
-echo "--------------------------------------"
-echo "   Creating ci-privileged network"
-echo "--------------------------------------"
-docker network create --driver=bridge --opt com.docker.network.bridge.name=ci-privileged ci-privileged
+sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
+sudo service docker restart
+sleep 5
 
 echo "--------------------------------------"
 echo "         Installing nomad"
@@ -33,12 +35,19 @@ mv nomad /usr/bin
 echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
+export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
 log_level = "DEBUG"
 
 data_dir = "/opt/nomad"
 datacenter = "us-east-1"
+
+advertise {
+    http = "$PRIVATE_IP"
+    rpc = "$PRIVATE_IP"
+    serf = "$PRIVATE_IP"
+}
 
 client {
     enabled = true
@@ -61,6 +70,11 @@ script
     exec nomad agent -config /etc/nomad/config.hcl
 end script
 EOT
+
+echo "--------------------------------------"
+echo "   Creating ci-privileged network"
+echo "--------------------------------------"
+docker network create --driver=bridge --opt com.docker.network.bridge.name=ci-privileged ci-privileged
 
 echo "--------------------------------------"
 echo "      Starting Nomad service"

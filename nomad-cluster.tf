@@ -76,6 +76,8 @@ data "template_file" "nomad_user_data"{
 
   vars {
     nomad_server = "${aws_instance.services.private_ip}"
+    http_proxy   = "${var.http_proxy}"
+    https_proxy  = "${var.https_proxy}"
   }
 }
 

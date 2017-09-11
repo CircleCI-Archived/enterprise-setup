@@ -3,6 +3,9 @@
 set -exu
 REPLICATED_VERSION="2.10.3"
 
+export http_proxy="${http_proxy}"
+export https_proxy="${https_proxy}"
+
 echo "-------------------------------------------"
 echo "     Performing System Updates"
 echo "-------------------------------------------"
@@ -22,7 +25,7 @@ echo "--------------------------------------------"
 echo "       Installing Replicated"
 echo "--------------------------------------------"
 sleep 3
-bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy docker-version="17.06.0"
+bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" http-proxy="${http_proxy}" docker-version="17.06.0"
 
 echo "--------------------------------------------"
 echo "       Passing Variables"
