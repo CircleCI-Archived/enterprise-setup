@@ -21,6 +21,8 @@ jobs:
             echo "nomad_client_instance_type = \"m4.xlarge\"" >> terraform.tfvars
             echo "circle_secret_passphrase = \"$CCIE_SECRET_PASSPHRASE\"" >> terraform.tfvars
             echo "services_delete_on_termination = true" >> terraform.tfvars
+            echo 'http_proxy = ""' >> terraform.tfvars
+            echo 'https_proxy = ""' >> terraform.tfvars
       - run:
           name: Validate the configuration
           command: terraform validate
