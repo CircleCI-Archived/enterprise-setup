@@ -67,3 +67,4 @@ Optional vars:
   | enable_route | enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
+  | associate_public_ip_address | Allows the ability to disable public IP for the service box in AWS | "true" |
