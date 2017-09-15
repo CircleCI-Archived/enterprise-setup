@@ -461,6 +461,7 @@ resource "aws_launch_configuration" "builder_lc" {
   image_id             = "${lookup(var.ubuntu_ami, var.aws_region)}"
   key_name             = "${var.aws_ssh_key_name}"
   iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
+  associate_public_ip_address = true
 
   security_groups = ["${aws_security_group.circleci_builders_sg.id}",
     "${aws_security_group.circleci_builders_admin_sg.id}",

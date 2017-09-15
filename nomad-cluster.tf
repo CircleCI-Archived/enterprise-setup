@@ -84,6 +84,7 @@ resource "aws_launch_configuration" "clients_lc" {
   instance_type = "${var.nomad_client_instance_type}"
   image_id      = "${lookup(var.ubuntu_ami, var.aws_region)}"
   key_name      = "${var.aws_ssh_key_name}"
+  associate_public_ip_address = true
 
   root_block_device = {
     volume_type = "gp2"
