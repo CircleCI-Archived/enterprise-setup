@@ -5,6 +5,7 @@ REPLICATED_VERSION="2.10.3"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
+export no_proxy="${no_proxy}"
 
 echo "-------------------------------------------"
 echo "     Performing System Updates"
@@ -38,3 +39,6 @@ echo '${s3_bucket}' > $config_dir/s3_bucket
 echo '${aws_region}' > $config_dir/aws_region
 echo '${subnet_id}' > $config_dir/subnet_id
 echo '${vm_sg_id}' > $config_dir/vm_sg_id
+echo '${http_proxy}' > $config_dir/http_proxy
+echo '${https_proxy}' > $config_dir/https_proxy
+echo '${no_proxy}' > $config_dir/no_proxy

@@ -92,6 +92,10 @@ variable "https_proxy" {
   description = ""
 }
 
+variable "no_proxy" {
+  description = ""
+}
+
 data "aws_subnet" "subnet" {
   id = "${var.aws_subnet_id}"
 }
@@ -108,6 +112,7 @@ data "template_file" "services_user_data" {
     vm_sg_id                 = "${aws_security_group.circleci_vm_sg.id}"
     http_proxy               = "${var.http_proxy}"
     https_proxy              = "${var.https_proxy}"
+    no_proxy                 = "${var.no_proxy}"
   }
 }
 
@@ -119,6 +124,7 @@ data "template_file" "builders_user_data" {
     circle_secret_passphrase = "${var.circle_secret_passphrase}"
     http_proxy               = "${var.http_proxy}"
     https_proxy              = "${var.https_proxy}"
+    no_proxy                 = "${var.no_proxy}"
   }
 }
 

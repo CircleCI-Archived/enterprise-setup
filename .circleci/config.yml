@@ -23,6 +23,7 @@ jobs:
             echo "services_delete_on_termination = true" >> terraform.tfvars
             echo 'http_proxy = ""' >> terraform.tfvars
             echo 'https_proxy = ""' >> terraform.tfvars
+            echo 'no_proxy = ""' >> terraform.tfvars
       - run:
           name: Validate the configuration
           command: terraform validate

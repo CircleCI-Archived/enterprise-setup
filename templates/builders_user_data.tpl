@@ -12,6 +12,7 @@ BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
+export no_proxy="${no_proxy}"
 
 echo "-------------------------------------------"
 echo "     Performing System Updates"
@@ -30,6 +31,7 @@ apt-get -y install docker-ce=17.06.0~ce-0~ubuntu cgmanager
 
 sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
+sudo echo 'export no_proxy="${no_proxy}"' >> /etc/default/docker
 sudo service docker restart
 
 echo "-------------------------------------------"
