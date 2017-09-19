@@ -10,6 +10,10 @@ set -exu
 
 BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4"
 
+export http_proxy="${http_proxy}"
+export https_proxy="${https_proxy}"
+export no_proxy="${no_proxy}"
+
 echo "-------------------------------------------"
 echo "     Performing System Updates"
 echo "-------------------------------------------"
@@ -24,6 +28,11 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
 apt-get -y install docker-ce=17.06.0~ce-0~ubuntu cgmanager
+
+sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
+sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
+sudo echo 'export no_proxy="${no_proxy}"' >> /etc/default/docker
+sudo service docker restart
 
 echo "-------------------------------------------"
 echo "      Pulling Server Builder Image"
