@@ -71,7 +71,74 @@ resource "aws_security_group" "ssh_sg" {
 #   }
 # }
 
-data "template_file" "nomad_user_data"{
+# We do this with rules so that we can handle "var.enable_nomad" being off
+# For Nomad server connections from Nomad servers in 2.0 clustered installation
+resource "aws_security_group_rule" "services_nomad_4647" {
+  count                    = "${var.enable_nomad}"
+  type                     = "ingress"
+  source_security_group_id = "${aws_security_group.nomad_sg.id}"
+  security_group_id        = "${aws_security_group.circleci_services_nomad_sg.id}"
+  protocol                 = "tcp"
+  from_port                = 4647
+  to_port                  = 4647
+}
+
+# For Nomad server connections from Docker VMs in 2.0 clustered installation
+resource "aws_security_group_rule" "services_vms_4647" {
+  count                    = "${var.enable_nomad}"
+  type                     = "ingress"
+  source_security_group_id = "${aws_security_group.circleci_vm_sg.id}"
+  security_group_id        = "${aws_security_group.circleci_services_nomad_sg.id}"
+  protocol                 = "tcp"
+  from_port                = 4647
+  to_port                  = 4647
+}
+
+# For output-processor connections from Nomad servers in 2.0 clustered installation
+resource "aws_security_group_rule" "services_nomad_8585" {
+  count                    = "${var.enable_nomad}"
+  type                     = "ingress"
+  source_security_group_id = "${aws_security_group.nomad_sg.id}"
+  security_group_id        = "${aws_security_group.circleci_services_nomad_sg.id}"
+  protocol                 = "tcp"
+  from_port                = 8585
+  to_port                  = 8585
+}
+
+# For output-processor connections from Docker VMs in 2.0 clustered installation
+resource "aws_security_group_rule" "services_vms_8585" {
+  count                    = "${var.enable_nomad}"
+  type                     = "ingress"
+  source_security_group_id = "${aws_security_group.circleci_vm_sg.id}"
+  security_group_id        = "${aws_security_group.circleci_services_nomad_sg.id}"
+  protocol                 = "tcp"
+  from_port                = 8585
+  to_port                  = 8585
+}
+
+# For build-agent connections from Nomad servers in 2.0 clustered installation
+resource "aws_security_group_rule" "services_nomad_3001" {
+  count                    = "${var.enable_nomad}"
+  type                     = "ingress"
+  source_security_group_id = "${aws_security_group.nomad_sg.id}"
+  security_group_id        = "${aws_security_group.circleci_services_nomad_sg.id}"
+  protocol                 = "tcp"
+  from_port                = 3001
+  to_port                  = 3001
+}
+
+# For build-agent connections from Docker VMs in 2.0 clustered installation
+resource "aws_security_group_rule" "services_vms_3001" {
+  count                    = "${var.enable_nomad}"
+  type                     = "ingress"
+  source_security_group_id = "${aws_security_group.circleci_vm_sg.id}"
+  security_group_id        = "${aws_security_group.circleci_services_nomad_sg.id}"
+  protocol                 = "tcp"
+  from_port                = 3001
+  to_port                  = 3001
+}
+
+data "template_file" "nomad_user_data" {
   template = "${file("templates/nomad_user_data.tpl")}"
 
   vars {
