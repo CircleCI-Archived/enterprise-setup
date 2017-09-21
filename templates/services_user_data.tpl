@@ -26,7 +26,7 @@ echo "--------------------------------------------"
 echo "       Installing Replicated"
 echo "--------------------------------------------"
 sleep 3
-bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" http-proxy="${http_proxy}" docker-version="17.06.0"
+bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy docker-version="17.03.2"
 
 echo "--------------------------------------------"
 echo "       Passing Variables"
