@@ -15,7 +15,7 @@ apt-get install -y apt-transport-https ca-certificates curl
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
-apt-get -y install docker-ce=17.06.0~ce-0~ubuntu cgmanager
+apt-get -y install docker-ce=17.03.2~ce-0~ubuntu cgmanager
 
 echo "--------------------------------------"
 echo "   Creating ci-privileged network"
