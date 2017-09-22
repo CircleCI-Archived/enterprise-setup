@@ -22,11 +22,21 @@ echo "          Download Replicated"
 echo "--------------------------------------------"
 curl -sSk -o /tmp/get_replicated.sh "https://get.replicated.com/docker?replicated_tag=$REPLICATED_VERSION&replicated_ui_tag=$REPLICATED_VERSION&replicated_operator_tag=$REPLICATED_VERSION"
 
+echo "--------------------------------------"
+echo "        Installing Docker"
+echo "--------------------------------------"
+apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
+apt-get install -y apt-transport-https ca-certificates curl
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+apt-get update
+apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+
 echo "--------------------------------------------"
 echo "       Installing Replicated"
 echo "--------------------------------------------"
 sleep 3
-bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy docker-version="17.03.2"
+bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy no-docker
 
 echo "--------------------------------------------"
 echo "       Passing Variables"
