@@ -86,14 +86,17 @@ variable "route_zone_id" {
 
 variable "http_proxy" {
   description = ""
+  default     = ""
 }
 
 variable "https_proxy" {
   description = ""
+  default     = ""
 }
 
 variable "no_proxy" {
   description = ""
+  default     = ""
 }
 
 data "aws_subnet" "subnet" {
