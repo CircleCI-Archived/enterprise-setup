@@ -31,6 +31,7 @@
       {
               "Action": [
                   "ec2:RunInstances",
+                  "ec2:CreateVolume",
                   "ec2:CreateTags"
               ],
               "Effect": "Allow",
@@ -45,10 +46,13 @@
           },
           {
               "Action": [
-                  "ec2:TerminateInstances"
+                  "ec2:TerminateInstances",
+                  "ec2:AttachVolume",
+                  "ec2:DetachVolume",
+                  "ec2:DeleteVolume"
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ec2:${aws_region}:*:instance/*",
+              "Resource": "arn:aws:ec2:${aws_region}:*:*/*",
               "Condition": {
                   "StringEquals": {
                       "ec2:ResourceTag/ManagedBy": "circleci-vm-service"
