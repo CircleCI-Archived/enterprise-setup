@@ -1,3 +1,14 @@
+# variables
+variable "spin_up_schedule" {
+	description = "cron string for autoscaling scheduler"
+	default     = "0 14 * * MON-FRI"
+}
+
+variable "spin_down_schedule" {
+	description = "cron string for autoscaling scheduler"
+	default     = "0 2 * * TUE-SAT"
+}
+
 # nomad scheduler up
 resource "aws_autoscaling_schedule" "clients_asg_up" {
   scheduled_action_name  = "spin_up"
