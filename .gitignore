@@ -5,3 +5,4 @@
 *.tfvars
 .ansible/
 **.retry
+.DS_Store

@@ -5,5 +5,9 @@ aws_vpc_id = "..."
 aws_subnet_id = "..."
 aws_ssh_key_name = "..."
 circle_secret_passphrase = "..."
-services_instance_type = "c4.2xlarge"
-builder_instance_type = "r3.4xlarge"
+prefix = "..."
+
+# default: up at 7AM PST, down at 7PM PST, M-F
+# times are in cron format, UTC time zone
+spin_up_schedule = "..."
+spin_down_schedule = "...""

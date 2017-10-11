@@ -5,14 +5,23 @@ aws_vpc_id = "..."
 aws_subnet_id = "..."
 aws_ssh_key_name = "..."
 circle_secret_passphrase = "..."
+
+# Use this var if you have multiple installation within one AWS region
+# prefix = "..."
+
+# For Customer Engineering sandbox instances
 services_instance_type = "c4.2xlarge"
-builder_instance_type = "r3.4xlarge"
-nomad_client_instance_type = "..."
+builder_instance_type = "r3.2xlarge"
+max_builders_count = "1"
+nomad_client_instance_type = "m4.xlarge"
+max_clients_count = "1"
+
+# default: up at 7AM PST, down at 7PM PST, M-F
+# times are in cron format, UTC time zone
+spin_up_schedule = "0 14 * * MON-FRI"
+spin_down_schedule = "0 2 * * TUE-SAT"
 
 # Provide proxy address if your network configuration requires it
 http_proxy = ""
 https_proxy = ""
 no_proxy = ""
-
-# Use this var if you have multiple installation within one AWS region
-# prefix = "..."
