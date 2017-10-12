@@ -93,13 +93,14 @@ resource "aws_lambda_function" "start_services_box" {
   filename         = "files/start-server.zip"
   function_name    = "${var.prefix}_start_services_box"
   role             = "${aws_iam_role.ec2_start_stop_role.arn}"
-  handler          = "index.handler"
+  handler          = "start-server.handler"
   runtime          = "nodejs6.10"
   timeout          = 59
 
   environment {
     variables = {
       servicesInstanceId = "${aws_instance.services.id}"
+      awsRegion          = "${var.aws_region}"
     }
   }
 }
@@ -109,13 +110,14 @@ resource "aws_lambda_function" "stop_services_box" {
   filename         = "files/stop-server.zip"
   function_name    = "${var.prefix}_stop_services_box"
   role             = "${aws_iam_role.ec2_start_stop_role.arn}"
-  handler          = "index.handler"
+  handler          = "stop-server.handler"
   runtime          = "nodejs6.10"
   timeout          = 59
 
   environment {
     variables = {
       servicesInstanceId = "${aws_instance.services.id}"
+      awsRegion          = "${var.aws_region}"
     }
   }
 }
