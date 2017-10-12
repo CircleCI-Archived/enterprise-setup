@@ -13,7 +13,8 @@ This package allows you to easily orchestrate your CCIE cluster in AWS using Ter
 ### Basic
 
 1. Clone or download this repository
-1. Execute `make init` or save a copy of `terraform.tfvars.template` to `terraform.tfvars`
+1. Execute `make init` or save a copy of `terraform.tfvars.template` as `terraform.tfvars`
+1. Run `terraform init` to install required plugins
 1. Fill in the configuration vars in `terraform.tfvars` for your cluster. see [Configuration](#configuration)
 1. Run `terraform apply`
 

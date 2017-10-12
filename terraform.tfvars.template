@@ -6,7 +6,7 @@ aws_subnet_id = "..."
 aws_ssh_key_name = "..."
 circle_secret_passphrase = "..."
 
-# Use this var if you have multiple installation within one AWS region
+# Use this if you have multiple installations in one AWS region or otherwise want to name your install
 # prefix = "..."
 
 # For Customer Engineering sandbox instances
@@ -16,12 +16,16 @@ max_builders_count = "1"
 nomad_client_instance_type = "m4.xlarge"
 max_clients_count = "1"
 
-# default: up at 7AM PST, down at 7PM PST, M-F
-# times are in cron format, UTC time zone
-spin_up_schedule = "0 14 * * MON-FRI"
-spin_down_schedule = "0 2 * * TUE-SAT"
+# Times must be in cron format, UTC time zone (see https://stackoverflow.com/questions/20865688/is-it-possible-to-set-up-amazon-ec2-auto-scaling-for-particular-days-of-the-week)
+spin_up_schedule = "0 14 * * MON-FRI" # a.k.a. 7 AM PST, M-F
+spin_down_schedule = "0 2 * * TUE-SAT" # a.k.a. 7 PM PST, M-F
+
+# Up/down times for the services box
+# AWS Lambda requires slightly different cron syntax so be careful if you want to change these
+services_scheduler_up = "cron(0 14 ? * MON-FRI *)"
+services_scheduler_down = "cron(0 2 ? * TUE-SAT *)"
 
 # Provide proxy address if your network configuration requires it
-http_proxy = ""
-https_proxy = ""
-no_proxy = ""
+# http_proxy = ""
+# https_proxy = ""
+# no_proxy = ""
