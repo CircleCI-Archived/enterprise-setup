@@ -1,0 +1,1537 @@
+# TODOs
+#
+# == SubnetMode doesn't work
+#
+# The setting works fine from an EC2 perspective - but the get_replicated.sh
+# script suddenly requires user-input when it sees a public IPv4 address. Need
+# to track down how to resolve this.
+#
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  A fully CloudFormation based stack for managing CircleCI Enterprise 2.0
+
+Parameters:
+  ## General Configuration Parameters ##
+  SSHKeyName:
+    Type: String
+    Description: |
+      The name of the SSH KeyPair that will grant you access into
+      the Services/Builder boxes.
+
+  SecretPassphrase:
+    Type: String
+    NoEcho: True
+    Description: |
+      This is the secret passphrase that will be used between the Services and
+      Builder boxes to authenticate each other. This should be reasonably
+      private, but the Services/Builder boxes will be on a private Security
+      Group too that helps keep them privately connected.
+
+  UserCidr:
+    Type: String
+    Description: |
+      The IP Range to allow user and robot (webhook) inbound access to the
+      CircleCI services from. This includes SSH access to the individual builds
+      when appropriate.
+
+  AdminCidr:
+    Type: String
+    Description: |
+      The IP range to allow administrative access to the hosts and management
+      console from. This includes SSH access to the Services and Builder boxes.
+
+  BuilderBoxSpotPrice:
+    Type: String
+    Default: '0'
+    Description: |
+      If this is set to anything other than 0, this is used as the SpotPrice
+      for the AutoScalingGroup. This means the AutoScalingGroup will be unable
+      to launch instances until its able to bid for servers at this
+      price or lower.
+
+  S3Bucket:
+    Type: String
+    Default: ''
+    Description: |
+      If set, this overrides the default behavior of creating an S3 bucket.
+      Instead, your CircleCI Services Role will be granted access to the bucket
+      name you list here, and the app will be configured with this bucket. This
+      is primarily used if you are migrating from an existing CircleCI setup -
+      a fresh installation should not use this.
+
+  ## Services Box Configuration Parameters ##
+
+  # TODO: Implement
+  # ServicesAmi:
+  #   Type: String
+
+  ServicesBoxName:
+    Type: String
+    Default: circleci-services
+    Description: |
+      The Name to associate with the CircleCI Services box in the EC2 console.
+
+  ServicesBoxPrivateIp:
+    Type: String
+    Default: 'false'
+    Description: |
+      The Private IP Address to assign to the Services box. By setting this,
+      you will ensure that your services box can never be accidentally
+      replaced, and always has a static IP assigned to it. This IP must reside
+      in the $ServicesBoxSubnetID.
+
+  ServicesBoxInstanceType:
+    Type: String
+    Default: m4.2xlarge
+    AllowedValues:
+      - c4.2xlarge
+      - c4.4xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.4xlarge
+
+  ServicesBoxVolumeSize:
+    Type: String
+    Default: '100'
+    Description: |
+      This is the size of the EBS Root Volume for the Services Box.
+
+      NOTE: Changing this will launch a whole new Services Box. If you have
+      explicitly set a ServicesBoxPrivateIp, then this will fail. If you have
+      not, a new box will be launched with a fresh volume - but the stack
+      update will still throw an error about disabling Termination Protection
+      on the original box.
+
+  ServicesBoxSnapshots:
+    Type: String
+    Default: '7'
+    Description: |
+      Enable automatic EBS snapshots (daily) of the Services Box root volume.
+      This is managed by an Amazon-supplied automatic EBS snapshot
+      CloudFormation stack. Set this to the number of daily snapshots you want
+      to keep in your account. Set this to 0 to disable snapshotting.
+
+      Usage: To use one of these snapshots, you must first turn them into an
+      AMI ID, and then supply a custom AMI Id to the stack.
+
+  ServicesBoxSnapshotRate:
+    Type: String
+    Default: day
+    AllowedValues:
+      - hour
+      - day
+      - week
+    Description: |
+      How frequently should we take snapshots - hourly, daily or weekly?
+
+  ## Management of the CircleCI 1.xx builder boxes
+  1xxBuilderBoxMinimum:
+    Type: String
+    Default: '1'
+    Description: |
+      Count of the minimum number of Builder Boxes to run at any given time.
+
+  1xxBuilderBoxMaximum:
+    Type: String
+    Default: '6'
+    Description: |
+      Count of the maximum number of builder boxes to run at any given time -
+      this will be reached based on a simple autoscaling policy. If you set
+      this to 0, then no builder boxes or autoscaling groups will be created at
+      all.
+
+  1xxBuilderBoxScaleUpSchedule:
+    Type: String
+    Default: '0 13 * * 1,2,3,4,5'
+    Description: |
+      A cron-formatted schedule for scaling the cluster up. When this is
+      triggered, the cluster will have its DesiredCount set to
+      $1xxBuilderBoxMaximum.
+
+      Set this to '' to disable auto scaling.
+
+  1xxBuilderBoxScaleDownSchedule:
+    Type: String
+    Default: '0 3 * * 2,3,4,5,6'
+    Description: |
+      A cron-formatted schedule for scaling the cluster up. When this is
+      triggered, the cluster will have its DesiredCount set to
+      $1xxBuilderBoxMinimum.
+
+  1xxBuilderBoxInstanceType:
+    Type: String
+    Default: r3.2xlarge
+    AllowedValues:
+      - m3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+
+  ## Management of the CircleCI 2.xx builder boxes
+  2xxBuilderBoxMinimum:
+    Type: String
+    Default: '1'
+    Description: |
+      Count of the minimum number of Builder Boxes to run at any given time.
+
+  2xxBuilderBoxMaximum:
+    Type: String
+    Default: '6'
+    Description: |
+      Count of the maximum number of builder boxes to run at any given time -
+      this will be reached based on a simple autoscaling policy. If you set
+      this to 0, then no builder boxes or autoscaling groups will be created at
+      all.
+
+  2xxBuilderBoxScaleUpSchedule:
+    Type: String
+    Default: '0 13 * * 1,2,3,4,5'
+    Description: |
+      A cron-formatted schedule for scaling the cluster up. When this is
+      triggered, the cluster will have its DesiredCount set to
+      $2xxBuilderBoxMaximum.
+
+      Set this to '' to disable auto scaling.
+
+  2xxBuilderBoxScaleDownSchedule:
+    Type: String
+    Default: '0 3 * * 2,3,4,5,6'
+    Description: |
+      A cron-formatted schedule for scaling the cluster up. When this is
+      triggered, the cluster will have its DesiredCount set to
+      $2xxBuilderBoxMinimum.
+
+  2xxBuilderBoxInstanceType:
+    Type: String
+    Default: r3.2xlarge
+    AllowedValues:
+      - m3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+
+  ## Networking Configuration Parameters ##
+  SubnetIds:
+    Type: 'List<AWS::EC2::Subnet::Id>'
+    Description: |
+      A list of SubnetIDs that the Services Box and Builder Boxes can be
+      launched into. Note, the Services Box will be launched into the _first_
+      SubnetID listed here - so do not change the first item after creation of
+      the stack, or you may re-create your services box from scratch!
+
+  SubnetMode:
+    Type: String
+    Default: private
+    Description: |
+      Whether or not the subnets are Private or Public. If they are Public,
+      then the Services Box and Builder Boxes will be built with associated
+      public IP addresses. The Services Box will be given a static IP address
+      (managed by this stack) as well.
+    AllowedValues:
+      - public
+      - private
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC ID that your Services Box and Builders will launch in
+
+Conditions:
+  DontMapPrivateIp:
+    Fn::Equals: [{Ref: ServicesBoxPrivateIp}, 'false']
+
+  SubnetsArePublic:
+    Fn::Equals: [{Ref: SubnetMode}, 'public']
+
+  CreateSnapshots:
+    Fn::Not:
+      - Fn::Equals: [{Ref: ServicesBoxSnapshots}, '0']
+
+  CreateS3Bucket:
+    Fn::Equals: [{Ref: S3Bucket}, '']
+
+  Create1xxBuilderBoxes:
+    Fn::Not:
+      - Fn::Equals: [{Ref: 1xxBuilderBoxMaximum}, '0']
+
+  Create2xxBuilderBoxes:
+    Fn::Not:
+      - Fn::Equals: [{Ref: 2xxBuilderBoxMaximum}, '0']
+
+  UseSpotPricing:
+    Fn::Not:
+      - Fn::Equals: [{Ref: BuilderBoxSpotPrice}, '0']
+
+  1xxUseAutoScaling:
+    Fn::And:
+      - Fn::Not: ['Fn::Equals': [{Ref: 1xxBuilderBoxScaleUpSchedule}, '']]
+      - Fn::Not: ['Fn::Equals': [{Ref: 1xxBuilderBoxMaximum}, '0']]
+
+  2xxUseAutoScaling:
+    Fn::And:
+      - Fn::Not: ['Fn::Equals': [{Ref: 2xxBuilderBoxScaleUpSchedule}, '']]
+      - Fn::Not: ['Fn::Equals': [{Ref: 2xxBuilderBoxMaximum}, '0']]
+
+Mappings:
+  Regions:
+    ap-northeast-1:
+      AMI: ami-0a16e26c
+    ap-northeast-2:
+      AMI: ami-ed6fb783
+    ap-southeast-1:
+      AMI: ami-5929b23a
+    ap-southeast-2:
+      AMI: ami-40180023
+    eu-central-1:
+      AMI: ami-488e2727
+    eu-west-1:
+      AMI: ami-a142b2d8
+    sa-east-1:
+      AMI: ami-ec1b6a80
+    us-east-1:
+      AMI: ami-845367ff
+    us-east-2:
+      AMI: ami-1680a373
+    us-west-1:
+      AMI: ami-5185ae31
+    us-west-2:
+      AMI: ami-103fdc68
+
+Resources:
+
+
+  #############################################################################
+  # Create a dedicated S3 bucket where we will store all CircleCI artifacts
+  # and build logs.
+  #############################################################################
+  Bucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateS3Bucket
+    Metadata:
+      CreateS3Bucket: CreateS3Bucket
+    Properties:
+      # BucketName: Unset intentionally
+      # MetricsConfigurations: Unused
+      # NotificationConfiguration: Unused
+      # ReplicationConfiguration: Unused
+      #
+      AccessControl: BucketOwnerFullControl
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: ['GET']
+            AllowedOrigins: ['*']
+            MaxAge: 3600
+
+      # Never ever lose anything - even if someone deletes something.
+      VersioningConfiguration:
+        Status: Enabled
+
+      # LifecycleConfiguration: TODO, figure out if Circle will be OK with glacier
+      # LoggingConfiguraiton: TODO, make this optional
+
+  #############################################################################
+  # This queue is used to help trigger specific actions on the CircleCI master
+  # during builder box shutdowns
+  #############################################################################
+  Queue:
+    Type: AWS::SQS::Queue
+
+  #############################################################################
+  # Create a CircleCI security group specifically for the builders and the
+  # services box. This group will allow Services<->Builder communication, and
+  # will allow the supplied IP Range to access the Services/Builer boxes on
+  # the appropriate ports.
+  #############################################################################
+  ServicesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: CircleCI Services Sercurity Group
+      VpcId: {Ref: VpcId}
+
+  1xxBuildersSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: CircleCI Builders Security Group for classic 1.xx builders
+      VpcId: {Ref: VpcId}
+
+  2xxBuildersSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: CircleCI Builders Security Group for newer 2.xx builders
+      VpcId: {Ref: VpcId}
+
+  VmMachinesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: VMs allocated by CircleCI Services Box
+      VpcId: {Ref: VpcId}
+
+  # If you run multiple Services boxes, then they need to be able to
+  # communicate with each other on port 443.
+  ServicesBoxMasterToMasterCommunication:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 443
+      ToPort: 443
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  # CircleCI 1.xx builders talk to the Services box on a ton of ports - direct
+  # Mongo and POstgres access to name a few. We open access inbetween the 1.xx
+  # Builders and Services entirely.
+  Ingress1xxBuildersToServices:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 0
+      ToPort: 0
+      IpProtocol: '-1'
+      SourceSecurityGroupId: {'Fn::GetAtt': 1xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+  IngressServicesToBuilders:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 0
+      ToPort: 0
+      IpProtocol: '-1'
+      GroupId: {'Fn::GetAtt': 1xxBuildersSecurityGroup.GroupId}
+      SourceSecurityGroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  # CircleCI 1.xx builders need to talk directly to the other builders on a ton
+  # of ports. The model here is that 1.xx Builders can talk directly to any
+  # other 1.xx Builder on any port.
+  Ingress1xxBuildersToBuilders:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 0
+      ToPort: 0
+      IpProtocol: '-1'
+      SourceSecurityGroupId: {'Fn::GetAtt': 1xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': 1xxBuildersSecurityGroup.GroupId}
+
+  # The CircleCI 2.x Services server has the ability to launch an Amazon EC2
+  # instance and keep it running as a dedicated Docker endpoint. This allows
+  # communication to the Docker daemon on that host. This feature is only
+  # available to CircleCI 2.0 style jobs, so only valuable for the CircleCI
+  # 2.xx builders.
+  Ingress2xxBuildersToDocker:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 2376
+      ToPort: 2376
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': VmMachinesSecurityGroup.GroupId}
+  Ingress2xxBuildersToDockerSSHAccess:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 54782
+      ToPort: 54782
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': VmMachinesSecurityGroup.GroupId}
+
+  # It seems reasonable that on the Docker Endpoint host, you may run your
+  # container and want to actually communicate with it. I believe that we will
+  # need wide open access to allow for that.
+  #
+  # This rule is held out separately from the other rules because we may remove
+  # it in the future if we find we don't need it.
+  Ingress2xxBuildersToDockerAllPorts:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 0
+      ToPort: 65535
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': VmMachinesSecurityGroup.GroupId}
+
+  # 2.xx Builders -> Services: Cluster Communication
+  Ingress2xxBuildersToServicesOutputProcessor:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 8585
+      ToPort: 8585
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+  Ingress2xxBuildersToServicesNomad:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 4647
+      ToPort: 4647
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  # 2.xx Services -> Builders: Cluster Communication
+  IngressServicesTo2xxBuildersNomadClustering:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 4646
+      ToPort: 4648
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+  Ingress2xxBuildersTo2xxBuildersNomadClustering:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 4646
+      ToPort: 4648
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+
+  IngressVmMachinesToBuildAgent:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 3001
+      ToPort: 3001
+      IpProtocol: tcp
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+      SourceSecurityGroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+
+  # The Services box has to SSH into the VM Machine hosts to finish their
+  # setup after they boot.
+  IngressServicesToDockerSSH:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 22
+      ToPort: 22
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': VmMachinesSecurityGroup.GroupId}
+
+  # When spinning up a remote Docker agent, the vm-service app on the Services
+  # needs to be able to hit the Docker daemon.
+  IngressServicesToDocker:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 2376
+      ToPort: 2376
+      IpProtocol: tcp
+      SourceSecurityGroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+      GroupId: {'Fn::GetAtt': VmMachinesSecurityGroup.GroupId}
+
+  ## Admin-level access into the host SSH ports, management console, etc.
+  AdminIngressSSHServices:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 22
+      ToPort: 22
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  AdminIngressSSH1xxBuilders:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 22
+      ToPort: 22
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': 1xxBuildersSecurityGroup.GroupId}
+
+  AdminIngressSSH2xxBuilders:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 22
+      ToPort: 22
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+
+  AdminIngressHTTP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 80
+      ToPort: 80
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  AdminIngressHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 443
+      ToPort: 443
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  AdminIngressMgmt:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 8800
+      ToPort: 8800
+      IpProtocol: tcp
+      CidrIp: {Ref: AdminCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  ## User-level access into the baisc web ports and for SSH into builds
+  UserIngressHTTP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 80
+      ToPort: 80
+      IpProtocol: tcp
+      CidrIp: {Ref: UserCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  UserIngressHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 443
+      ToPort: 443
+      IpProtocol: tcp
+      CidrIp: {Ref: UserCidr}
+      GroupId: {'Fn::GetAtt': ServicesSecurityGroup.GroupId}
+
+  # Users -> 1.xx SSH Build Access
+  UserIngressSSHto1xxBuilders:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 64535
+      ToPort: 65535
+      IpProtocol: tcp
+      CidrIp: {Ref: UserCidr}
+      GroupId: {'Fn::GetAtt': 1xxBuildersSecurityGroup.GroupId}
+
+  # Users -> 2.xx SSH Build Access
+  UserIngressSSHto2xxBuilders:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 64535
+      ToPort: 65535
+      IpProtocol: tcp
+      CidrIp: {Ref: UserCidr}
+      GroupId: {'Fn::GetAtt': 2xxBuildersSecurityGroup.GroupId}
+
+  #############################################################################
+  # Create the Services Box - this is the main management box that users and
+  # github triggers interact with. This box gets its own IAM Role, Instance
+  # Profile and EBS-backed Root volume.
+  #############################################################################
+
+  # This is the role for the Services box - this role will give the server
+  # permission to publish CloudWatch metrics, and manage S3 buckets for log and
+  # artifact storage.
+  ServicesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: {'Fn::Sub': '${AWS::StackName}-ServicesRole'}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      Policies:
+        # Full access to the S3 bucket where artifacts, build logs,
+        # and build caches are stored.
+        - PolicyName: ReadWriteAccessToS3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - s3:*
+                Effect: Allow
+                Resource:
+                  Fn::If:
+                    - CreateS3Bucket
+                    - - {'Fn::Join': ['', ['arn:aws:s3:::', {Ref: Bucket}, '*']]}
+                      - {'Fn::Join': ['', ['arn:aws:s3:::', {Ref: Bucket}, '*/*']]}
+                    - - {'Fn::Sub': 'arn:aws:s3:::${S3Bucket}*'}
+                      - {'Fn::Sub': 'arn:aws:s3:::${S3Bucket}*/*'}
+
+        # Full access to the SQS queue that will handle Shutdown Event
+        # notifications from the AutoScalingGroup of our builders. This
+        # helps CircleCI know when an instance is shutting down.
+        - PolicyName: ShutdownQueueAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - sqs:*
+                Effect: Allow
+                Resource:
+                - {'Fn::GetAtt': Queue.Arn}
+
+        # Access to monitor the various build boxes, the costs, etc. Also
+        # send Cloudwatch metrics back for us to monitor.
+        - PolicyName: ReadAndPublishMetrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - ec2:Describe*
+                - ec2:CreateTags
+                - cloudwatch:*
+                - iam:GetUser
+                - autoscaling:CompleteLifecycleAction
+                Effect: Allow
+                Resource:
+                - '*'
+
+        # Allow the Services box to launch a dedicated Docker daemon server
+        - PolicyName: RunInstancesOnDemand
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - ec2:RunInstances
+                - ec2:CreateTags
+                Effect: Allow
+                Resource: {'Fn::Sub': 'arn:aws:ec2:${AWS::Region}:*'}
+
+        # Allow the Services box to terminate instances that its launched, as
+        # well as instances that were launched by the 1xxBuilderBoxASG. This
+        # allows CircleCI to control the instances when they are no longer
+        # needed.
+        - PolicyName: TerminateMyOwnInstances
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - ec2:TerminateInstances
+                - ec2:StopInstances
+                Effect: Allow
+                Resource: {'Fn::Sub': 'arn:aws:ec2:${AWS::Region}:*'}
+                Condition:
+                  StringEquals: {'ec2:ResourceTag/ManagedBy': 'circleci-vm-service'}
+
+        # 2.xx builders don't get the IAM Instance Profile - instead, each
+        # individual Docker-based build gets a set of STS:AssumeRole granted
+        # permissions to the same IAM role. This circular reference allows the
+        # IAM Role to grant temporary tokens to its builders for the same role.
+        - PolicyName: 2xxBuildersAccessToAWSResources
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - sts:AssumeRole
+                Effect: Allow
+                Resource:
+                  - {'Fn::Sub': 'arn:aws:iam::*:role/${AWS::StackName}-ServicesRole'}
+
+  ServicesProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [{Ref: ServicesRole}]
+
+  ServicesBox:
+    Type: AWS::EC2::Instance
+
+    # Wait up to 20 minutes for this host to signal that its fully built..
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT20M
+
+    Metadata:
+      CreateSnapshots: CreateSnapshots
+
+      # The UserData script will call cfn-init, which will initialize these
+      # files on the host before setting up the Replicated daemon.
+      AWS::CloudFormation::Init:
+        config:
+          files:
+            /var/lib/replicated/circle-config/circle_secret_passphrase:
+              content: {Ref: SecretPassphrase}
+            /var/lib/replicated/circle-config/sqs_queue_url:
+              content: {Ref: Queue}
+            /var/lib/replicated/circle-config/s3_bucket:
+              content:
+                Fn::If:
+                  - CreateS3Bucket
+                  - {Ref: Bucket}
+                  - {Ref: S3Bucket}
+            /var/lib/replicated/circle-config/aws_region:
+              content: {Ref: 'AWS::Region'}
+            /var/lib/replicated/circle-config/subnet_id:
+              content : {'Fn::Select': [0, {Ref: SubnetIds}]}
+            /var/lib/replicated/circle-config/vm_sg_id:
+              content: {Ref: VmMachinesSecurityGroup}
+
+    DependsOn:
+      - ServicesProfile
+      - ServicesSecurityGroup
+      - 1xxBuildersSecurityGroup
+      - 2xxBuildersSecurityGroup
+      - VmMachinesSecurityGroup
+
+    Properties:
+      # Don't set any Host Affinity config - the whole thing is EBS backed, so
+      # it can move to any underlying Amazon host.
+      # Affinity: false
+      # HostId: Not used, no host-affinity config
+      # AvailabilityZone: Not used, instead, selection is made via the SubnetId
+      # NetworkInterfaces: Unused
+      # PlacementGroupName: Unused
+      # RamdiskId: Unused
+      # SecurityGroups: Unused, use SecurityGroupIds instead
+      # SsmAssociations: Unused
+      # Volumes: Unused, we use a full root volume on EBS
+
+      # Make this really really hard to terminate.
+      DisableApiTermination: true
+
+      # The root volume is EBS backed, so yes, we want the fastest possible EBS
+      # storage speed.
+      EbsOptimized: true
+
+      # We use an IAM Instance Profile to get credentials to our Services Box.
+      # This way we don't have to configure IAM Users, Access Keys, etc.
+      IamInstanceProfile: {Ref: ServicesProfile}
+
+      # Ensure that its really hard to terminate this host. This setting
+      # protects the host so that an accidental stack chagne that would replace
+      # the instance will simply fail. This can be manually overridden by going
+      # in and explicitly disabling the API Termination Protection in the
+      # Amazon UI.
+      InstanceInitiatedShutdownBehavior: stop
+
+      # Basic instance hardware config
+      ImageId: {'Fn::FindInMap': [Regions, {Ref: 'AWS::Region'}, AMI]}
+      InstanceType: {Ref: ServicesBoxInstanceType}
+      KeyName: {Ref: SSHKeyName}
+      Monitoring: true
+
+      NetworkInterfaces:
+        # If the Subnets are marked as Public, then go ahead and associate a
+        # Public IPV4 address. Otherwise, don't.
+        - AssociatePublicIpAddress:
+            Fn::If:
+              - SubnetsArePublic
+              - True
+              - False
+
+          # If the user supplied a private IP, then use it -- otherwise we let EC2
+          # pick a random one.
+          PrivateIpAddress:
+            Fn::If:
+              - DontMapPrivateIp
+              - {Ref: 'AWS::NoValue'}
+              - {Ref: ServicesBoxPrivateIp}
+
+          DeleteOnTermination: True
+          DeviceIndex: 0
+
+          # Pick the first subnet in the list of subnets supplied
+          SubnetId: {'Fn::Select': [0, {Ref: SubnetIds}]}
+
+          # Map our security group to the Services host. In the future, we'll
+          # support allowing users to add their own security group to this list as
+          # well.
+          GroupSet:
+            - {Ref: ServicesSecurityGroup}
+
+      SourceDestCheck: false
+      Tenancy: default
+
+      # Map the Root volume to an EBS volume - do NOT Delete it on Termination.
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: {Ref: ServicesBoxVolumeSize}
+            DeleteOnTermination: false
+
+      Tags:
+        - Key: Name
+          Value: {Ref: ServicesBoxName}
+
+      # Installs the Replicated agent on the host. This is a slightly modified
+      # version of https://github.com/circleci/enterprise-setup/blob/master/templates/services_user_data.tpl
+      UserData:
+        Fn::Base64:
+          Fn::Sub: |
+            #!/bin/bash
+            set -exu
+            REPLICATED_VERSION="2.10.3"
+
+            echo '-------------------------------------------'
+            echo '     Performing System Updates'
+            echo '-------------------------------------------'
+            apt-get update && apt-get -y upgrade
+
+            echo '-------------------------------------------'
+            echo '     Installing CloudFormation Helpers'
+            echo '-------------------------------------------'
+            mkdir -p /tmp/cfn-helper
+            apt-get install -y python-setuptools
+            curl -sSk https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | \
+              tar -zx -C /tmp/cfn-helper --strip-components 1
+            easy_install /tmp/cfn-helper
+            cfn-init --region ${AWS::Region} --resource ServicesBox --stack ${AWS::StackName}
+
+            echo '--------------------------------------------'
+            echo '       Setting Private IP'
+            echo '--------------------------------------------'
+            export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+            export MAC="$(/sbin/ifconfig eth0 | grep 'HWaddr' | awk '{print $5}')"
+            export METADATA=http://169.254.169.254/latest/meta-data
+            export SUBNET_ID=$(curl -sSk $METADATA/network/interfaces/macs/$MAC/subnet-id)
+
+            echo "--------------------------------------"
+            echo "        Installing Docker"
+            echo "--------------------------------------"
+            apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
+            apt-get install -y apt-transport-https ca-certificates curl
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            apt-get update
+            apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+
+            echo '--------------------------------------------'
+            echo '          Download Replicated'
+            echo '--------------------------------------------'
+            curl -sSk -o /tmp/get_replicated.sh "https://get.replicated.com/docker?replicated_tag=$REPLICATED_VERSION&replicated_ui_tag=$REPLICATED_VERSION&replicated_operator_tag=$REPLICATED_VERSION"
+
+            echo '--------------------------------------------'
+            echo '       Installing Replicated'
+            echo '--------------------------------------------'
+            sleep 3
+            bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy no-docker
+
+            echo "-------------------------------------------"
+            echo "           Signaling CloudFormation"
+            echo "-------------------------------------------"
+            cfn-signal --region ${AWS::Region} --resource ServicesBox --success true --stack ${AWS::StackName}
+
+  #############################################################################
+  # Optionally create a Lambda execution role and function for Snapshotting
+  # the CircleCI Services box automatically.
+  #############################################################################
+  SnapshotExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: CreateSnapshots
+    Metadata:
+      CreateSnapshots: CreateSnapshots
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ManageEBSSnapshots
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: DiscoverEC2Instances
+                Effect: Allow
+                Action:
+                  - ec2:Describe*
+                Resource: ['*']
+              - Sid: ManageSnapshots
+                Effect: Allow
+                Action:
+                  - ec2:CreateTags
+                  - ec2:CreateSnapshot
+                  - ec2:DeleteSnapshot
+                Resource: ['*']
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: [lambda.amazonaws.com]}
+            Action: ['sts:AssumeRole']
+
+  SnapshotFunction:
+    Type: AWS::Lambda::Function
+    Condition: CreateSnapshots
+    Metadata:
+      CreateSnapshots: CreateSnapshots
+    Properties:
+      Handler: index.handler
+      Role: {'Fn::GetAtt': SnapshotExecutionRole.Arn}
+      Runtime: python2.7
+      Timeout: 30
+      Code:
+        ZipFile:
+          Fn::Sub: |
+            import boto3
+            import cfnresponse
+            import json
+
+            ec2 = boto3.resource('ec2')
+
+            def handler(event, context):
+              # Parse the inbound event and figure out our instance IDs, names
+              # and counts.
+              instance_id = event.get('instance_id')
+              instance_name = event.get('instance_name')
+              count = int(event.get('count'))
+
+              # Get our instance and find its root volume ID
+              instances = list(ec2.instances.filter(
+                  Filters=[{'Name': 'instance-id', 'Values': [instance_id]}]))
+              instance = instances[0]
+              volume_id = instance.block_device_mappings[0]['Ebs']['VolumeId']
+              print('Found Instance %s Volume: %s' % (instance_id, volume_id))
+
+              # Take a snapshot and tag it
+              snapshot = ec2.create_snapshot(
+                  VolumeId=volume_id,
+                  Description='%s - %s' % (instance_id, instance_name))
+              snapshot.create_tags(
+                  Resources=[snapshot.id],
+                  Tags=[{'Key': 'Name',
+                         'Value': '%s-%s' % (instance_id, instance_name)}])
+              print('Created Snapshot ID %s' % snapshot.id)
+
+              # Discover a full list of snapshots now based on this Volume ID.
+              # Sort the list based on when they were taken.
+              snapshots = ec2.snapshots.filter(
+                  Filters=[{'Name': 'volume-id',
+                            'Values': [volume_id]}]).all()
+              snapshots = sorted(snapshots, key=lambda ss:ss.start_time)
+              snapshot_ids = map(lambda ss:ss.id, snapshots)
+              images = ec2.images.filter(
+                  Filters=[{'Name': 'block-device-mapping.snapshot-id',
+                            'Values': snapshot_ids}])
+
+              # Figure out if any of these snapshot IDs are in use - if they
+              # are, we don't ever purge them.
+              used_snapshot_ids = []
+              for image in images:
+                for mapping in image.block_device_mappings:
+                  used_snapshot_ids.append(mapping['Ebs']['SnapshotId'])
+                  print('Snapshot ID %s is in use, skipping' % mapping['Ebs']['SnapshotId'])
+
+              # Ok, purge the old snapshots
+              snapshots = filter(lambda ss:ss.id not in used_snapshot_ids, snapshots)
+              to_be_deleted = len(snapshots) - count
+              for ss in snapshots[:to_be_deleted]:
+                print('Deleting old snapshot with ID %s ...' % ss.id)
+                ss.delete()
+
+  SnapshotCron:
+    Type: AWS::Events::Rule
+    Condition: CreateSnapshots
+    Metadata:
+      CreateSnapshots: CreateSnapshots
+      ServicesBoxSnapshotRate: ServicesBoxSnapshotRate
+    DependsOn:
+      - SnapshotFunction
+      - ServicesBox
+    Properties:
+      Description: {'Fn::Sub': 'Automated Snapshots for ${ServicesBoxName}'}
+      ScheduleExpression: {'Fn::Sub': 'rate(1 ${ServicesBoxSnapshotRate})'}
+      Targets:
+        - Arn: {'Fn::GetAtt': SnapshotFunction.Arn}
+          Id: SnapshotFunction
+          Input:
+            Fn::Sub: |
+              {"instance_id": "${ServicesBox}",
+               "instance_name": "${ServicesBoxName}",
+               "count": ${ServicesBoxSnapshots}}
+
+  SnapshotPermission:
+    Type: AWS::Lambda::Permission
+    Condition: CreateSnapshots
+    DependsOn:
+      - SnapshotFunction
+      - SnapshotCron
+    Properties:
+      FunctionName: {Ref: SnapshotFunction}
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: {'Fn::GetAtt': SnapshotCron.Arn}
+
+  #############################################################################
+  # Optionally create an AutoScalingGroup for our Builder Boxes with a cron
+  # based schedule for scaling up and down.
+  #############################################################################
+
+  1xxBuilderBoxLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Condition: Create1xxBuilderBoxes
+    Metadata:
+      Create1xxBuilderBoxes: Create1xxBuilderBoxes
+
+    DependsOn:
+      - ServicesBox
+    Properties:
+      # ClassicLinkVPCId: Unused
+      # ClassicLinkVPCSecurityGroups: Unused
+      # KernelId: Unused
+      # RamDiskId: Unused
+
+      # While we do use EBS for the root volume, its not necessary for these to
+      # be EBS optimized. On smaller instances, they'll operate just fine. On
+      # the large instances, they are automatically optimized.
+      EbsOptimized: false
+
+      # If the Subnets are marked as Public, then go ahead and associate a
+      # Public IPV4 address. Otherwise, don't.
+      #
+      AssociatePublicIpAddress:
+        Fn::If:
+          - SubnetsArePublic
+          - True
+          - False
+
+      # Map an EBS volume to the hosts on bootup, and use GP2 storage. Note,
+      # thse DO get deleted on termination because these builder boxes are
+      # ephemeral.
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: 30  # 1.xx Builders use /mnt (local ephemeral storage)
+            DeleteOnTermination: True
+
+      # This is the same IAM InstanceProfile as the Services box gets.
+      IamInstanceProfile: {Ref: ServicesProfile}
+
+      # Basic instance hardware config
+      ImageId: {'Fn::FindInMap': [Regions, {Ref: 'AWS::Region'}, AMI]}
+      InstanceType: {Ref: 1xxBuilderBoxInstanceType}
+      KeyName: {Ref: SSHKeyName}
+      InstanceMonitoring: true
+
+      # Map our security group to the Services host. In the future, we'll
+      # support allowing users to add their own security group to this list as
+      # well.
+      SecurityGroups:
+        - {Ref: 1xxBuildersSecurityGroup}
+
+      # Optionally configure SpotPrice for the ASG:
+      SpotPrice:
+        Fn::If:
+          - UseSpotPricing
+          - {Ref: BuilderBoxSpotPrice}
+          - {Ref: 'AWS::NoValue'}
+
+      # Modified version of:
+      # https://github.com/circleci/enterprise-setup/blob/master/templates/builders_user_data.tpl
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+            - ""
+            - - "#!/bin/bash\n"
+              - "set -exu\n"
+
+              # These variables have to be retrieved from live resources that
+              # were created above -- so we have to use this funky Fn::Join
+              # mechanism to get them into the User Data.
+              - "export SERVICES_PRIVATE_IP="
+              - {'Fn::GetAtt': ServicesBox.PrivateIp}
+              - "\n"
+
+              # The rest of this is pretty static, or has easy Ref variables
+              # that can be swapped in.
+              - Fn::Sub: |
+                  echo '-------------------------------------------'
+                  echo '     Performing System Updates'
+                  echo '-------------------------------------------'
+                  apt-get update && apt-get -y upgrade
+
+                  echo '-------------------------------------------'
+                  echo '     Installing CloudFormation Helpers'
+                  echo '-------------------------------------------'
+                  mkdir -p /tmp/cfn-helper
+                  apt-get install -y python-setuptools
+                  curl -sSk https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | \
+                    tar -zx -C /tmp/cfn-helper --strip-components 1
+                  easy_install /tmp/cfn-helper
+                  cfn-init --region ${AWS::Region} --resource 1xxBuilderBoxASG --stack ${AWS::StackName}
+
+                  echo "-------------------------------------------"
+                  echo "    Legacy 1.xx Builder Install"
+                  echo "-------------------------------------------"
+
+                  # The init-builder-0.2.sh script tries to move /mnt out of
+                  # the way.. need to ensure its not mounted at all, which
+                  # Ubuntu sometimes does.
+                  umount -f /mnt || true
+
+                  #apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | bash
+                  #
+                  # Note: Small patch here because there's a weird GPG issue going on. Use --force-yes to avoid it.
+                  apt-cache policy | grep circle || curl https://s3.amazonaws.com/circleci-enterprise/provision-builder.sh | \
+                    sed 's/apt-get install -y /apt-get install -y --force-yes /g' | bash -x
+
+                  curl https://s3.amazonaws.com/circleci-enterprise/init-builder-0.2.sh | \
+                      CIRCLE_CONTAINER_MEMORY_LIMIT=30G \
+                      CIRCLE_CONTAINER_CPUS=0 \
+                      CIRCLE_NUM_CONTAINERS=8 \
+                      SERVICES_PRIVATE_IP=$SERVICES_PRIVATE_IP \
+                      CIRCLE_SECRET_PASSPHRASE='${SecretPassphrase}' \
+                      bash -x
+
+                  echo "-------------------------------------------"
+                  echo "           Signaling CloudFormation"
+                  echo "-------------------------------------------"
+                  cfn-signal --region ${AWS::Region} --resource 1xxBuilderBoxASG --success true --stack ${AWS::StackName}
+
+  1xxBuilderBoxASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Condition: Create1xxBuilderBoxes
+    Metadata:
+      Create1xxBuilderBoxes: Create1xxBuilderBoxes
+    DependsOn:
+      - 1xxBuilderBoxLC
+
+    # Wait up to 15m for the first Builder box to come up, If it doesn't,
+    # trigger a failure.
+    CreationPolicy:
+      ResourceSignal:
+        Count: {Ref: 1xxBuilderBoxMinimum}
+        Timeout: PT15M
+
+    # Ensure that if the LaunchConfiguration is changed, then we replace all of
+    # the instances in the AutoScalingGroup.
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
+
+    Properties:
+      # AvailabilityZones: Unused
+      # HealthCheckType: Unused
+      # HealthCheckGracePeriod: Unused
+      # InstanceId: Unused
+      # LoadBalancerNames: Unused
+      # TargetGroupARNs: Unused
+      # NotificationConfigurations: Unused
+      # PlacementGroup: Unused
+
+      # Basic hardware config
+      LaunchConfigurationName: {Ref: 1xxBuilderBoxLC}
+      DesiredCapacity: {Ref: 1xxBuilderBoxMaximum}
+      MaxSize: {Ref: 1xxBuilderBoxMaximum}
+      MinSize: {Ref: 1xxBuilderBoxMinimum}
+      VPCZoneIdentifier: {Ref: SubnetIds}
+      TerminationPolicies:
+       - ClosestToNextInstanceHour
+       - Default
+
+      # Wait at least 5 minutes after any cooldown before making more actions
+      Cooldown: 300
+
+      # Collect scaling metrics about the cluster
+      MetricsCollection:
+        - Granularity: 1Minute
+
+      Tags:
+        - Key: Name
+          Value: {'Fn::Sub': '${ServicesBoxName}_1xx_builder'}
+          PropagateAtLaunch: True
+
+        # This tag specifically allows the Services Box to issue EC2 Terminate
+        # calls to the API and terminate its own builders. This is done in
+        # conjunction with the Shutdown Queue.
+        - Key: ManagedBy
+          Value: circleci-vm-service
+          PropagateAtLaunch: True
+
+  # When an ASG decides to shut a host down (say, a spot instance pricing issue
+  # .. or an auto scaling event), we send an SQS Shutdown Hook. CircleCI will
+  # monitor a queue for these hooks, and tell Amazon when the host is ready to
+  # be shut down (all builds finished). This ensures that ASG events don't
+  # interrupt our builds.
+  #
+  # This requires an IAM Role to send the hook, and the lifecycle hook itself.
+  #
+  ShutdownRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - autoscaling.amazonaws.com
+      Policies:
+        - PolicyName: PublishToShutdownQueue
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Action:
+                - sqs:GetQueueUrl
+                - sqs:SendMessage
+              Effect: Allow
+              Resource: [{'Fn::GetAtt': Queue.Arn}]
+
+  1xxBuilderBoxShutdownHook:
+    Type: AWS::AutoScaling::LifecycleHook
+    Condition: Create1xxBuilderBoxes
+    Metadata:
+      Create1xxBuilderBoxes: Create1xxBuilderBoxes
+    DependsOn:
+      - 1xxBuilderBoxASG
+    Properties:
+      # DefaultResult: Unused
+      # NotificationMetadata: Unused
+      AutoScalingGroupName: {Ref: 1xxBuilderBoxASG}
+      HeartbeatTimeout: 3600
+      LifecycleTransition: autoscaling:EC2_INSTANCE_TERMINATING
+      NotificationTargetARN: {'Fn::GetAtt': Queue.Arn}
+      RoleARN: {'Fn::GetAtt': ShutdownRole.Arn}
+
+  # Optionally create cron-based auto scaling actions that scale the Builder
+  # Boxes up and down based on the $1xxBuilderBoxWorkingHours parameter.
+  1xxBuilderBoxScaleUp:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: 1xxUseAutoScaling
+    Properties:
+      AutoScalingGroupName: {Ref: 1xxBuilderBoxASG}
+      DesiredCapacity: {Ref: 1xxBuilderBoxMaximum}
+      Recurrence: {Ref: 1xxBuilderBoxScaleUpSchedule}
+
+  1xxBuilderBoxScaleDown:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: 1xxUseAutoScaling
+    Properties:
+      AutoScalingGroupName: {Ref: 1xxBuilderBoxASG}
+      DesiredCapacity: {Ref: 1xxBuilderBoxMinimum}
+      Recurrence: {Ref: 1xxBuilderBoxScaleDownSchedule}
+
+  #############################################################################
+  # Optionally create an AutoScalingGroup for our Builder Boxes with a cron
+  # based schedule for scaling up and down.
+  #############################################################################
+
+  2xxBuilderBoxLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Condition: Create2xxBuilderBoxes
+    Metadata:
+      Create2xxBuilderBoxes: Create2xxBuilderBoxes
+
+    DependsOn:
+      - ServicesBox
+    Properties:
+      # ClassicLinkVPCId: Unused
+      # ClassicLinkVPCSecurityGroups: Unused
+      # KernelId: Unused
+      # RamDiskId: Unused
+
+      # While we do use EBS for the root volume, its not necessary for these to
+      # be EBS optimized. On smaller instances, they'll operate just fine. On
+      # the large instances, they are automatically optimized.
+      EbsOptimized: false
+
+      # If the Subnets are marked as Public, then go ahead and associate a
+      # Public IPV4 address. Otherwise, don't.
+      #
+      AssociatePublicIpAddress:
+        Fn::If:
+          - SubnetsArePublic
+          - True
+          - False
+
+      # Map an EBS volume to the hosts on bootup, and use GP2 storage. Note,
+      # thse DO get deleted on termination because these builder boxes are
+      # ephemeral.
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: 300  # 2.xx Builders use Docker on the Root Volume
+            DeleteOnTermination: True
+
+      # IamInstanceProfile: This is not used on the Circle 2.xx boxes, instead
+      # the STS:AssumeRole call is used for each build container.
+
+      # Basic instance hardware config
+      ImageId: {'Fn::FindInMap': [Regions, {Ref: 'AWS::Region'}, AMI]}
+      InstanceType: {Ref: 2xxBuilderBoxInstanceType}
+      KeyName: {Ref: SSHKeyName}
+      InstanceMonitoring: true
+
+      # Map our security group to the Services host. In the future, we'll
+      # support allowing users to add their own security group to this list as
+      # well.
+      SecurityGroups:
+        - {Ref: 2xxBuildersSecurityGroup}
+
+      # Optionally configure SpotPrice for the ASG:
+      SpotPrice:
+        Fn::If:
+          - UseSpotPricing
+          - {Ref: BuilderBoxSpotPrice}
+          - {Ref: 'AWS::NoValue'}
+
+      # Modified version of:
+      # https://raw.githubusercontent.com/circleci/enterprise-setup/master/templates/nomad_user_data.tpl
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+            - ""
+            - - "#!/bin/bash\n"
+              - "set -exu\n"
+
+              # These variables have to be retrieved from live resources that
+              # were created above -- so we have to use this funky Fn::Join
+              # mechanism to get them into the User Data.
+              - "export SERVICES_PRIVATE_IP="
+              - {'Fn::GetAtt': ServicesBox.PrivateIp}
+              - "\n"
+
+              # The rest of this is pretty static, or has easy Ref variables
+              # that can be swapped in.
+              - Fn::Sub: |
+                  echo '-------------------------------------------'
+                  echo '     Performing System Updates'
+                  echo '-------------------------------------------'
+                  apt-get update && apt-get -y upgrade
+
+                  echo '-------------------------------------------'
+                  echo '     Installing CloudFormation Helpers'
+                  echo '-------------------------------------------'
+                  mkdir -p /tmp/cfn-helper
+                  apt-get install -y python-setuptools
+                  curl -sSk https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | \
+                    tar -zx -C /tmp/cfn-helper --strip-components 1
+                  easy_install /tmp/cfn-helper
+                  cfn-init --region ${AWS::Region} --resource 2xxBuilderBoxASG --stack ${AWS::StackName}
+
+                  echo "--------------------------------------"
+                  echo "        Installing Docker"
+                  echo "--------------------------------------"
+                  apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
+                  apt-get install -y apt-transport-https ca-certificates curl
+                  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+                  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+                  apt-get update
+                  apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+
+                  echo "--------------------------------------"
+                  echo "   Creating ci-privileged network"
+                  echo "--------------------------------------"
+                  docker network create --driver=bridge --opt com.docker.network.bridge.name=ci-privileged ci-privileged
+
+                  echo "--------------------------------------"
+                  echo "         Installing nomad"
+                  echo "--------------------------------------"
+                  apt-get install -y zip
+                  curl -o nomad.zip https://releases.hashicorp.com/nomad/0.5.6/nomad_0.5.6_linux_amd64.zip
+                  unzip nomad.zip
+                  mv nomad /usr/bin
+                  echo "--------------------------------------"
+                  echo "      Creating config.hcl"
+                  echo "--------------------------------------"
+                  mkdir -p /etc/nomad
+                  cat <<EOT > /etc/nomad/config.hcl
+                  log_level = "DEBUG"
+
+                  data_dir = "/opt/nomad"
+                  datacenter = "us-east-1"
+
+                  client {
+                      enabled = true
+
+                      # Expecting to have DNS record for nomad server(s)
+                      servers = ["$SERVICES_PRIVATE_IP:4647"]
+                      node_class = "linux-64bit"
+                      options = {"driver.raw_exec.enable" = "1"}
+                  }
+                  EOT
+
+                  echo "--------------------------------------"
+                  echo "      Creating nomad.conf"
+                  echo "--------------------------------------"
+                  cat <<EOT > /etc/init/nomad.conf
+                  start on filesystem or runlevel [2345]
+                  stop on shutdown
+
+                  script
+                      exec nomad agent -config /etc/nomad/config.hcl
+                  end script
+                  EOT
+
+                  echo "--------------------------------------"
+                  echo "      Starting Nomad service"
+                  echo "--------------------------------------"
+                  service nomad restart
+
+                  echo "-------------------------------------------"
+                  echo "           Signaling CloudFormation"
+                  echo "-------------------------------------------"
+                  cfn-signal --region ${AWS::Region} --resource 2xxBuilderBoxASG --success true --stack ${AWS::StackName}
+
+  2xxBuilderBoxASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Condition: Create2xxBuilderBoxes
+    Metadata:
+      Create2xxBuilderBoxes: Create2xxBuilderBoxes
+    DependsOn:
+      - 2xxBuilderBoxLC
+
+    # Wait up to 15m for the first Builder box to come up, If it doesn't,
+    # trigger a failure.
+    CreationPolicy:
+      ResourceSignal:
+        Count: {Ref: 2xxBuilderBoxMinimum}
+        Timeout: PT15M
+
+    # Ensure that if the LaunchConfiguration is changed, then we replace all of
+    # the instances in the AutoScalingGroup.
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: true
+
+    Properties:
+      # AvailabilityZones: Unused
+      # HealthCheckType: Unused
+      # HealthCheckGracePeriod: Unused
+      # InstanceId: Unused
+      # LoadBalancerNames: Unused
+      # TargetGroupARNs: Unused
+      # NotificationConfigurations: Unused
+      # PlacementGroup: Unused
+
+      # Basic hardware config
+      LaunchConfigurationName: {Ref: 2xxBuilderBoxLC}
+      DesiredCapacity: {Ref: 2xxBuilderBoxMaximum}
+      MaxSize: {Ref: 2xxBuilderBoxMaximum}
+      MinSize: {Ref: 2xxBuilderBoxMinimum}
+      VPCZoneIdentifier: {Ref: SubnetIds}
+      TerminationPolicies:
+       - ClosestToNextInstanceHour
+       - Default
+
+      # Wait at least 5 minutes after any cooldown before making more actions
+      Cooldown: 300
+
+      # Collect scaling metrics about the cluster
+      MetricsCollection:
+        - Granularity: 1Minute
+
+      Tags:
+        - Key: Name
+          Value: {'Fn::Sub': '${ServicesBoxName}_2xx_builder'}
+          PropagateAtLaunch: True
+
+        # This tag specifically allows the Services Box to issue EC2 Terminate
+        # calls to the API and terminate its own builders. This is done in
+        # conjunction with the Shutdown Queue.
+        - Key: ManagedBy
+          Value: circleci-vm-service
+          PropagateAtLaunch: True
+
+  # Optionally create cron-based auto scaling actions that scale the Builder
+  # Boxes up and down based on the $2xxBuilderBoxWorkingHours parameter.
+  2xxBuilderBoxScaleUp:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: 2xxUseAutoScaling
+    Properties:
+      AutoScalingGroupName: {Ref: 2xxBuilderBoxASG}
+      DesiredCapacity: {Ref: 2xxBuilderBoxMaximum}
+      Recurrence: {Ref: 2xxBuilderBoxScaleUpSchedule}
+
+  2xxBuilderBoxScaleDown:
+    Type: AWS::AutoScaling::ScheduledAction
+    Condition: 2xxUseAutoScaling
+    Properties:
+      AutoScalingGroupName: {Ref: 2xxBuilderBoxASG}
+      DesiredCapacity: {Ref: 2xxBuilderBoxMinimum}
+      Recurrence: {Ref: 2xxBuilderBoxScaleDownSchedule}
