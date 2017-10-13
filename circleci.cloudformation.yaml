@@ -680,13 +680,17 @@ Resources:
                 Resource:
                 - '*'
 
-        # Allow the Services box to launch a dedicated Docker daemon server
+        # Allow the Services box to launch a dedicated Docker daemon server.
+        # EBS Volume control is also granted here - presumably so that the
+        # CircleCI manager can attach static EBS volumes to hosts for storing
+        # Docker images/layers long term between builds.
         - PolicyName: RunInstancesOnDemand
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Action:
                 - ec2:RunInstances
+                - ec2:CreateVolume
                 - ec2:CreateTags
                 Effect: Allow
                 Resource: {'Fn::Sub': 'arn:aws:ec2:${AWS::Region}:*'}
@@ -702,6 +706,9 @@ Resources:
               - Action:
                 - ec2:TerminateInstances
                 - ec2:StopInstances
+                - ec2:AttachVolume
+                - ec2:DetachVolume
+                - ec2:DeleteVolume
                 Effect: Allow
                 Resource: {'Fn::Sub': 'arn:aws:ec2:${AWS::Region}:*'}
                 Condition:
