@@ -33,6 +33,7 @@ sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
 sudo echo 'export no_proxy="${no_proxy}"' >> /etc/default/docker
 sudo service docker restart
+while ! docker info; do echo "Waiting for docker..."; sleep 1; done
 
 echo "-------------------------------------------"
 echo "      Pulling Server Builder Image"
