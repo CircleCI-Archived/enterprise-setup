@@ -62,7 +62,7 @@ Optional vars:
   | nomad_client_instance_type | instance type for the nomad clients. We recommend a XYZ instance | m4.xlarge |
   | max_clients_count | max number of nomad clients | 2 |
   | prefix   | prefix for resource names | circleci |
-  | enable_nomad | provisions a nomad cluster for CCIE v2 | 0 |
+  | enable_nomad | provisions a nomad cluster for CCIE v2 | 1 |
   | enable_ansible_provisioner | enable provisioning of Services box via Ansible | 0 |
   | enable_route | enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
