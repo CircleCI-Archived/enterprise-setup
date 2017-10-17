@@ -13,7 +13,3 @@ circle_secret_passphrase = "..."
 # http_proxy = ""
 # https_proxy = ""
 # no_proxy = ""
-
-services_instance_type = ""
-builder_instance_type = ""
-nomad_client_instance_type = ""
