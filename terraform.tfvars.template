@@ -9,10 +9,10 @@ services_instance_type = "c4.2xlarge"
 builder_instance_type = "r3.4xlarge"
 nomad_client_instance_type = "..."
 
-# Provide proxy address if your network configuration requires it
-http_proxy = ""
-https_proxy = ""
-no_proxy = ""
+# Use this if your network configuration requires proxy addresses
+# http_proxy = ""
+# https_proxy = ""
+# no_proxy = ""
 
 # Use this if you have multiple installations in one AWS region or otherwise want to name your install
 # prefix = "..."
