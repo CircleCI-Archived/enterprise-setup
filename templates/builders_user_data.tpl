@@ -8,7 +8,7 @@ set -exu
 #    CIRCLE_SECRET_PASSPHRASE='${circle_secret_passphrase}' \
 #    bash
 
-BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4"
+BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-1239-04cfc8d"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
