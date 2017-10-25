@@ -114,7 +114,7 @@ resource "aws_autoscaling_group" "clients_asg" {
 
   tag {
     key                 = "Name"
-    value               = "${var.prefix}-nomad-client"
+    value               = "${var.prefix}_nomad-client"
     propagate_at_launch = "true"
   }
 }

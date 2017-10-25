@@ -1,7 +1,10 @@
 /secret/
 /.dependencies/
+.terraform/
 *.tfstate
 *.tfstate.backup
 *.tfvars
+*.tfvars-*
 .ansible/
 **.retry
+.DS_Store
