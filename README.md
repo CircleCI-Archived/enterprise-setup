@@ -59,7 +59,7 @@ Optional vars:
   | services_instance_type | instance type for the centralized services box.  We recommend a c4 instance | c4.2xlarge |
   | builder_instance_type | instance type for the builder machines.  We recommend a r3 instance | r3.2xlarge |
   | max_builders_count | max number of builders | 2 |
-  | nomad_client_instance_type | instance type for the nomad clients. We recommend a XYZ instance | m4.xlarge |
+  | nomad_client_instance_type | instance type for the nomad clients. | m4.xlarge |
   | max_clients_count | max number of nomad clients | 2 |
   | prefix   | prefix for resource names | circleci |
   | enable_nomad | provisions a nomad cluster for CCIE v2 | 1 |
