@@ -99,6 +99,21 @@ variable "no_proxy" {
   default     = ""
 }
 
+variable "ha" {
+  description = ""
+  default     = "false"
+}
+
+variable "postgres_password" {
+  description = ""
+  default = ""
+}
+
+variable "mongo_password" {
+  description = ""
+  default = ""
+}
+
 data "aws_subnet" "subnet" {
   id = "${var.aws_subnet_id}"
 }
@@ -166,6 +181,14 @@ provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
   region     = "${var.aws_region}"
+}
+
+data "template_file" "circleci-customizations" {
+  template = "${file("${path.module}/templates/ha-circle-customize.sh.tpl")}"
+  vars {
+    postgres_password = "${var.postgres_password}"
+    mongo_password = "${var.mongo_password}"
+  }
 }
 
 # SQS queue for hook
@@ -444,6 +467,11 @@ resource "aws_instance" "services" {
 
   user_data = "${ var.enable_ansible_provisioning ? "sudo apt-get update" : data.template_file.services_user_data.rendered }"
 
+  connection {
+    type     = "ssh"
+    user     = "ubuntu"
+  }
+
   provisioner "local-exec" {
     command    = "${ var.enable_ansible_provisioning ? "make ansible-setup" : "echo skipped" }"
     on_failure = "continue"
@@ -459,6 +487,23 @@ resource "aws_instance" "services" {
 
   provisioner "local-exec" {
     command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -v -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "echo skipped" }"
+  }
+
+  provisioner "local-exec" {
+    command = "./scripts/ha-tls.sh ${aws_instance.services.public_ip} ${var.ha}"
+  }
+
+  provisioner "file" {
+    content = "${data.template_file.circleci-customizations.rendered}"
+    destination = "~/circle-customize.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x ~/circle-customize.sh",
+      "sudo ~/circle-customize.sh",
+      "rm ~/circle-customize.sh",
+    ]
   }
 
   lifecycle {

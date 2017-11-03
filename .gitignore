@@ -5,3 +5,7 @@
 *.tfvars
 .ansible/
 **.retry
+.terraform
+debug.log
+terraform.tfvars
+terraform.tfvars*
