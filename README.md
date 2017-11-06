@@ -56,14 +56,14 @@ Optional vars:
 
   | Var      | Description | Default |
   | -------- | ----------- | ------- |
-  | services_instance_type | instance type for the centralized services box.  We recommend a c4 instance | c4.2xlarge |
-  | builder_instance_type | instance type for the builder machines.  We recommend a r3 instance | r3.2xlarge |
-  | max_builders_count | max number of builders | 2 |
-  | nomad_client_instance_type | instance type for the nomad clients. We recommend a XYZ instance | m4.xlarge |
-  | max_clients_count | max number of nomad clients | 2 |
-  | prefix   | prefix for resource names | circleci |
-  | enable_nomad | provisions a nomad cluster for CCIE v2 | 1 |
-  | enable_ansible_provisioner | enable provisioning of Services box via Ansible | 0 |
-  | enable_route | enable creating a Route53 route for the Services box | 0 |
+  | services_instance_type | Instance type for the centralized services box.  We recommend a c4 instance | c4.2xlarge |
+  | builder_instance_type | Instance type for the builder machines.  We recommend a r3 instance | r3.2xlarge |
+  | max_builders_count | Max number of builders | 2 |
+  | nomad_client_instance_type | Instance type for the nomad clients. We recommend a XYZ instance | m4.xlarge |
+  | max_clients_count | Max number of nomad clients | 2 |
+  | prefix   | Prefix for resource names | circleci |
+  | enable_nomad | Provisions a nomad cluster for CCIE v2 | 1 |
+  | enable_ansible_provisioner | Enable provisioning of Services box via Ansible | 0 |
+  | enable_route | Enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
