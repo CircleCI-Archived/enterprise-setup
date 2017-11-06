@@ -2,6 +2,7 @@
 /.dependencies/
 *.tfstate
 *.tfstate.backup
+*.tfvars-*
 *.tfvars
 .ansible/
 **.retry
