@@ -64,6 +64,11 @@ variable "ansible_extra_vars" {
   default = {}
 }
 
+variable "services_disable_api_termination" {
+  description = "Enable or disable service box termination prevention"
+  default = "true"
+}
+
 variable "services_delete_on_termination" {
   description = "Configures AWS to delete the ELB volume for the Services box upon instance termination."
   default     = "false"
@@ -424,7 +429,7 @@ resource "aws_instance" "services" {
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
   associate_public_ip_address = true
-  disable_api_termination     = true
+  disable_api_termination     = "${var.services_disable_api_termination}"
   iam_instance_profile        = "${aws_iam_instance_profile.circleci_profile.name}"
 
   vpc_security_group_ids = [
