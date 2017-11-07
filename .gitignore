@@ -6,3 +6,4 @@
 *.tfvars
 .ansible/
 **.retry
+/.terraform
