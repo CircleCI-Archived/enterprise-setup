@@ -45,8 +45,13 @@ variable "builder_instance_type" {
 }
 
 variable "max_builders_count" {
-  description = "max number of builders"
+  description = "max number of 1.0 builders"
   default     = "2"
+}
+
+variable "desired_builders_count" {
+  description = "desired number of 1.0 builders"
+  default     = "1"
 }
 
 variable "prefix" {
@@ -511,7 +516,7 @@ resource "aws_autoscaling_group" "builder_asg" {
   launch_configuration = "${aws_launch_configuration.builder_lc.name}"
   max_size             = "${var.max_builders_count}"
   min_size             = 0
-  desired_capacity     = 1
+  desired_capacity     = "${var.desired_builders_count}"
   force_delete         = true
 
   tag {
