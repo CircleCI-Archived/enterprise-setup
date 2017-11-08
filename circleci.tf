@@ -109,7 +109,7 @@ data "aws_subnet" "subnet" {
 }
 
 data "template_file" "services_user_data" {
-  template = "${file("templates/services_user_data.tpl")}"
+  template = "${file("${path.module}/templates/services_user_data.tpl")}"
 
   vars {
     circle_secret_passphrase = "${var.circle_secret_passphrase}"
@@ -125,7 +125,7 @@ data "template_file" "services_user_data" {
 }
 
 data "template_file" "builders_user_data" {
-  template = "${file("templates/builders_user_data.tpl")}"
+  template = "${file("${path.module}/templates/builders_user_data.tpl")}"
 
   vars {
     services_private_ip      = "${aws_instance.services.private_ip}"
@@ -137,7 +137,7 @@ data "template_file" "builders_user_data" {
 }
 
 data "template_file" "circleci_policy" {
-  template = "${file("templates/circleci_policy.tpl")}"
+  template = "${file("${path.module}/templates/circleci_policy.tpl")}"
 
   vars {
     bucket_arn    = "${aws_s3_bucket.circleci_bucket.arn}"
@@ -148,7 +148,7 @@ data "template_file" "circleci_policy" {
 }
 
 data "template_file" "shutdown_queue_role_policy" {
-  template = "${file("templates/shutdown_queue_role_policy.tpl")}"
+  template = "${file("${path.module}/templates/shutdown_queue_role_policy.tpl")}"
 
   vars {
     sqs_queue_arn = "${aws_sqs_queue.shutdown_queue.arn}"
@@ -156,7 +156,7 @@ data "template_file" "shutdown_queue_role_policy" {
 }
 
 data "template_file" "output" {
-  template = "${file("templates/output.tpl")}"
+  template = "${file("${path.module}/templates/output.tpl")}"
 
   vars {
     services_public_ip = "${aws_instance.services.public_ip}"
@@ -183,7 +183,7 @@ resource "aws_sqs_queue" "shutdown_queue" {
 
 resource "aws_iam_role" "shutdown_queue_role" {
   name               = "${var.prefix}_shutdown_queue_role"
-  assume_role_policy = "${file("files/shutdown_queue_role.json")}"
+  assume_role_policy = "${file("${path.module}/files/shutdown_queue_role.json")}"
 }
 
 resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
@@ -211,7 +211,7 @@ resource "aws_s3_bucket" "circleci_bucket" {
 resource "aws_iam_role" "circleci_role" {
   name               = "${var.prefix}_role"
   path               = "/"
-  assume_role_policy = "${file("files/circleci_role.json")}"
+  assume_role_policy = "${file("${path.module}/files/circleci_role.json")}"
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {

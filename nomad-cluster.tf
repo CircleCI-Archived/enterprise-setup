@@ -72,7 +72,7 @@ resource "aws_security_group" "ssh_sg" {
 # }
 
 data "template_file" "nomad_user_data"{
-  template = "${file("templates/nomad_user_data.tpl")}"
+  template = "${file("${path.module}/templates/nomad_user_data.tpl")}"
 
   vars {
     nomad_server = "${aws_instance.services.private_ip}"
