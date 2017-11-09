@@ -10,10 +10,11 @@ workflows:
 jobs:
   lint:
     docker:
-      - image: wata727/tflint:latest
+      - image: dantoml/docker-terraform-tflint:latest
     working_directory: ~/terraform
     steps:
       - checkout
+      - run: terraform init
       - run: terraform get
       - run: tflint
   build:
