@@ -54,6 +54,16 @@ variable "desired_builders_count" {
   default     = "1"
 }
 
+variable "enable_nomad" {
+  description = "enable running 2.0 builds"
+  default     = 1
+}
+
+variable "nomad_client_instance_type" {
+  description = "instance type for the nomad clients. It must be a valid aws instance type."
+  default     = "m4.xlarge"
+}
+
 variable "prefix" {
   description = "prefix for resource names"
   default     = "circleci"
@@ -71,7 +81,7 @@ variable "ansible_extra_vars" {
 
 variable "services_disable_api_termination" {
   description = "Enable or disable service box termination prevention"
-  default = "true"
+  default     = "true"
 }
 
 variable "services_delete_on_termination" {
@@ -167,7 +177,6 @@ data "template_file" "output" {
     services_public_ip = "${aws_instance.services.public_ip}"
     ssh_key            = "${var.aws_ssh_key_name}"
     ansible            = "${var.enable_ansible_provisioning}"
-    nomad              = "${var.enable_nomad}"
     hostname           = "${lookup(var.ansible_extra_vars, "services_hostname", "")}"
   }
 }
@@ -539,6 +548,22 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
   lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
   notification_target_arn = "${aws_sqs_queue.shutdown_queue.arn}"
   role_arn                = "${aws_iam_role.shutdown_queue_role.arn}"
+}
+
+module "nomad" {
+  source                = "./modules/nomad"
+  enabled               = "${var.enable_nomad}"
+  prefix                = "${var.prefix}"
+  ami_id                = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
+  instance_type         = "${var.nomad_client_instance_type}"
+  aws_vpc_id            = "${var.aws_vpc_id}"
+  aws_subnet_id         = "${var.aws_subnet_id}"
+  aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
+  aws_ssh_key_name      = "${var.aws_ssh_key_name}"
+  services_private_ip   = "${aws_instance.services.private_ip}"
+  http_proxy            = "${var.http_proxy}"
+  https_proxy           = "${var.https_proxy}"
+  no_proxy              = "${var.no_proxy}"
 }
 
 output "success_message" {
