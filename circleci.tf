@@ -288,6 +288,12 @@ resource "aws_security_group" "circleci_services_sg" {
   #}
 }
 
+resource "aws_security_group" "circleci_services_nomad_sg" {
+  name        = "${var.prefix}_services_nomad_sg"
+  description = "SG for Nomad servers to access CircleCI services"
+  vpc_id      = "${var.aws_vpc_id}"
+}
+
 resource "aws_security_group" "circleci_builders_admin_sg" {
   name        = "${var.prefix}_builders_admin_sg"
   description = "SG for services to masters communication - avoids circular dependency"
@@ -338,30 +344,6 @@ resource "aws_security_group" "circleci_users_sg" {
     protocol    = "tcp"
     from_port   = 8800
     to_port     = 8800
-  }
-
-  # For Nomad server in 2.0 clustered installation
-  ingress {
-    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    protocol    = "tcp"
-    from_port   = 4647
-    to_port     = 4647
-  }
-
-  # For output-processor in 2.0 clustered installation
-  ingress {
-    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    protocol    = "tcp"
-    from_port   = 8585
-    to_port     = 8585
-  }
-
-  # For build-agent to talk to vm-service
-  ingress {
-    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    protocol    = "tcp"
-    from_port   = 3001
-    to_port     = 3001
   }
 
   # For SSH traffic to builder boxes
@@ -439,6 +421,7 @@ resource "aws_instance" "services" {
 
   vpc_security_group_ids = [
     "${aws_security_group.circleci_services_sg.id}",
+    "${aws_security_group.circleci_services_nomad_sg.id}",
     "${aws_security_group.circleci_users_sg.id}",
   ]
 
