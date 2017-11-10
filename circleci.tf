@@ -498,6 +498,11 @@ resource "aws_instance" "services" {
     destination = "~/circle-customize.sh"
   }
 
+  provisioner "file" {
+    source = "${path.module}/files/vault.json"
+    destination = "~/vault.json"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "chmod +x ~/circle-customize.sh",

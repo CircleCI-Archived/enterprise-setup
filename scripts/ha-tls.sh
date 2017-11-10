@@ -3,6 +3,7 @@ set -ex
 TLS_DIR="$HOME/.circleci/server/tls"
 IP="${1}"
 SHOULD_RSYNC="${2}"
+REMOTE_IP="${3}"
 mkdir -m 744 -p ${TLS_DIR}
 cd ${TLS_DIR}
 if [ ! -s "${TLS_DIR}/ca.key" ] && [ ! -s "${TLS_DIR}/ca.pem" ]; then
@@ -18,7 +19,7 @@ openssl req \
 		-out server.csr \
 		-subj "/C=US/ST=California/L=San Francisco/O=CircleCI/CN=SphereCI"
 openssl x509 -req -in server.csr \
-		-extfile <(printf "subjectAltName=IP:${IP}") \
+		-extfile <(printf "subjectAltName=IP:${REMOTE_IP}") \
 		-CA ca.pem -CAkey ca.key -CAcreateserial \
 		-out server.crt -days 1825 -sha256
 rm server.csr
@@ -28,9 +29,9 @@ chmod 744 server.key
 openssl req \
 		-newkey rsa:2048 -nodes -keyout ha.key \
 		-out ha.csr \
-		-subj "/C=US/ST=California/L=San Francisco/O=CircleCI/CN=SphereCI"
+		-subj "/C=US/ST=California/L=San Francisco/O=CircleCI/CN=${IP}"
 openssl x509 -req -in ha.csr \
-		-extfile <(printf "subjectAltName=IP:${IP}") \
+		-extfile <(printf "subjectAltName=IP:${IP},DNS:${IP}") \
 		-CA ca.pem -CAkey ca.key -CAcreateserial \
 		-out ha.crt -days 1825 -sha256
 rm ha.csr
@@ -51,7 +52,7 @@ if [ "${SHOULD_RSYNC}" = "true" ]; then
 				   ${TLS_DIR}/ha.pem \
 				   ${TLS_DIR}/ha.crt \
 				   ${TLS_DIR}/ha.key \
-				ubuntu@${IP}:~/
+				ubuntu@${REMOTE_IP}:~/
 	   RC=$?
 	   TRY=$((TRY+1))
 	   sleep $INTERVAL
@@ -60,7 +61,10 @@ if [ "${SHOULD_RSYNC}" = "true" ]; then
 		exit 1
 	fi
 	set -e
-	ssh ubuntu@${IP} 'sudo mkdir -p /etc/ssl/circleci; \
+	ssh ubuntu@${REMOTE_IP} 'sudo mkdir -p /etc/ssl/circleci; \
 					  sudo cp ~/ca.pem /usr/local/share/ca-certificates/ca.crt; \
-					  sudo mv ~/ca.pem ~/ha.pem ~/ha.key ~/ha.crt /etc/ssl/circleci;'
+					  sudo mv ~/ca.pem ~/ha.pem ~/ha.key ~/ha.crt /etc/ssl/circleci; \
+					  sudo mkdir -p /etc/ssl/circleci/vault;
+					  sudo cp /etc/ssl/circleci/ha.key /etc/ssl/circleci/ha.crt /etc/ssl/circleci/vault/; \
+					  cat /etc/ssl/circleci/ca.pem | sudo tee -a /etc/ssl/circleci/vault/ha.crt'
 fi

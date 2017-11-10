@@ -1,5 +1,5 @@
 #!/bin/bash
-IP="$$(dig +short myip.opendns.com @resolver1.opendns.com)"
+IP="$$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)"
 
 cat << EOF > /etc/circle-installation-customizations
 MONGO_BASE_URI=mongodb://circle:${mongo_password}@$${IP}:27017
