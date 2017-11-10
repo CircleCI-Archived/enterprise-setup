@@ -21,23 +21,19 @@ variable "os" {
 }
 
 variable "instance_type" {
-  description = "instance type for the nomad clients. It must be a valid aws instance type."
-  default     = "m4.xlarge"
+  default = "m4.xlarge"
 }
 
 variable "services_private_ip" {
-  description = "the private ip address of the services box"
-  default     = ""
+  default = ""
 }
 
 variable "max_instances" {
-  description = "max number of nomad clients"
-  default     = "2"
+  default = "2"
 }
 
 variable "desired_instances" {
-  description = "desired number of nomad clients"
-  default     = "1"
+  default = "1"
 }
 
 variable "http_proxy" {}

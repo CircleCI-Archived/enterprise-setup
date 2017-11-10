@@ -105,18 +105,15 @@ variable "route_zone_id" {
 }
 
 variable "http_proxy" {
-  description = ""
-  default     = ""
+  default = ""
 }
 
 variable "https_proxy" {
-  description = ""
-  default     = ""
+  default = ""
 }
 
 variable "no_proxy" {
-  description = ""
-  default     = ""
+  default = ""
 }
 
 data "aws_subnet" "subnet" {
@@ -554,16 +551,16 @@ module "nomad" {
   source                = "./modules/nomad"
   enabled               = "${var.enable_nomad}"
   prefix                = "${var.prefix}"
-  ami_id                = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   instance_type         = "${var.nomad_client_instance_type}"
   aws_vpc_id            = "${var.aws_vpc_id}"
   aws_subnet_id         = "${var.aws_subnet_id}"
-  aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
   aws_ssh_key_name      = "${var.aws_ssh_key_name}"
-  services_private_ip   = "${aws_instance.services.private_ip}"
   http_proxy            = "${var.http_proxy}"
   https_proxy           = "${var.https_proxy}"
   no_proxy              = "${var.no_proxy}"
+  ami_id                = "${(var.services_ami != "") ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
+  aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
+  services_private_ip   = "${aws_instance.services.private_ip}"
 }
 
 output "success_message" {
