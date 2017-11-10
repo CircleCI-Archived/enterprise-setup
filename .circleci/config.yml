@@ -1,20 +1,6 @@
 version: 2
 
-workflows:
-  version: 2
-  build-test:
-    jobs:
-      - build
-      - lint
-
 jobs:
-  lint:
-    docker:
-      - image: wata727/tflint:latest
-    working_directory: ~/terraform
-    steps:
-      - checkout
-      - run: tflint
   build:
     docker:
       - image: hashicorp/terraform:0.9.9
@@ -39,6 +25,7 @@ jobs:
             echo 'http_proxy = ""' >> terraform.tfvars
             echo 'https_proxy = ""' >> terraform.tfvars
             echo 'no_proxy = ""' >> terraform.tfvars
+      - run: terraform get
       - run:
           name: Validate the configuration
           command: terraform validate
