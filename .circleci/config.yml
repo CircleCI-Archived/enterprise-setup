@@ -1,22 +1,6 @@
 version: 2
 
-workflows:
-  version: 2
-  build-test:
-    jobs:
-      - build
-      - lint
-
 jobs:
-  lint:
-    docker:
-      - image: dantoml/docker-terraform-tflint:latest
-    working_directory: ~/terraform
-    steps:
-      - checkout
-      - run: terraform init
-      - run: terraform get
-      - run: tflint
   build:
     docker:
       - image: hashicorp/terraform:0.9.9
