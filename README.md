@@ -46,4 +46,4 @@ Optional vars:
   | enable_route | Enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
-  | disable_user_data | Set to 1 to disable automated installation on Services Box | 0 |
+  | services_user_data_enabled | Set to 0 to disable automated installation on Services Box | 1 |
