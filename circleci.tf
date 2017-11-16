@@ -69,8 +69,6 @@ variable "prefix" {
   default     = "circleci"
 }
 
-
-
 variable "services_disable_api_termination" {
   description = "Enable or disable service box termination prevention"
   default     = "true"
@@ -106,6 +104,11 @@ variable "https_proxy" {
 
 variable "no_proxy" {
   default = ""
+}
+
+variable "disable_user_data" {
+  description = "Disable User Data for Services Box"
+  default = "0"
 }
 
 data "aws_subnet" "subnet" {
@@ -448,7 +451,7 @@ resource "aws_instance" "services" {
     delete_on_termination = "${var.services_delete_on_termination}"
   }
 
-  user_data = "${ data.template_file.services_user_data.rendered }"
+  user_data = "${ var.disable_user_data ? "" : data.template_file.services_user_data.rendered }"
 
   lifecycle {
     prevent_destroy = false
