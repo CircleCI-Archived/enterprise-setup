@@ -69,16 +69,6 @@ variable "prefix" {
   default     = "circleci"
 }
 
-variable "enable_ansible_provisioning" {
-  description = "Enables Ansible provisioning of the Services box for automatic / no-touch installation / configuration."
-  default     = 0
-}
-
-variable "ansible_extra_vars" {
-  type    = "map"
-  default = {}
-}
-
 variable "services_disable_api_termination" {
   description = "Enable or disable service box termination prevention"
   default     = "true"
@@ -114,6 +104,11 @@ variable "https_proxy" {
 
 variable "no_proxy" {
   default = ""
+}
+
+variable "services_user_data_enabled" {
+  description = "Disable User Data for Services Box"
+  default = "1"
 }
 
 data "aws_subnet" "subnet" {
@@ -173,8 +168,6 @@ data "template_file" "output" {
   vars {
     services_public_ip = "${aws_instance.services.public_ip}"
     ssh_key            = "${var.aws_ssh_key_name}"
-    ansible            = "${var.enable_ansible_provisioning}"
-    hostname           = "${lookup(var.ansible_extra_vars, "services_hostname", "")}"
   }
 }
 
@@ -458,24 +451,7 @@ resource "aws_instance" "services" {
     delete_on_termination = "${var.services_delete_on_termination}"
   }
 
-  user_data = "${ var.enable_ansible_provisioning ? "sudo apt-get update" : data.template_file.services_user_data.rendered }"
-
-  provisioner "local-exec" {
-    command    = "${ var.enable_ansible_provisioning ? "make ansible-setup" : "echo skipped" }"
-    on_failure = "continue"
-  }
-
-  provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "echo '\n[services]\n${aws_instance.services.public_ip} ansible_user=ubuntu ansible_ssh_common_args=\"-o ConnectionAttempts=30 -o StrictHostKeyChecking=no\"' > .ansible/hosts" : "echo skipped" }"
-  }
-
-  provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "echo '${jsonencode(merge(var.ansible_extra_vars, map("services_ip",aws_instance.services.private_ip,"secret_passphrase",var.circle_secret_passphrase,"aws_region",var.aws_region,"s3_bucket",aws_s3_bucket.circleci_bucket.id,"sqs_queue_url",aws_sqs_queue.shutdown_queue.id,"circle_version_2",var.enable_nomad)))}' > .ansible/extra_vars.json" : "echo skipped" }"
-  }
-
-  provisioner "local-exec" {
-    command = "${ var.enable_ansible_provisioning ? "ansible-playbook playbook.yml -v -i ./.ansible/hosts -e \"@./.ansible/extra_vars.json\"" : "echo skipped" }"
-  }
+  user_data = "${ var.services_user_data_enabled ? data.template_file.services_user_data.rendered : "" }"
 
   lifecycle {
     prevent_destroy = false
