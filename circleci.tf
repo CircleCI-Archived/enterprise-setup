@@ -120,7 +120,7 @@ data "template_file" "services_user_data" {
 
   vars {
     circle_secret_passphrase = "${var.circle_secret_passphrase}"
-    sqs_queue_url            = "${aws_sqs_queue.shutdown_queue.id}"
+    sqs_queue_url            = "${module.shutdown_sqs.sqs_id}"
     s3_bucket                = "${aws_s3_bucket.circleci_bucket.id}"
     aws_region               = "${var.aws_region}"
     subnet_id                = "${var.aws_subnet_id}"
@@ -148,17 +148,9 @@ data "template_file" "circleci_policy" {
 
   vars {
     bucket_arn    = "${aws_s3_bucket.circleci_bucket.arn}"
-    sqs_queue_arn = "${aws_sqs_queue.shutdown_queue.arn}"
+    sqs_queue_arn = "${module.shutdown_sqs.sqs_arn}"
     role_name     = "${aws_iam_role.circleci_role.name}"
     aws_region    = "${var.aws_region}"
-  }
-}
-
-data "template_file" "shutdown_queue_role_policy" {
-  template = "${file("templates/shutdown_queue_role_policy.tpl")}"
-
-  vars {
-    sqs_queue_arn = "${aws_sqs_queue.shutdown_queue.arn}"
   }
 }
 
@@ -177,23 +169,10 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
-# SQS queue for hook
-
-resource "aws_sqs_queue" "shutdown_queue" {
-  name = "${var.prefix}_queue"
-}
-
-# IAM for shutdown queue
-
-resource "aws_iam_role" "shutdown_queue_role" {
-  name               = "${var.prefix}_shutdown_queue_role"
-  assume_role_policy = "${file("files/shutdown_queue_role.json")}"
-}
-
-resource "aws_iam_role_policy" "shutdown_queue_role_policy" {
-  name   = "${var.prefix}_shutdown_queue_role"
-  role   = "${aws_iam_role.shutdown_queue_role.id}"
-  policy = "${data.template_file.shutdown_queue_role_policy.rendered}"
+module "shutdown_sqs" {
+  source = "./modules/aws_sqs"
+  name   = "shutdown"
+  prefix = "${var.prefix}"
 }
 
 # Single general-purpose bucket
@@ -519,8 +498,8 @@ resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
   autoscaling_group_name  = "${aws_autoscaling_group.builder_asg.name}"
   heartbeat_timeout       = 3600
   lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
-  notification_target_arn = "${aws_sqs_queue.shutdown_queue.arn}"
-  role_arn                = "${aws_iam_role.shutdown_queue_role.arn}"
+  notification_target_arn = "${module.shutdown_sqs.sqs_arn}"
+  role_arn                = "${module.shutdown_sqs.queue_role_arn}"
 }
 
 module "nomad" {
