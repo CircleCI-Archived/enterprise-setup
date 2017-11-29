@@ -5,4 +5,3 @@ output "asg_name" {
 output "shutdown_hook_name" {
   value = "${aws_autoscaling_lifecycle_hook.mod_shutdown_hook.name}"
 }
-

@@ -7,13 +7,14 @@ variable "aws_instance_profile_name" {}
 
 # Builder ASG Configurations
 variable "asg_max_size" {}
+
 variable "asg_min_size" {}
 variable "asg_desired_size" {}
 
 variable "user_data" {}
 
 variable "builder_security_group_ids" {
-  type = "list"
+  type    = "list"
   default = []
 }
 
