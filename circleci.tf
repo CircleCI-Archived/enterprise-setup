@@ -108,7 +108,11 @@ variable "no_proxy" {
 
 variable "services_user_data_enabled" {
   description = "Disable User Data for Services Box"
-  default = "1"
+  default     = "1"
+}
+
+variable "legacy_builder_spot_price" {
+  default = ""
 }
 
 data "aws_subnet" "subnet" {
@@ -125,18 +129,6 @@ data "template_file" "services_user_data" {
     aws_region               = "${var.aws_region}"
     subnet_id                = "${var.aws_subnet_id}"
     vm_sg_id                 = "${aws_security_group.circleci_vm_sg.id}"
-    http_proxy               = "${var.http_proxy}"
-    https_proxy              = "${var.https_proxy}"
-    no_proxy                 = "${var.no_proxy}"
-  }
-}
-
-data "template_file" "builders_user_data" {
-  template = "${file("templates/builders_user_data.tpl")}"
-
-  vars {
-    services_private_ip      = "${aws_instance.services.private_ip}"
-    circle_secret_passphrase = "${var.circle_secret_passphrase}"
     http_proxy               = "${var.http_proxy}"
     https_proxy              = "${var.https_proxy}"
     no_proxy                 = "${var.no_proxy}"
@@ -447,59 +439,43 @@ resource "aws_route53_record" "services_route" {
 }
 
 ## Builders ASG
-resource "aws_launch_configuration" "builder_lc" {
-  # 4x or 8x are best
-  instance_type        = "${var.builder_instance_type}"
-  image_id             = "${lookup(var.ubuntu_ami, var.aws_region)}"
-  key_name             = "${var.aws_ssh_key_name}"
-  iam_instance_profile = "${aws_iam_instance_profile.circleci_profile.name}"
+module "legacy_builder_user_data" {
+  source = "./modules/legacy-builder-cloudinit-ubuntu-docker-v1"
 
-  security_groups = ["${aws_security_group.circleci_builders_sg.id}",
+  services_private_ip = "${aws_instance.services.private_ip}"
+
+  circle_secret_passphrase = "${var.circle_secret_passphrase}"
+  https_proxy              = "${var.https_proxy}"
+  http_proxy               = "${var.http_proxy}"
+  no_proxy                 = "${var.no_proxy}"
+}
+
+module "legacy_builder" {
+  source = "./modules/legacy-builder"
+
+  prefix                    = "${var.prefix}"
+  name                      = "builders"
+  aws_subnet_id             = "${var.aws_subnet_id}"
+  aws_ssh_key_name          = "${var.aws_ssh_key_name}"
+  aws_instance_profile_name = "${aws_iam_instance_profile.circleci_profile.name}"
+
+  builder_security_group_ids = [
+    "${aws_security_group.circleci_builders_sg.id}",
     "${aws_security_group.circleci_builders_admin_sg.id}",
     "${aws_security_group.circleci_users_sg.id}",
   ]
 
-  root_block_device {
-    volume_type           = "gp2"
-    volume_size           = "150"
-    delete_on_termination = "${var.services_delete_on_termination}"
-  }
+  asg_max_size     = "${var.max_builders_count}"
+  asg_min_size     = 0
+  asg_desired_size = "${var.desired_builders_count}"
 
-  user_data = "${data.template_file.builders_user_data.rendered}"
-
-  # To enable using spots
-  # spot_price = "1.00"
-
-  # Can't delete an LC until the replacement is applied
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_autoscaling_group" "builder_asg" {
-  name                 = "${var.prefix}_builders_asg"
-  vpc_zone_identifier  = ["${var.aws_subnet_id}"]
-  launch_configuration = "${aws_launch_configuration.builder_lc.name}"
-  max_size             = "${var.max_builders_count}"
-  min_size             = 0
-  desired_capacity     = "${var.desired_builders_count}"
-  force_delete         = true
-
-  tag {
-    key                 = "Name"
-    value               = "${var.prefix}_builder"
-    propagate_at_launch = "true"
-  }
-}
-
-# Shutdown hooks
-resource "aws_autoscaling_lifecycle_hook" "builder_shutdown_hook" {
-  name                    = "builder_shutdown_hook"
-  autoscaling_group_name  = "${aws_autoscaling_group.builder_asg.name}"
-  heartbeat_timeout       = 3600
-  lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
-  notification_target_arn = "${module.shutdown_sqs.sqs_arn}"
-  role_arn                = "${module.shutdown_sqs.queue_role_arn}"
+  user_data                     = "${module.legacy_builder_user_data.rendered}"
+  delete_volume_on_termination  = "${var.services_delete_on_termination}"
+  image_id                      = "${lookup(var.ubuntu_ami, var.aws_region)}"
+  instance_type                 = "${var.builder_instance_type}"
+  spot_price                    = "${var.legacy_builder_spot_price}"
+  shutdown_queue_target_sqs_arn = "${module.shutdown_sqs.sqs_arn}"
+  shutdown_queue_role_arn       = "${module.shutdown_sqs.queue_role_arn}"
 }
 
 module "nomad" {
