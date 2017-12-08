@@ -1,0 +1,35 @@
+#cloud-config
+
+bootcmd:
+  - while ! stat "${mongo_device_path}" >/dev/null; do echo "waiting for ${mongo_device_path}..." >&2; sleep 5; done
+
+fqdn: "${fqdn}"
+manage_etc_hosts: localhost
+
+manage_resolv_conf: true
+resolv_conf:
+  domain: "${zone_name}"
+  searchdomains:
+    - "${zone_name}"
+
+package_update: true
+package_upgrade: true
+
+disk_setup:
+  "${mongo_device_path}":
+    table_type: gpt
+    layout:
+      - [100, 0x83]
+    overwrite: false
+
+fs_setup:
+  - label: "mongodb-data"
+    filesystem: ext4
+    device: "${mongo_device_path}"
+    partition: 1
+    overwrite: false
+
+mounts:
+  - ["${mongo_device_path}", "${mongo_mount_path}", "ext4", "defaults", "0", "0"]
+
+# vim:ft=yaml

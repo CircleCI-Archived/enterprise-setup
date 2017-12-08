@@ -7,3 +7,4 @@
 .ansible/
 **.retry
 /.terraform
+debug.log
