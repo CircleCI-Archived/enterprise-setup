@@ -71,13 +71,6 @@ resource "aws_security_group" "mongodb_servers" {
   }
 
   egress {
-    from_port   = "${var.influxdb_port}"
-    to_port     = "${var.influxdb_port}"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
     from_port = 27017
     to_port   = 27017
     protocol  = "tcp"
@@ -119,7 +112,7 @@ resource "aws_instance" "mongodb" {
   instance_type                        = "${var.instance_type}"
   key_name                             = "${var.key_name}"
   vpc_security_group_ids               = ["${concat(list(aws_security_group.mongodb_servers.id), var.security_group_ids)}"]
-  subnet_id                            = "${var.subnet_id}"
+  subnet_id                            = "${element(var.subnet_ids, count.index)}"
   user_data                            = "${element(module.cloudinit.rendered, count.index)}"
   iam_instance_profile                 = "${var.instance_profile_name}"
   disable_api_termination              = true
