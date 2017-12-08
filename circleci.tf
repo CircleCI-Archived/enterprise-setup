@@ -247,14 +247,14 @@ resource "aws_security_group" "circleci_services_sg" {
   #ingress {
   #    security_groups = ["192.30.252.0/22"]
   #    protocol = "tcp"
-  #    from_protocol = 443
-  #    to_protocol = 443
+  #    from_port = 443
+  #    to_port = 443
   #}
   #ingress {
   #    security_groups = ["192.30.252.0/22"]
   #    protocol = "tcp"
-  #    from_protocol = 80
-  #    to_protocol = 80
+  #    from_port = 80
+  #    to_port = 80
   #}
 }
 
