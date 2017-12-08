@@ -132,14 +132,14 @@ resource "aws_security_group" "circleci_services_sg" {
   #ingress {
   #    security_groups = ["192.30.252.0/22"]
   #    protocol = "tcp"
-  #    from_protocol = 443
-  #    to_protocol = 443
+  #    from_port = 443
+  #    to_port = 443
   #}
   #ingress {
   #    security_groups = ["192.30.252.0/22"]
   #    protocol = "tcp"
-  #    from_protocol = 80
-  #    to_protocol = 80
+  #    from_port = 80
+  #    to_port = 80
   #}
 }
 
@@ -263,22 +263,6 @@ resource "aws_security_group" "circleci_vm_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-variable "ubuntu_ami" {
-  default = {
-    ap-northeast-1 = "ami-0a16e26c"
-    ap-northeast-2 = "ami-ed6fb783"
-    ap-southeast-1 = "ami-5929b23a"
-    ap-southeast-2 = "ami-40180023"
-    eu-central-1   = "ami-488e2727"
-    eu-west-1      = "ami-a142b2d8"
-    sa-east-1      = "ami-ec1b6a80"
-    us-east-1      = "ami-845367ff"
-    us-east-2      = "ami-43391926"
-    us-west-1      = "ami-5185ae31"
-    us-west-2      = "ami-103fdc68"
   }
 }
 
