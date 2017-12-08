@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 # AWS Specific configuration
 
 # Service Box and Builders
 
-=======
->>>>>>> origin/master
 variable "aws_access_key" {
   description = "Access key used to create instances"
 }
@@ -25,14 +22,11 @@ variable "aws_subnet_id" {
   description = "The subnet-id to be used for the instance"
 }
 
-<<<<<<< HEAD
 variable "aws_subnet_ids" {
   description = "subnet-ids to be used for HA instances"
   default = []
 }
 
-=======
->>>>>>> origin/master
 variable "aws_ssh_key_name" {
   description = "The SSH key to be used for the instances"
 }
@@ -127,7 +121,6 @@ variable "legacy_builder_spot_price" {
   default = ""
 }
 
-<<<<<<< HEAD
 variable "azs" {
   default = []
 }
@@ -142,7 +135,7 @@ variable "mongodb_instance_type" {
 variable "mongo_image" {
     default = "ami-fc4f5e85"
 }
-=======
+
 variable "ubuntu_ami" {
   default = {
     ap-northeast-1 = "ami-0a16e26c"
@@ -158,5 +151,3 @@ variable "ubuntu_ami" {
     us-west-2      = "ami-103fdc68"
   }
 }
-
->>>>>>> origin/master
