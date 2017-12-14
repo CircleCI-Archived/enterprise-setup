@@ -16,6 +16,7 @@ This package allows you to easily orchestrate your CCIE cluster in AWS using Ter
 1. Execute `make init` or save a copy of `terraform.tfvars.template` to `terraform.tfvars`
 1. Fill in the configuration vars in `terraform.tfvars` for your cluster. see [Configuration](#configuration)
 1. Run `terraform apply`
+1. Once your installation has finished, you can use [our realitycheck repo](https://github.com/circleci/realitycheck) to check basic CircleCI functionality
 
 ## Configuration
 
