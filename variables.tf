@@ -76,7 +76,7 @@ variable "services_delete_on_termination" {
   default     = "false"
 }
 
-variable "destroy_s3_bucket" {
+variable "force_destroy_s3_bucket" {
   description = "Enable or disable ability to destroy non-empty S3 buckets"
   default     = "false"
 }
