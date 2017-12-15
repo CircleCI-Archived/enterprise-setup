@@ -48,3 +48,4 @@ Optional vars:
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
   | services_user_data_enabled | Set to 0 to disable automated installation on Services Box | 1 |
+  | force_destroy_s3_bucket | Add/Remove ability to forcefully destroy S3 bucket | false |
