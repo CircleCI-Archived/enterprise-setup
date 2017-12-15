@@ -62,6 +62,8 @@ resource "aws_s3_bucket" "circleci_bucket" {
     allowed_origins = ["*"]
     max_age_seconds = 3600
   }
+
+  force_destroy = "${var.destroy_s3_bucket}"
 }
 
 ## IAM for instances
