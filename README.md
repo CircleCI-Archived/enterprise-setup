@@ -43,7 +43,6 @@ Optional vars:
   | max_clients_count | Max number of nomad clients | 2 |
   | prefix   | Prefix for resource names | circleci |
   | enable_nomad | Provisions a nomad cluster for CCIE v2 | 1 |
-  | enable_ansible_provisioner | Enable provisioning of Services box via Ansible | 0 |
   | enable_route | Enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
