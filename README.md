@@ -16,27 +16,7 @@ This package allows you to easily orchestrate your CCIE cluster in AWS using Ter
 1. Execute `make init` or save a copy of `terraform.tfvars.template` to `terraform.tfvars`
 1. Fill in the configuration vars in `terraform.tfvars` for your cluster. see [Configuration](#configuration)
 1. Run `terraform apply`
-
-### Advanced: Ansible provisioning
-
-Advanced install involves using Ansible to fully configure your services box without having to configure it via the user interface. This installation method requires having Ansible locally installed on the machine you will be running Terraform on.
-
-To enable Ansible provisioning, set `enable_ansible_provisioning = true` in your tfvars file. Then add a dictionary to your tfvars file called `ansible_extra_vars` containing the extra variables that will be passed to the Ansible playbook in this project.
-
-Example:
-
-```
-enable_ansible_provisioning = true
-ansible_extra_vars = {
-  license_file_path = "/path/to/my/CircleCILicense.rli"
-  ghe_type = "github_type_enterprise"
-  ghe_domain = "ghe.example.com"
-  github_client_id = "insertclientidfromghe"
-  github_client_secret = "insertclientsecretfromghe"
-  aws_access_key_id = "insertawskey"
-  aws_access_secret_key = "insertawssecretkey"
-}
-```
+1. Once your installation has finished, you can use [our realitycheck repo](https://github.com/circleci/realitycheck) to check basic CircleCI functionality
 
 ## Configuration
 
@@ -56,14 +36,15 @@ Optional vars:
 
   | Var      | Description | Default |
   | -------- | ----------- | ------- |
-  | services_instance_type | instance type for the centralized services box.  We recommend a c4 instance | c4.2xlarge |
-  | builder_instance_type | instance type for the builder machines.  We recommend a r3 instance | r3.2xlarge |
-  | max_builders_count | max number of builders | 2 |
-  | nomad_client_instance_type | instance type for the nomad clients. We recommend a XYZ instance | m4.xlarge |
-  | max_clients_count | max number of nomad clients | 2 |
-  | prefix   | prefix for resource names | circleci |
-  | enable_nomad | provisions a nomad cluster for CCIE v2 | 1 |
-  | enable_ansible_provisioner | enable provisioning of Services box via Ansible | 0 |
-  | enable_route | enable creating a Route53 route for the Services box | 0 |
+  | services_instance_type | Instance type for the centralized services box.  We recommend a c4 instance | c4.2xlarge |
+  | builder_instance_type | Instance type for the builder machines.  We recommend a r3 instance | r3.2xlarge |
+  | max_builders_count | Max number of builders | 2 |
+  | nomad_client_instance_type | Instance type for the nomad clients. We recommend a XYZ instance | m4.xlarge |
+  | max_clients_count | Max number of nomad clients | 2 |
+  | prefix   | Prefix for resource names | circleci |
+  | enable_nomad | Provisions a nomad cluster for CCIE v2 | 1 |
+  | enable_route | Enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
+  | services_user_data_enabled | Set to 0 to disable automated installation on Services Box | 1 |
+  | force_destroy_s3_bucket | Add/Remove ability to forcefully destroy S3 bucket | false |

@@ -1,4 +1,5 @@
 version: 2
+
 jobs:
   build:
     docker:
@@ -24,6 +25,7 @@ jobs:
             echo 'http_proxy = ""' >> terraform.tfvars
             echo 'https_proxy = ""' >> terraform.tfvars
             echo 'no_proxy = ""' >> terraform.tfvars
+      - run: terraform get
       - run:
           name: Validate the configuration
           command: terraform validate

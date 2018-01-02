@@ -2,10 +2,13 @@
 /.dependencies/
 *.tfstate
 *.tfstate.backup
+*.tfvars-*
 *.tfvars
 .ansible/
 **.retry
+<<<<<<< HEAD
 .terraform
 debug.log
 terraform.tfvars
 terraform.tfvars*
+/.terraform

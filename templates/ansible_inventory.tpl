@@ -1,2 +1,0 @@
-[${host_group}]
-${host}

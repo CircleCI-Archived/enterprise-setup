@@ -46,6 +46,8 @@
           },
           {
               "Action": [
+                  "ec2:StartInstances",
+                  "ec2:StopInstances",
                   "ec2:TerminateInstances",
                   "ec2:AttachVolume",
                   "ec2:DetachVolume",
