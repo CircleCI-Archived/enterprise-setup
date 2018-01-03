@@ -211,6 +211,14 @@ resource "aws_security_group" "circleci_users_sg" {
     to_port     = 8585
   }
 
+  # For embedded storage in 2.0 clustered installation
+  ingress {
+    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+    protocol    = "tcp"
+    from_port   = 7171
+    to_port     = 7171
+  }
+
   # For build-agent to talk to vm-service
   ingress {
     cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
