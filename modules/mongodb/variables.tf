@@ -50,6 +50,11 @@ variable "security_group_ids" {
   default = []
 }
 
+variable "service_sgs" {
+  type    = "list"
+  default = []
+}
+
 # ebs_size defines the size, in gigabytes, of the persistent EBS volume to
 # attach to each MongoDB server instance.  e.g.: "100".
 variable "ebs_size" {}
@@ -63,3 +68,9 @@ variable "ebs_iops" {}
 # for each MongoDB server instance.  Each name will resolve to the instance's
 # private IPv4 address.
 variable "zone_id" {}
+variable "aws_access_key_location" {}
+variable "key_location" {}
+variable "bastion_host" {}
+variable "bastion_port" {}
+variable "bastion_user" {}
+variable "bastion_key" {}

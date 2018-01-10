@@ -16,12 +16,6 @@ main() {
   wait_for_mongod
   add_mongo_root_user
   test_mongo_root_user
-
-  configure_telegraf_repos
-  install_telegraf_packages
-  configure_telegraf
-  add_mongo_telegraf_user
-  start_telegraf
 }
 
 

@@ -117,7 +117,3 @@ resource "tls_locally_signed_cert" "root" {
     "client_auth",
   ]
 }
-
-resource "random_id" "telegraf_mongo_password" {
-  byte_length = 32
-}

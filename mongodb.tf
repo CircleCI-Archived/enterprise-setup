@@ -18,7 +18,7 @@ module "mongodb" {
   prefix                = "${var.prefix}-"
   cluster_id            = "20171207"
   instance_type         = "${var.mongodb_instance_type}"
-  key_name              = "${var.aws_ssh_key_name}"
+  key_name              = "${var.aws_mongodb_ssh_key_name}"
   ami_id                = "${var.mongo_image}"
   azs                   = "${var.azs}"
   vpc_id                = "${var.aws_vpc_id}"
@@ -27,12 +27,23 @@ module "mongodb" {
 
   security_group_ids = [
     "${aws_security_group.ssh_from_services.id}",
-    "${aws_security_group.ccie_mongo_server_sg.id}",
+  ]
+
+  service_sgs = [
+    "${aws_security_group.circleci_builders_sg.id}",
+    "${aws_security_group.circleci_services_sg.id}",
   ]
 
   ebs_size = "300"
   ebs_iops = "100"
   zone_id  = "${var.route_zone_id}"
+
+  aws_access_key_location = "${var.aws_access_key_location}"
+  bastion_host = "${var.bastion_host != "" ? var.bastion_host : aws_instance.services.public_ip}"
+  bastion_port = "${var.bastion_port != "" ? var.bastion_port : "22"}"
+  bastion_user = "${var.bastion_user != "" ? var.bastion_user : "ubuntu"}"
+  bastion_key = "${var.bastion_key != "" ? var.bastion_key : "~/.ssh/id_rsa"}"
+  key_location = "${var.mongodb_key_location}"
 }
 
 resource "aws_security_group" "ccie_mongo_client_sg" {
@@ -45,30 +56,5 @@ resource "aws_security_group" "ccie_mongo_client_sg" {
         to_port = 27017
         protocol = "tcp"
         cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    }
-}
-
-resource "aws_security_group" "ccie_mongo_server_sg" {
-    name = "${var.prefix}_mongo_server_sg"
-    description = "Mongo Servers"
-
-    vpc_id = "${var.aws_vpc_id}"
-    ingress {
-        from_port = 27017
-        to_port = 27017
-        protocol = "tcp"
-        cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    }
-    egress {
-        from_port = 27017
-        to_port = 27017
-        protocol = "tcp"
-        cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
-    }
-    ingress {
-        from_port = 27017
-        to_port = 27017
-        protocol = "tcp"
-        security_groups = ["sg-3f1a5045"]
     }
 }

@@ -6,6 +6,25 @@ variable "aws_access_key" {
   description = "Access key used to create instances"
 }
 
+
+variable "aws_access_key_location" {
+  description = "Access key used to create instances"
+  default = "~/.ssh/id_rsa"
+}
+
+variable "aws_mongodb_ssh_key_name" {
+  description = "Access key used to create mongodb instances"
+}
+
+variable "mongodb_key_location" {
+  description = "Location of ssh key to use to log in to mongodb"
+  default = "~/.ssh/id_rsa"
+}
+
+variable "aws_vault_ssh_key_name" {
+  description = "Access key used to create vault instances"
+}
+
 variable "aws_secret_key" {
   description = "Secret key used to create instances"
 }
@@ -133,7 +152,7 @@ variable "mongodb_instance_type" {
 }
 
 variable "mongo_image" {
-    default = "ami-fc4f5e85"
+    default = "ami-845367ff"
 }
 
 variable "ubuntu_ami" {
@@ -150,4 +169,18 @@ variable "ubuntu_ami" {
     us-west-1      = "ami-5185ae31"
     us-west-2      = "ami-103fdc68"
   }
+}
+
+
+variable "bastion_host" {
+  default = ""
+}
+variable "bastion_port" {
+  default = ""
+}
+variable "bastion_user" {
+  default = ""
+}
+variable "bastion_key" {
+  default = ""
 }

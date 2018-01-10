@@ -40,15 +40,10 @@ resource "aws_security_group" "mongodb_servers" {
     from_port       = 27017
     to_port         = 27017
     protocol        = "tcp"
-    security_groups = ["${aws_security_group.mongodb_clients.id}"]
+    security_groups = ["${concat(list(aws_security_group.mongodb_clients.id), var.service_sgs)}"]
     self            = true
   }
-  ingress {
-    from_port       = 27017
-    to_port         = 27017
-    protocol        = "tcp"
-    security_groups = ["sg-5f39f225"]
-  }
+
   egress {
     from_port = 27017
     to_port   = 27017
@@ -68,13 +63,6 @@ resource "aws_security_group" "mongodb_servers" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port = 27017
-    to_port   = 27017
-    protocol  = "tcp"
-    security_groups = ["sg-c73ff4bd"]
   }
 
   tags {
@@ -131,6 +119,24 @@ resource "aws_instance" "mongodb" {
     prevent_destroy = false
   }
   */
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    port        = "22"
+    host        = "${self.private_ip}"
+    private_key = "${file(var.key_location)}"
+
+    bastion_host = "${var.bastion_host}"
+    bastion_port = "${var.bastion_port}"
+    bastion_user = "${var.bastion_user}"
+    bastion_private_key = "${file(var.bastion_key)}"
+  }
+
+#  provisioner "remote-exec" {
+#    inline = ["sudo umount /mongo"]
+#    when   = "destroy"
+# }
 }
 
 resource "aws_volume_attachment" "mongodb" {
