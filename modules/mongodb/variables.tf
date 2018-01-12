@@ -68,6 +68,7 @@ variable "ebs_iops" {}
 # for each MongoDB server instance.  Each name will resolve to the instance's
 # private IPv4 address.
 variable "zone_id" {}
+variable "mongo_domain" {}
 variable "aws_access_key_location" {}
 variable "key_location" {}
 variable "bastion_host" {}

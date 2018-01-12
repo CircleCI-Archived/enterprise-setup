@@ -37,6 +37,7 @@ module "mongodb" {
   ebs_size = "300"
   ebs_iops = "100"
   zone_id  = "${var.route_zone_id}"
+  mongo_domain = "${var.route_zone_domain}"
 
   aws_access_key_location = "${var.aws_access_key_location}"
   bastion_host = "${var.bastion_host != "" ? var.bastion_host : aws_instance.services.public_ip}"
@@ -57,4 +58,12 @@ resource "aws_security_group" "ccie_mongo_client_sg" {
         protocol = "tcp"
         cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
     }
+}
+
+output "mongo_primary" {
+  value = "${module.mongodb.server_primary_fqdn}"
+}
+
+output "mongo_secondary" {
+  value = "${module.mongodb.server_secondary_fqdn}"
 }

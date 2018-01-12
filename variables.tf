@@ -119,6 +119,11 @@ variable "route_zone_id" {
   default     = ""
 }
 
+variable "route_zone_domain" {
+  description = "The actual domain of the Route53 Zone ie. circleci.com"
+}
+
+
 variable "http_proxy" {
   default = ""
 }

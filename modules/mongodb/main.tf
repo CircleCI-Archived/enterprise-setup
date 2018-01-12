@@ -10,8 +10,7 @@ module "cloudinit" {
   zone_name              = "${data.aws_route53_zone.zone.name}"
   mongo_replica_set_name = "${format("%smongodb-%s", var.prefix, var.cluster_id)}"
   mongo_device_path      = "/dev/xvdi"
-  #influxdb_url           = "${var.influxdb_url}"
-  #influxdb_database      = "${var.influxdb_database}"
+  mongo_domain           = "${var.mongo_domain}"
 }
 
 resource "aws_security_group" "mongodb_clients" {
@@ -72,8 +71,8 @@ resource "aws_security_group" "mongodb_servers" {
   }
 }
 
-resource "aws_ebs_volume" "mongodb" {
-  availability_zone = "${element(var.azs, count.index)}"
+resource "aws_ebs_volume" "mongodb_primary" {
+  availability_zone = "${element(var.azs, var.num_instances - 1)}"
   encrypted         = true
   type              = "io1"
   size              = "${var.ebs_size}"
@@ -88,11 +87,31 @@ resource "aws_ebs_volume" "mongodb" {
   count = "${var.num_instances}"
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
-resource "aws_instance" "mongodb" {
+resource "aws_ebs_volume" "mongodb_secondary" {
+  availability_zone = "${element(var.azs, count.index)}"
+  encrypted         = true
+  type              = "io1"
+  size              = "${var.ebs_size}"
+  iops              = "${var.ebs_iops}"
+
+  tags {
+    Name      = "${format("%smongodb-%s-%02d", var.prefix, var.cluster_id, count.index + 2)}"
+    Role      = "${format("%smongodb-%s", var.prefix, var.cluster_id)}"
+    Terraform = "yes"
+  }
+
+  count = "${var.num_instances}"
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+resource "aws_instance" "mongodb_secondary" {
   ami                                  = "${var.ami_id}"
   availability_zone                    = "${element(var.azs, count.index)}"
   ebs_optimized                        = "${var.ebs_optimized}"
@@ -101,7 +120,33 @@ resource "aws_instance" "mongodb" {
   key_name                             = "${var.key_name}"
   vpc_security_group_ids               = ["${concat(list(aws_security_group.mongodb_servers.id), var.security_group_ids)}"]
   subnet_id                            = "${element(var.subnet_ids, count.index)}"
-  user_data                            = "${element(module.cloudinit.rendered, count.index)}"
+  user_data                            = "${element(module.cloudinit.rendered_secondary, count.index)}"
+  iam_instance_profile                 = "${var.instance_profile_name}"
+  disable_api_termination              = true
+
+  tags {
+    Name      = "${format("%smongodb-%s-%02d", var.prefix, var.cluster_id, count.index + 2)}"
+    Role      = "${format("%smongodb-%s", var.prefix, var.cluster_id)}"
+    Terraform = "yes"
+  }
+
+  count = "${var.num_instances - 1}"
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+resource "aws_instance" "mongodb_primary" {
+  ami                                  = "${var.ami_id}"
+  availability_zone                    = "${element(var.azs, var.num_instances - 1)}"
+  ebs_optimized                        = "${var.ebs_optimized}"
+  instance_initiated_shutdown_behavior = "stop"
+  instance_type                        = "${var.instance_type}"
+  key_name                             = "${var.key_name}"
+  vpc_security_group_ids               = ["${concat(list(aws_security_group.mongodb_servers.id), var.security_group_ids)}"]
+  subnet_id                            = "${element(var.subnet_ids, var.num_instances - 1)}"
+  user_data                            = "${element(module.cloudinit.rendered_primary, count.index)}"
   iam_instance_profile                 = "${var.instance_profile_name}"
   disable_api_termination              = true
 
@@ -111,46 +156,44 @@ resource "aws_instance" "mongodb" {
     Terraform = "yes"
   }
 
-  count = "${var.num_instances}"
+  depends_on = ["aws_instance.mongodb_secondary"]
+
+  count = 1
 
   # TODO(saj): Remove comments following testing.
-  /*
   lifecycle {
     prevent_destroy = false
   }
-  */
-
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    port        = "22"
-    host        = "${self.private_ip}"
-    private_key = "${file(var.key_location)}"
-
-    bastion_host = "${var.bastion_host}"
-    bastion_port = "${var.bastion_port}"
-    bastion_user = "${var.bastion_user}"
-    bastion_private_key = "${file(var.bastion_key)}"
-  }
-
-#  provisioner "remote-exec" {
-#    inline = ["sudo umount /mongo"]
-#    when   = "destroy"
-# }
 }
 
-resource "aws_volume_attachment" "mongodb" {
+resource "aws_volume_attachment" "mongodb_primary" {
   device_name = "/dev/sdi"
-  volume_id   = "${element(aws_ebs_volume.mongodb.*.id, count.index)}"
-  instance_id = "${element(aws_instance.mongodb.*.id, count.index)}"
-  count       = "${var.num_instances}"
+  volume_id   = "${element(aws_ebs_volume.mongodb_primary.*.id, count.index)}"
+  instance_id = "${element(aws_instance.mongodb_primary.*.id, count.index)}"
+  count       = 1
 }
 
-resource "aws_route53_record" "mongodb" {
+resource "aws_volume_attachment" "mongodb_secondary" {
+  device_name = "/dev/sdi"
+  volume_id   = "${element(aws_ebs_volume.mongodb_secondary.*.id, count.index)}"
+  instance_id = "${element(aws_instance.mongodb_secondary.*.id, count.index)}"
+  count       = "${var.num_instances - 1}"
+}
+
+resource "aws_route53_record" "mongodb_primary" {
   zone_id = "${var.zone_id}"
   name    = "${format("%smongodb-%s-%02d", var.prefix, var.cluster_id, count.index + 1)}"
   type    = "A"
   ttl     = "300"
-  records = ["${element(aws_instance.mongodb.*.private_ip, count.index)}"]
-  count   = "${var.num_instances}"
+  records = ["${element(aws_instance.mongodb_primary.*.private_ip, count.index)}"]
+  count   = 1
+}
+
+resource "aws_route53_record" "mongodb_secondary" {
+  zone_id = "${var.zone_id}"
+  name    = "${format("%smongodb-%s-%02d", var.prefix, var.cluster_id, count.index + 2)}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${element(aws_instance.mongodb_secondary.*.private_ip, count.index)}"]
+  count   = "${var.num_instances - 1}"
 }

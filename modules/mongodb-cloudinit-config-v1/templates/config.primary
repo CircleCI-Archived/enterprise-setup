@@ -1,0 +1,306 @@
+#!/bin/bash
+
+set -e
+set -x
+set -o pipefail
+
+
+main() {
+  apply_mongo_optimisations
+  configure_mongo_repos
+  install_mongo_packages
+  configure_mongo_storage
+  configure_mongod
+  configure_mongod_log_rotation
+  start_mongod
+  wait_for_mongod
+  add_mongo_root_user
+  test_mongo_root_user
+  initiate_rs_config
+  restart_mongod
+  wait_for_mongod
+  create_replicasets
+}
+
+
+apply_mongo_optimisations() {
+  echo 'never' >/sys/kernel/mm/transparent_hugepage/enabled
+  echo 'never' >/sys/kernel/mm/transparent_hugepage/defrag
+}
+
+
+configure_mongo_repos() {
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+  echo 'deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse' >/etc/apt/sources.list.d/mongodb-org-3.2.list
+  apt-get -y update
+}
+
+
+install_mongo_packages() {
+  local packages=(
+    curl \
+    mongodb-org-mongos=3.2.13 \
+    mongodb-org-server=3.2.13 \
+    mongodb-org-shell=3.2.13 \
+    mongodb-org-tools=3.2.13 \
+    mongodb-org=3.2.13 \
+    unzip \
+    zip \
+  )
+
+  policyrcd_forbid_all
+  apt-get -y install "$${packages[@]}"
+  policyrcd_allow_all
+}
+
+
+configure_mongo_storage() {
+  if [[ -z "${mongo_device_path}" ]]; then
+    echo 'mongo_device_path is null' >&2
+    return 1
+  fi
+
+  if [[ -z "${mongo_mount_path}" ]]; then
+    echo 'mongo_mount_path is null' >&2
+    return 1
+  fi
+
+  # By this point, cloudinit should have formatted the block device with a
+  # filesystem (if necessary) and mounted the filesystem where we expect.
+  local -r actual_mount_path="$$(lsblk --raw --noheadings --nodeps --output MOUNTPOINT "${mongo_device_path}")"
+  if [[ "$${actual_mount_path}" != "${mongo_mount_path}" ]]; then
+    echo 'mongo_device_path is not mounted' >&2
+    return 1
+  fi
+
+  mkdir "${mongo_mount_path}/data"
+  chown mongodb:mongodb "${mongo_mount_path}" "${mongo_mount_path}/data"
+}
+
+
+configure_mongod() {
+  mkdir /etc/mongodb
+
+  cat - >/etc/mongodb/ca.pem <<'EOF'
+${ca_cert_pem}
+EOF
+  chmod 0444 /etc/mongodb/ca.pem
+
+  cat - >/etc/mongodb/server.pem <<'EOF'
+${server_key_pem}
+${server_cert_pem}
+EOF
+  chown root:mongodb /etc/mongodb/server.pem
+  chmod 0440 /etc/mongodb/server.pem
+
+  # This certificate is not strictly required on the servers.  Convenience only.
+  cat - >/etc/mongodb/root.pem <<'EOF'
+${root_key_pem}
+${root_cert_pem}
+EOF
+  chown root:root /etc/mongodb/root.pem
+  chmod 0440 /etc/mongodb/root.pem
+
+  cat - >/etc/mongod.conf <<'EOF'
+storage:
+  dbPath: ${mongo_mount_path}/data
+
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+  logRotate: reopen
+  timeStampFormat: iso8601-utc
+
+# Manually uncomment the following lines and 'service mongod restart' when you
+# are ready to deploy the replica set.  We disable this by default so that
+# cloudinit may bootstrap the root user.
+
+#replication:
+#  replSetName: ${mongo_replica_set_name}
+
+security:
+  clusterAuthMode: x509
+
+net:
+  port: 27017
+  ssl:
+    mode: requireSSL
+    CAFile: /etc/mongodb/ca.pem
+    PEMKeyFile: /etc/mongodb/server.pem
+    disabledProtocols: TLS1_0,TLS1_1
+EOF
+}
+
+
+configure_mongod_log_rotation() {
+  cat - >/etc/logrotate.d/mongod <<'EOF'
+/var/log/mongodb/mongod.log {
+    daily
+    rotate 6
+    missingok
+    notifempty
+    compress
+    delaycompress
+    postrotate
+      /bin/kill -USR1 "$(/bin/cat /var/run/mongodb.pid)"
+    endscript
+}
+EOF
+}
+
+
+start_mongod() {
+  service mongod start
+}
+
+
+restart_mongod() {
+  service mongod restart
+}
+
+
+wait_for_mongod() {
+  local -r timeout=60
+  local -r started="$${SECONDS}"
+  local now
+  while ! nc -n -w 3 127.0.0.1 27017 </dev/null ; do
+    now="$${SECONDS}"
+    if [[ $(( $${now} - $${started} )) -gt $${timeout} ]]; then
+      echo "mongod failed to start within $${timeout} seconds" >&2
+      exit 1
+    fi
+    echo 'waiting for mongod...' >&2
+    sleep 5
+  done
+}
+
+
+add_mongo_root_user() {
+  local -r subject="$(rfc2253_subject_from_x509_cert /etc/mongodb/root.pem)"
+  if [[ -z "$${subject}" ]]; then
+    echo 'failed to extract subject DN from root user x509 certificate' >&2
+    exit 1
+  fi
+
+  mongo \
+    --ssl \
+    --sslCAFile /etc/mongodb/ca.pem \
+    --sslPEMKeyFile /etc/mongodb/root.pem \
+    admin <<EOF
+db.getSiblingDB("\$external").runCommand(
+  {
+    createUser: "$${subject}",
+    roles: [
+      { role: 'root', db: 'admin' }
+    ]
+  }
+)
+EOF
+}
+
+
+test_mongo_root_user() {
+  local -r subject="$(rfc2253_subject_from_x509_cert /etc/mongodb/root.pem)"
+  if [[ -z "$${subject}" ]]; then
+    echo 'failed to extract subject DN from root user x509 certificate' >&2
+    exit 1
+  fi
+
+  mongo \
+    --authenticationDatabase admin \
+    --authenticationMechanism MONGODB-X509 \
+    --ssl \
+    --sslCAFile /etc/mongodb/ca.pem \
+    --sslPEMKeyFile /etc/mongodb/root.pem \
+    admin <<EOF
+db.getSiblingDB("\$external").auth(
+  {
+    mechanism: "MONGODB-X509",
+    user: "$${subject}"
+  }
+)
+
+db.stats()
+EOF
+}
+
+
+create_replicasets() {
+  local -r subject="$(rfc2253_subject_from_x509_cert /etc/mongodb/root.pem)"
+  if [[ -z "$${subject}" ]]; then
+    echo 'failed to extract subject DN from root user x509 certificate' >&2
+    exit 1
+  fi
+
+  mongo \
+    --ssl \
+    --sslCAFile /etc/mongodb/ca.pem \
+    --sslPEMKeyFile /etc/mongodb/root.pem \
+    admin <<EOF
+db.getSiblingDB("\$external").auth(
+  {
+    mechanism: "MONGODB-X509",
+    user: "$${subject}"
+  }
+)
+
+rs.initiate(
+  {
+    _id : "${mongo_replica_set_name}",
+    members: [
+      { _id : 0, host : "${mongo_replica_set_name}-01.infra.circleci.com:27017" }
+    ]
+  }
+)
+
+function checkRsStatus() {
+  status = rs.status()
+  if (status.myState && status.ok && status.myState === 1 && status.ok === 1) {
+    return true
+  }
+  return false
+}
+
+while (checkRsStatus() === false) {
+  print('waiting for primary replicaset to be ready')
+  sleep(10000)
+}
+
+for (var i=1; i < ${num_instances}; i++) {
+  rs.add("${mongo_replica_set_name}-0"+(i+1)+".${mongo_domain}:27017")
+}
+EOF
+}
+
+
+initiate_rs_config() {
+  sed -i 's/#replication/replication/' /etc/mongod.conf
+  sed -i 's/#  replSetName/   replSetName/' /etc/mongod.conf
+}
+
+rfc2253_subject_from_x509_cert() {
+  local path="$1"
+  openssl x509 -in "$${path}" -subject -nameopt RFC2253 \
+    | sed -nr '/^-+BEGIN CERTIFICATE-+$/,/^-+END CERTIFICATE-+$/!p' \
+    | head -n 1 \
+    | sed 's/^subject= //' \
+    | sed 's,\\,\\\\,g' \
+    | sed 's,",\\",g'
+}
+
+
+policyrcd_forbid_all() {
+  local -r p='/usr/sbin/policy-rc.d'
+  echo 'exit 101' >"$${p}"
+  chmod a+x "$${p}"
+}
+
+
+policyrcd_allow_all() {
+  local -r p='/usr/sbin/policy-rc.d'
+  rm -f "$${p}"
+}
+
+
+main "$$@"

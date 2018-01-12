@@ -1,5 +1,9 @@
-output "rendered" {
-  value = ["${data.template_cloudinit_config.config.*.rendered}"]
+output "rendered_primary" {
+  value = ["${data.template_cloudinit_config.config_primary.*.rendered}"]
+}
+
+output "rendered_secondary" {
+  value = ["${data.template_cloudinit_config.config_secondary.*.rendered}"]
 }
 
 output "ca_key_pem" {

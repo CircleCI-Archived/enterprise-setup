@@ -2,8 +2,12 @@ output "clients_security_group_id" {
   value = "${aws_security_group.mongodb_clients.id}"
 }
 
-output "server_fqdns" {
-  value = ["${aws_route53_record.mongodb.*.fqdn}"]
+output "server_primary_fqdn" {
+  value = ["${aws_route53_record.mongodb_primary.*.fqdn}"]
+}
+
+output "server_secondary_fqdn" {
+  value = ["${aws_route53_record.mongodb_secondary.*.fqdn}"]
 }
 
 output "ca_key_pem" {

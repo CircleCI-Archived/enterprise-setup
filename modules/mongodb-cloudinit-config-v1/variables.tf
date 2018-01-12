@@ -18,3 +18,5 @@ variable "mongo_device_path" {}
 variable "mongo_mount_path" {
   default = "/mongo"
 }
+
+variable "mongo_domain" {}
