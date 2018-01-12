@@ -4,6 +4,7 @@ set -e
 set -x
 set -o pipefail
 
+IS_MASTER="${is_master}"
 
 main() {
   apply_mongo_optimisations
@@ -19,6 +20,9 @@ main() {
   initiate_rs_config
   restart_mongod
   wait_for_mongod
+  if [[ "$IS_MASTER" == "true" ]]; then
+    create_replicasets
+  fi
 }
 
 
@@ -153,6 +157,7 @@ start_mongod() {
   service mongod start
 }
 
+
 restart_mongod() {
   service mongod restart
 }
@@ -224,11 +229,58 @@ EOF
 }
 
 
+create_replicasets() {
+  local -r subject="$(rfc2253_subject_from_x509_cert /etc/mongodb/root.pem)"
+  if [[ -z "$${subject}" ]]; then
+    echo 'failed to extract subject DN from root user x509 certificate' >&2
+    exit 1
+  fi
+
+  mongo \
+    --ssl \
+    --sslCAFile /etc/mongodb/ca.pem \
+    --sslPEMKeyFile /etc/mongodb/root.pem \
+    admin <<EOF
+db.getSiblingDB("\$external").auth(
+  {
+    mechanism: "MONGODB-X509",
+    user: "$${subject}"
+  }
+)
+
+rs.initiate(
+  {
+    _id : "${mongo_replica_set_name}",
+    members: [
+      { _id : 0, host : "${mongo_replica_set_name}-01.infra.circleci.com:27017" }
+    ]
+  }
+)
+
+function checkRsStatus() {
+  status = rs.status()
+  if (status.myState && status.ok && status.myState === 1 && status.ok === 1) {
+    return true
+  }
+  return false
+}
+
+while (checkRsStatus() === false) {
+  print('waiting for primary replicaset to be ready')
+  sleep(10000)
+}
+
+for (var i=1; i < ${num_instances}; i++) {
+  rs.add("${mongo_replica_set_name}-0"+(i+1)+".${mongo_domain}:27017")
+}
+EOF
+}
+
+
 initiate_rs_config() {
   sed -i 's/#replication/replication/' /etc/mongod.conf
   sed -i 's/#  replSetName/   replSetName/' /etc/mongod.conf
 }
-
 
 rfc2253_subject_from_x509_cert() {
   local path="$1"

@@ -84,7 +84,7 @@ resource "aws_ebs_volume" "mongodb_primary" {
     Terraform = "yes"
   }
 
-  count = "${var.num_instances}"
+  count = 1
 
   lifecycle {
     prevent_destroy = false
@@ -104,7 +104,7 @@ resource "aws_ebs_volume" "mongodb_secondary" {
     Terraform = "yes"
   }
 
-  count = "${var.num_instances}"
+  count = "${var.num_instances - 1}"
 
   lifecycle {
     prevent_destroy = false
@@ -120,7 +120,7 @@ resource "aws_instance" "mongodb_secondary" {
   key_name                             = "${var.key_name}"
   vpc_security_group_ids               = ["${concat(list(aws_security_group.mongodb_servers.id), var.security_group_ids)}"]
   subnet_id                            = "${element(var.subnet_ids, count.index)}"
-  user_data                            = "${element(module.cloudinit.rendered_secondary, count.index)}"
+  user_data                            = "${element(module.cloudinit.rendered, count.index + 1)}"
   iam_instance_profile                 = "${var.instance_profile_name}"
   disable_api_termination              = true
 
@@ -146,7 +146,7 @@ resource "aws_instance" "mongodb_primary" {
   key_name                             = "${var.key_name}"
   vpc_security_group_ids               = ["${concat(list(aws_security_group.mongodb_servers.id), var.security_group_ids)}"]
   subnet_id                            = "${element(var.subnet_ids, var.num_instances - 1)}"
-  user_data                            = "${element(module.cloudinit.rendered_primary, count.index)}"
+  user_data                            = "${element(module.cloudinit.rendered, count.index)}"
   iam_instance_profile                 = "${var.instance_profile_name}"
   disable_api_termination              = true
 

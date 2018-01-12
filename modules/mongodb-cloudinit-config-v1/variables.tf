@@ -20,3 +20,7 @@ variable "mongo_mount_path" {
 }
 
 variable "mongo_domain" {}
+
+variable "is_master" {
+  default = ""
+}
