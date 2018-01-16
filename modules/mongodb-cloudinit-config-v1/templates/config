@@ -55,6 +55,7 @@ install_docker() {
   apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
 }
 
+
 apply_mongo_optimisations() {
   echo 'never' >/sys/kernel/mm/transparent_hugepage/enabled
   echo 'never' >/sys/kernel/mm/transparent_hugepage/defrag
@@ -100,20 +101,27 @@ configure_mongo_storage() {
 create_mongo_helper() {
   cat << EOF >> /home/ubuntu/.bash_profile
 mongo() {
-  sudo docker run -it -v /etc/mongodb:/etc/mongodb --rm true mongo:$${MONGO_VERSION} mongo \
-    --authenticationDatabase admin \
-    --authenticationMechanism MONGODB-X509 \
-    --ssl \
-    --sslCAFile /etc/mongodb/ca.pem \
-    --sslPEMKeyFile /etc/mongodb/root.pem \
-    admin \
-    "$@"
+  sudo docker run -it --rm \
+    --network host \
+    -u mongodb \
+    -v /home/mongodb:/home/mongodb \
+    -v /etc/mongodb:/etc/mongodb \
+    mongo:$${MONGO_VERSION} \
+    mongo \
+      --authenticationDatabase admin \
+      --authenticationMechanism MONGODB-X509 \
+      --ssl \
+      --sslCAFile /etc/mongodb/ca.pem \
+      --sslPEMKeyFile /etc/mongodb/root.pem \
+      admin
 }
 EOF
 }
 
 
 configure_mongod() {
+  sudo useradd -u 999 -m mongodb
+  chown mongodb "${mongo_mount_path}/data"
   mkdir /etc/mongodb
 
   cat - >/etc/mongodb/ca.pem <<'EOF'
@@ -125,7 +133,7 @@ EOF
 ${server_key_pem}
 ${server_cert_pem}
 EOF
-  chown root:mongodb /etc/mongodb/server.pem
+  chown mongodb /etc/mongodb/server.pem
   chmod 0440 /etc/mongodb/server.pem
 
   # This certificate is not strictly required on the servers.  Convenience only.
@@ -133,20 +141,13 @@ EOF
 ${root_key_pem}
 ${root_cert_pem}
 EOF
-  chown root:root /etc/mongodb/root.pem
+  chown mongodb /etc/mongodb/root.pem
   chmod 0440 /etc/mongodb/root.pem
 
   mkdir /etc/mongod
   cat - >/etc/mongod/mongod.conf <<'EOF'
 storage:
   dbPath: ${mongo_mount_path}/data
-
-systemLog:
-  destination: file
-  logAppend: true
-  path: /var/log/mongodb/mongod.log
-  logRotate: reopen
-  timeStampFormat: iso8601-utc
 
 # Manually uncomment the following lines and 'service mongod restart' when you
 # are ready to deploy the replica set.  We disable this by default so that
@@ -166,18 +167,24 @@ net:
     PEMKeyFile: /etc/mongodb/server.pem
     disabledProtocols: TLS1_0,TLS1_1
 EOF
+
+  chown -R mongodb /etc/mongod
+  chmod 0440 /etc/mongod/mongod.conf
 }
+
 
 pull_mongod() {
   docker pull mongo:$${MONGO_VERSION}
 }
 
+
 start_mongod() {
-  docker run -d --name mongodb --restart-policy always \
-    -p 27017:27017 \
+  docker run -d --name mongodb --restart always \
+    -u mongodb \
+    --network host \
     -v /mongo:/mongo \
     -v /etc/mongodb:/etc/mongodb \
-    -v /etc/mongod:/etc/mongod \
+    -v /etc/mongod:/etc/mongod:ro \
     mongo:$${MONGO_VERSION} \
       -f /etc/mongod/mongod.conf
 }
@@ -211,7 +218,13 @@ add_mongo_root_user() {
     exit 1
   fi
 
-  docker run -it --rm true -v /etc/mongodb:/etc/mongodb mongo:$${MONGO_VERSION} mongo \
+  docker run -i --rm \
+    --network host \
+    -u mongodb \
+    -v /home/mongodb:/home/mongodb \
+    -v /etc/mongodb:/etc/mongodb \
+    mongo:$${MONGO_VERSION} \
+    mongo \
     --ssl \
     --sslCAFile /etc/mongodb/ca.pem \
     --sslPEMKeyFile /etc/mongodb/root.pem \
@@ -235,13 +248,19 @@ test_mongo_root_user() {
     exit 1
   fi
 
-  docker run -it --rm true -v /etc/mongodb:/etc/mongodb mongo:$${MONGO_VERSION} mongo \
-    --authenticationDatabase admin \
-    --authenticationMechanism MONGODB-X509 \
-    --ssl \
-    --sslCAFile /etc/mongodb/ca.pem \
-    --sslPEMKeyFile /etc/mongodb/root.pem \
-    admin <<EOF
+  docker run -i --rm \
+    --network host \
+    -u mongodb \
+    -v /home/mongodb:/home/mongodb \
+    -v /etc/mongodb:/etc/mongodb \
+    mongo:$${MONGO_VERSION} \
+    mongo \
+      --authenticationDatabase admin \
+      --authenticationMechanism MONGODB-X509 \
+      --ssl \
+      --sslCAFile /etc/mongodb/ca.pem \
+      --sslPEMKeyFile /etc/mongodb/root.pem \
+      admin <<EOF
 db.getSiblingDB("\$external").auth(
   {
     mechanism: "MONGODB-X509",
@@ -261,11 +280,17 @@ create_replicasets() {
     exit 1
   fi
 
-  docker run -it --rm true -v /etc/mongodb:/etc/mongodb mongo:$${MONGO_VERSION} mongo \
-    --ssl \
-    --sslCAFile /etc/mongodb/ca.pem \
-    --sslPEMKeyFile /etc/mongodb/root.pem \
-    admin <<EOF
+  docker run -i --rm \
+    --network host \
+    -u mongodb \
+    -v /home/mongodb:/home/mongodb \
+    -v /etc/mongodb:/etc/mongodb \
+    mongo:$${MONGO_VERSION} \
+    mongo \
+      --ssl \
+      --sslCAFile /etc/mongodb/ca.pem \
+      --sslPEMKeyFile /etc/mongodb/root.pem \
+      admin <<EOF
 db.getSiblingDB("\$external").auth(
   {
     mechanism: "MONGODB-X509",
@@ -303,9 +328,10 @@ EOF
 
 
 initiate_rs_config() {
-  sed -i 's/#replication/replication/' /etc/mongod.conf
-  sed -i 's/#  replSetName/   replSetName/' /etc/mongod.conf
+  sed -i 's/#replication/replication/' /etc/mongod/mongod.conf
+  sed -i 's/#  replSetName/   replSetName/' /etc/mongod/mongod.conf
 }
+
 
 rfc2253_subject_from_x509_cert() {
   local path="$1"
