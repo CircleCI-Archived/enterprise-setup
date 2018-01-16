@@ -13,6 +13,7 @@ resource "aws_security_group" "ssh_from_services" {
 }
 
 module "mongodb" {
+  count = 0
   source                = "./modules/mongodb"
   num_instances         = "3"
   prefix                = "${var.prefix}-"
@@ -40,10 +41,6 @@ module "mongodb" {
   mongo_domain = "${var.route_zone_domain}"
 
   aws_access_key_location = "${var.aws_access_key_location}"
-  bastion_host = "${var.bastion_host != "" ? var.bastion_host : aws_instance.services.public_ip}"
-  bastion_port = "${var.bastion_port != "" ? var.bastion_port : "22"}"
-  bastion_user = "${var.bastion_user != "" ? var.bastion_user : "ubuntu"}"
-  bastion_key = "${var.bastion_key != "" ? var.bastion_key : "~/.ssh/id_rsa"}"
   key_location = "${var.mongodb_key_location}"
 }
 
