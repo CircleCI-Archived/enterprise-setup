@@ -71,7 +71,3 @@ variable "zone_id" {}
 variable "mongo_domain" {}
 variable "aws_access_key_location" {}
 variable "key_location" {}
-variable "bastion_host" {}
-variable "bastion_port" {}
-variable "bastion_user" {}
-variable "bastion_key" {}
