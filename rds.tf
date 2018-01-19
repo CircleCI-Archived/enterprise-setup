@@ -42,3 +42,11 @@ resource "null_resource" "pg_setup" {
 output "posgresql_endpoint" {
   value = "${module.circle_pg.endpoint}"
 }
+
+output "postgres_application_user" {
+  value = "${module.circle_pg.application_user}"
+}
+
+output "postgres_application_password" {
+  value = "${module.circle_pg.application_password}"
+}
