@@ -13,14 +13,13 @@ resource "aws_security_group" "ssh_from_services" {
 }
 
 module "mongodb" {
-  count = 0
   source                = "./modules/mongodb"
   num_instances         = "3"
   prefix                = "${var.prefix}-"
   cluster_id            = "20171207"
   instance_type         = "${var.mongodb_instance_type}"
   key_name              = "${var.aws_mongodb_ssh_key_name}"
-  ami_id                = "${var.mongo_image}"
+  ami_id                = "${lookup(var.ubuntu_ami, var.aws_region)}"
   azs                   = "${var.azs}"
   vpc_id                = "${var.aws_vpc_id}"
   subnet_ids            = "${var.aws_subnet_ids}"

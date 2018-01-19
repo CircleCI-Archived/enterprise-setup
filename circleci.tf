@@ -227,6 +227,22 @@ resource "aws_security_group" "circleci_users_sg" {
     from_port   = 64535
     to_port     = 65535
   }
+
+  # For HA posgresql
+  egress {
+    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+    protocol    = "tcp"
+    from_port   = 5432
+    to_port     = 5432
+  }
+
+  # For HA mongodb
+  egress {
+    cidr_blocks = ["${data.aws_subnet.subnet.cidr_block}"]
+    protocol    = "tcp"
+    from_port   = 27017
+    to_port     = 27017
+  }
 }
 
 resource "aws_security_group" "circleci_vm_sg" {

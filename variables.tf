@@ -6,7 +6,6 @@ variable "aws_access_key" {
   description = "Access key used to create instances"
 }
 
-
 variable "aws_access_key_location" {
   description = "Access key used to create instances"
   default = "~/.ssh/id_rsa"
@@ -123,7 +122,6 @@ variable "route_zone_domain" {
   description = "The actual domain of the Route53 Zone ie. circleci.com"
 }
 
-
 variable "http_proxy" {
   default = ""
 }
@@ -149,17 +147,6 @@ variable "azs" {
   default = []
 }
 
-# HA Mongodb
-
-variable "mongodb_instance_type" {
-  description = "instance type for mongodb replicas.  We recommend a c4 instance"
-  default     = "c4.large"
-}
-
-variable "mongo_image" {
-    default = "ami-845367ff"
-}
-
 variable "ubuntu_ami" {
   default = {
     ap-northeast-1 = "ami-0a16e26c"
@@ -176,16 +163,55 @@ variable "ubuntu_ami" {
   }
 }
 
+# HA Global
 
 variable "bastion_host" {
+  description = "host to use as bastion server in place of services box"
   default = ""
 }
 variable "bastion_port" {
+  description = "SSH port of bastion host"
   default = ""
 }
 variable "bastion_user" {
+  description = "SSH user of bastion host"
   default = ""
 }
 variable "bastion_key" {
+  description = "SSH key of bastion host"
   default = ""
+}
+
+# HA Mongodb
+
+variable "mongodb_instance_type" {
+  description = "instance type for mongodb replicas.  We recommend a c4 instance"
+  default     = "c4.large"
+}
+
+# HA Postgresql
+
+# Postgres Databases. "circle" is omitted from this list because
+# it is the default database created
+variable "postgresql_databases" {
+  description = "list of databases to create in postgres. 'circle' is omitted from this list because it is the default database created"
+  default = [
+    "vms",
+    "conductor_production",
+    "contexts_service_production",
+    "cron_service_production",
+  ]
+}
+
+variable "postgres_db_password" {
+  description = "root password for postgres"
+}
+
+variable "postgresql_ingress_sg_group_ids" {
+  description = "additional security groups to allow as ingress"
+  default = []
+}
+
+variable "postgresql_egress_cidr" {
+  default = "0.0.0.0/0"
 }
