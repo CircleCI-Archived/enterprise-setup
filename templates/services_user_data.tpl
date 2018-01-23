@@ -15,7 +15,7 @@ apt-get update && apt-get -y upgrade
 echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 
 echo "--------------------------------------------"
 echo "          Download Replicated"
@@ -25,12 +25,12 @@ curl -sSk -o /tmp/get_replicated.sh "https://get.replicated.com/docker?replicate
 echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
-apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
+apt-get install -y linux-image-extra-virtual
 apt-get install -y apt-transport-https ca-certificates curl
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+ apt-get update
+apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial cgmanager
 
 echo "--------------------------------------------"
 echo "       Installing Replicated"
