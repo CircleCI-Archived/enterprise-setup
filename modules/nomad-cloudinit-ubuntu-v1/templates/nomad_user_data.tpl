@@ -14,12 +14,12 @@ apt-get update && apt-get -y upgrade
 echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
-apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
+apt-get install -y linux-image-extra-virtual
 apt-get install -y apt-transport-https ca-certificates curl
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial cgmanager
 
 sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
@@ -38,7 +38,7 @@ mv nomad /usr/bin
 echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
 log_level = "DEBUG"
@@ -63,15 +63,19 @@ client {
 EOT
 
 echo "--------------------------------------"
-echo "      Creating nomad.conf"
+echo "      Creating nomad.service"
 echo "--------------------------------------"
-cat <<EOT > /etc/init/nomad.conf
-start on filesystem or runlevel [2345]
-stop on shutdown
+cat <<EOT > /etc/systemd/system/nomad.service
+[Unit]
+Description=Nomad
+Documentation=https://nomadproject.io/docs/
 
-script
-    exec nomad agent -config /etc/nomad/config.hcl
-end script
+[Service]
+ExecStart=/usr/bin/nomad agent -config /etc/nomad/config.hcl
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
 EOT
 
 echo "--------------------------------------"
@@ -82,4 +86,6 @@ docker network create --driver=bridge --opt com.docker.network.bridge.name=ci-pr
 echo "--------------------------------------"
 echo "      Starting Nomad service"
 echo "--------------------------------------"
-service nomad restart
+systemctl daemon-reload
+systemctl enable nomad
+systemctl restart nomad

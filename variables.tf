@@ -126,8 +126,13 @@ variable "ubuntu_ami" {
     eu-central-1   = "ami-ff30a290"
     eu-west-1      = "ami-3cf36145"
     sa-east-1      = "ami-24642648"
-    us-east-1      = "ami-0ce3bb76"
-    us-east-2      = "ami-01664c64"
+
+    # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20180122
+    us-east-1      = "ami-263d0b5c"
+
+    # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20180122
+    us-east-2      = "ami-218da744"
+
     us-west-1      = "ami-98595af8"
     us-west-2      = "ami-779a2d0f"
   }
