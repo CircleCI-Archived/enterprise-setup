@@ -239,7 +239,7 @@ resource "aws_security_group" "circleci_users_sg" {
 
 resource "aws_security_group" "circleci_vm_sg" {
   name        = "${var.prefix}_vm_sg"
-  description = "SG form VMs allocated by CircleCI for Remote Docker and machine executor"
+  description = "SG for VMs allocated by CircleCI for Remote Docker and machine executor"
 
   vpc_id = "${var.aws_vpc_id}"
 
