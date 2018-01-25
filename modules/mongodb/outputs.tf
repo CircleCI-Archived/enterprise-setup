@@ -25,3 +25,4 @@ output "root_key_pem" {
 output "root_cert_pem" {
   value = "${module.cloudinit.root_cert_pem}"
 }
+
