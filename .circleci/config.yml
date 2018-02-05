@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: hashicorp/terraform:0.9.9
+      - image: iynere/enterprise-setup
     working_directory: ~/terraform
     steps:
       - checkout
