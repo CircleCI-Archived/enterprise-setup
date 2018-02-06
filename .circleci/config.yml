@@ -49,7 +49,18 @@ jobs:
 
       - run:
           name: test AMIs
-          command:
+          working_directory: ~/
+          command: |
+            mkdir -p test_results/bats
+            bats test/amis.bats | \
+            perl tap-to-junit.sh > \
+            test_results/bats/results.xml
+
+      - store_test_results:
+          path: test_results
+
+      - store_artifacts:
+          path: test_results
 
       - run:
           name: Run the plan
