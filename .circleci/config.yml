@@ -49,11 +49,10 @@ jobs:
 
       - run:
           name: test AMIs
-          working_directory: ~/
           command: |
             mkdir -p test_results/bats
             bats test/amis.bats | \
-            perl tap-to-junit-xml/tap-to-junit-xml > \
+            perl ~/tap-to-junit-xml/tap-to-junit-xml > \
             test_results/bats/results.xml
 
       - store_test_results:
