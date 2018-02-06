@@ -2,7 +2,7 @@
 
 echo "#!/usr/bin/env bats"
 
-for i in $(cat /Users/avena/Desktop/amilist.txt);
+for i in $(cat /tmp/amilist.txt);
 do
   REGION=$(echo $i | cut -d "=" -f 1)
   AMI_ID=$(echo $i | cut -d "=" -f 2)
