@@ -119,7 +119,7 @@ variable "legacy_builder_spot_price" {
 
 variable "ubuntu_ami" {
   default = {
-    ap-northeast-1 = "ami-2d69f14"
+    ap-northeast-1 = "ami-2d69f14b"
     ap-northeast-2 = "ami-cd78d8a3"
     ap-southeast-1 = "ami-c38bf8bf"
     ap-southeast-2 = "ami-a437cac6"
