@@ -70,13 +70,14 @@ jobs:
           name: generate test file
           command: bash test/setup.sh > test/amis.bats
 
+      # | \
+      #            perl /tap-to-junit-xml/tap-to-junit-xml > \
+      #            test_results/bats/results.xml
       - run:
           name: test AMIs
           command: |
             mkdir -p test_results/bats
-            bats test/amis.bats | \
-            perl /tap-to-junit-xml/tap-to-junit-xml > \
-            test_results/bats/results.xml
+            bats test/amis.bats
 
       - store_test_results:
           path: test_results
@@ -95,6 +96,4 @@ workflows:
   test:
     jobs:
       - terraform
-      - validate_amis:
-          requires:
-            - terraform
+      - validate_amis
