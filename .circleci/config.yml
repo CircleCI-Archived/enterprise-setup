@@ -1,10 +1,10 @@
 version: 2
 
 jobs:
-  build:
+  terraform:
     docker:
-      - image: iynere/enterprise-setup:latest
-    working_directory: ~/enterprise-setup
+      - image: hashicorp/terraform:0.9.9
+    working_directory: ~/terraform
     steps:
       - checkout
 
@@ -32,6 +32,25 @@ jobs:
       - run:
           name: Validate the configuration
           command: terraform validate
+
+      - run:
+          name: Run the plan
+          command: terraform plan
+
+      - run:
+          name: Enable nomad orchestration
+          command: echo "enable_nomad = 1" >> terraform.tfvars
+
+      - run:
+          name: Run the plan
+          command: terraform plan
+
+  validate_amis:
+    docker:
+      - image: iynere/enterprise-setup:latest
+    working_directory: ~/enterprise-setup
+    steps:
+      - checkout
 
       - run:
           name: setup AWS creds
@@ -71,14 +90,11 @@ jobs:
       - store_artifacts:
           path: /tmp
 
-      - run:
-          name: Run the plan
-          command: terraform plan
-
-      - run:
-          name: Enable nomad orchestration
-          command: echo "enable_nomad = 1" >> terraform.tfvars
-
-      - run:
-          name: Run the plan
-          command: terraform plan
+workflows:
+  version: 2
+  test:
+    jobs:
+      - terraform:
+      - validate_amis:
+          requires:
+            - terraform
