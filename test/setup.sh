@@ -12,5 +12,5 @@ do
     aws --region $REGION ec2 describe-images --filters "Name=image-id,Values=\$AMI_ID" | jq '.Images[] | length'
   }
 EOF
-	printf "Validating $AMI_ID located in $REGION..."
+
 done
