@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: iynere/enterprise-setup
+      - image: iynere/enterprise-setup:latest
     working_directory: ~/terraform
     steps:
       - checkout
