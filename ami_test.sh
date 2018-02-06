@@ -9,8 +9,11 @@ do
 
   AWS_RESULT=$(aws --region $REGION  ec2 describe-images --filters "Name=image-id,Values=$AMI_ID" | jq '.Images[] | length')
 
-  if [ $AWS_RESULT -gt 0 ]; then
+  if [ $AWS_RESULT ]; then
     printf " PASSED\n"
+  else
+    printf " FAILED\n"
+    exit 1
   fi
 
 done
