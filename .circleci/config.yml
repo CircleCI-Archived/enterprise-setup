@@ -7,6 +7,7 @@ jobs:
     working_directory: ~/terraform
     steps:
       - checkout
+
       - run:
           name: Generate the tfvars file
           command: |
@@ -25,7 +26,9 @@ jobs:
             echo 'http_proxy = ""' >> terraform.tfvars
             echo 'https_proxy = ""' >> terraform.tfvars
             echo 'no_proxy = ""' >> terraform.tfvars
+
       - run: terraform get
+
       - run:
           name: Validate the configuration
           command: terraform validate
@@ -40,22 +43,22 @@ jobs:
             echo "aws_secret_access_key = $CCIE_AWS_SECRET_KEY" >> .aws/credentials
             echo "[default]" > .aws/config
 
-      - store_artifacts:
-          path: ~/.aws
+      - run:
+          name: setup tmp AMIs list
+          command: cat variables.tf | grep "ami-" | tr -d " " | tr -d '"' > /tmp/amilist.txt
 
       - run:
           name: test AMIs
-          working_directory: ~/terraform
-          command: |
-            cat variables.tf | grep "ami-" | tr -d " " | tr -d '"' > /tmp/amilist.txt
-            bash ami_test.sh
+          command:
 
       - run:
           name: Run the plan
           command: terraform plan
+
       - run:
           name: Enable nomad orchestration
           command: echo "enable_nomad = 1" >> terraform.tfvars
+
       - run:
           name: Run the plan
           command: terraform plan
