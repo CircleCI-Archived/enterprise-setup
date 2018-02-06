@@ -119,17 +119,17 @@ variable "legacy_builder_spot_price" {
 
 variable "ubuntu_ami" {
   default = {
-    ap-northeast-1 = "ami-2d69f14b"
+    ap-northeast-1 = "ami-2d69f14bX"
     ap-northeast-2 = "ami-cd78d8a3"
-    ap-southeast-1 = "ami-c38bf8bf"
+    ap-southeast-1 = "ami-c38bf8bfX"
     ap-southeast-2 = "ami-a437cac6"
-    eu-central-1   = "ami-ff30a290"
+    eu-central-1   = "ami-ff30a290X"
     eu-west-1      = "ami-3cf36145"
-    sa-east-1      = "ami-24642648"
+    sa-east-1      = "ami-24642648X"
     us-east-1      = "ami-0ce3bb76"
-    us-east-2      = "ami-01664c64"
+    us-east-2      = "ami-01664c64X"
     us-west-1      = "ami-98595af8"
-    us-west-2      = "ami-779a2d0f"
+    us-west-2      = "ami-779a2d0fX"
   }
 }
 
