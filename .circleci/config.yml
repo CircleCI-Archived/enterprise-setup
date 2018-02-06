@@ -1,12 +1,13 @@
 version: 2
 
 jobs:
-  build:
+  terraform:
     docker:
       - image: hashicorp/terraform:0.9.9
     working_directory: ~/terraform
     steps:
       - checkout
+
       - run:
           name: Generate the tfvars file
           command: |
@@ -25,16 +26,73 @@ jobs:
             echo 'http_proxy = ""' >> terraform.tfvars
             echo 'https_proxy = ""' >> terraform.tfvars
             echo 'no_proxy = ""' >> terraform.tfvars
+
       - run: terraform get
+
       - run:
           name: Validate the configuration
           command: terraform validate
+
       - run:
           name: Run the plan
           command: terraform plan
+
       - run:
           name: Enable nomad orchestration
           command: echo "enable_nomad = 1" >> terraform.tfvars
+
       - run:
           name: Run the plan
           command: terraform plan
+
+  validate_amis:
+    docker:
+      - image: iynere/enterprise-setup:latest
+    working_directory: ~/enterprise-setup
+    steps:
+      - checkout
+
+      - run:
+          name: setup AWS creds
+          working_directory: ~/
+          command: |
+            mkdir .aws
+            echo "[default]" > .aws/credentials
+            echo "aws_access_key_id = $CCIE_AWS_ACCESS_KEY" >> .aws/credentials
+            echo "aws_secret_access_key = $CCIE_AWS_SECRET_KEY" >> .aws/credentials
+            echo "[default]" > .aws/config
+
+      - run:
+          name: setup tmp AMIs list
+          command: cat variables.tf | grep "ami-" | tr -d " " | tr -d '"' > /tmp/amilist.txt
+
+      - run:
+          name: generate test file
+          command: bash test/setup.sh > test/amis.bats
+
+      - run:
+          name: test AMIs
+          command: |
+            mkdir -p test_results/bats
+            bats test/amis.bats | \
+            perl /tap-to-junit-xml/tap-to-junit-xml > \
+            test_results/bats/results.xml
+
+      - store_test_results:
+          path: test_results
+
+      - store_artifacts:
+          path: test_results
+
+      - store_artifacts:
+          path: test
+
+      - store_artifacts:
+          path: /tmp
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - terraform
+      - validate_amis
