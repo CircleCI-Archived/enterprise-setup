@@ -47,11 +47,8 @@ jobs:
           name: test AMIs
           working_directory: ~/
           command: |
-            # should pass
-            aws --region ap-northeast-1 ec2 describe-images --filters "Name=image-id,Values=ami-2d69f14b"
-
-            # should fail
-            aws --region ap-northeast-1 ec2 describe-images --filters "Name=image-id,Values=ami-2d69f14bdddddd"
+            cat variables.tf | grep "ami-" | tr -d " " | tr -d '"' > /tmp/amilist.txt
+            bash ami_test.sh
 
       - run:
           name: Run the plan
