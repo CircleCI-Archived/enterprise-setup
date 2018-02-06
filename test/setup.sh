@@ -4,7 +4,7 @@ echo "#!/usr/bin/env bats"
 
 cat << EOF
 verify_ami () {
-	aws --region \$1 ec2 describe-images --filters "Name=image-id,Values=\$2" | jq '.Images[] | length'
+  aws --region \$1 ec2 describe-images --filters "Name=image-id,Values=\$2" | jq '.Images[] | length'
 }
 EOF
 
