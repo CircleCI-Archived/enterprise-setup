@@ -48,7 +48,7 @@ jobs:
           working_directory: ~/terraform
           command: |
             cat variables.tf | grep "ami-" | tr -d " " | tr -d '"' > /tmp/amilist.txt
-            bash ami_test.sh
+            ls -l
 
       - run:
           name: Run the plan
