@@ -51,6 +51,7 @@ jobs:
           name: test AMIs
           command: |
             mkdir -p test_results/bats
+            bash test/setup.sh > test/amis.bats
             bats test/amis.bats | \
             perl /tap-to-junit-xml/tap-to-junit-xml > \
             test_results/bats/results.xml
