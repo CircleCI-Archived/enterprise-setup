@@ -4,7 +4,7 @@ jobs:
   build:
     docker:
       - image: iynere/enterprise-setup:latest
-    working_directory: ~/terraform
+    working_directory: ~/enterprise-setup
     steps:
       - checkout
 
@@ -53,7 +53,7 @@ jobs:
           command: |
             mkdir -p test_results/bats
             bats test/amis.bats | \
-            perl tap-to-junit.sh > \
+            perl tap-to-junit-xml/tap-to-junit-xml > \
             test_results/bats/results.xml
 
       - store_test_results:
