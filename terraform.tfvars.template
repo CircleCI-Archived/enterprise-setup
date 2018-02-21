@@ -14,7 +14,7 @@ aws_ssh_key_name = "..."
 #####################################
 
 circle_secret_passphrase = "..."
-services_instance_type = "c4.2xlarge"
+services_instance_type = "m5.2xlarge"
 builder_instance_type = "r3.4xlarge"
 nomad_client_instance_type = "m4.xlarge"
 
