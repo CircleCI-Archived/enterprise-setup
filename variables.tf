@@ -133,3 +133,17 @@ variable "ubuntu_ami" {
   }
 }
 
+variable "ha" {
+  description = ""
+  default     = "false"
+}
+
+variable "postgres_password" {
+  description = ""
+  default = ""
+}
+
+variable "mongo_password" {
+  description = ""
+  default = ""
+}

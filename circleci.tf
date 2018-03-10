@@ -1,3 +1,5 @@
+# Configure the AWS Provider
+
 data "aws_subnet" "subnet" {
   id = "${var.aws_subnet_id}"
 }
@@ -48,6 +50,16 @@ module "shutdown_sqs" {
   source = "./modules/aws_sqs"
   name   = "shutdown"
   prefix = "${var.prefix}"
+}
+
+# Populate circleci-customizations files
+
+data "template_file" "circleci-customizations" {
+  template = "${file("${path.module}/templates/ha-circle-customize.sh.tpl")}"
+  vars {
+    postgres_password = "${var.postgres_password}"
+    mongo_password = "${var.mongo_password}"
+  }
 }
 
 # Single general-purpose bucket
@@ -300,6 +312,33 @@ resource "aws_instance" "services" {
   }
 
   user_data = "${ var.services_user_data_enabled ? data.template_file.services_user_data.rendered : "" }"
+
+  connection {
+    type     = "ssh"
+    user     = "ubuntu"
+  }
+
+  provisioner "local-exec" {
+    command = "./scripts/ha-tls.sh ${aws_instance.services.public_ip} ${var.ha}"
+  }
+
+  provisioner "file" {
+    content = "${data.template_file.circleci-customizations.rendered}"
+    destination = "~/circle-customize.sh"
+  }
+
+  provisioner "file" {
+    source = "${path.module}/files/vault.json"
+    destination = "~/vault.json"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x ~/circle-customize.sh",
+      "sudo ~/circle-customize.sh",
+      "rm ~/circle-customize.sh",
+    ]
+  }
 
   lifecycle {
     prevent_destroy = false
