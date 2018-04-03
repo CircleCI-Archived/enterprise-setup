@@ -19,6 +19,8 @@ main() {
   wait_for_mongod
   add_mongo_root_user
   test_mongo_root_user
+  add_mongo_services_user
+  test_mongo_services_user
   initiate_rs_config
   restart_mongod
   wait_for_mongod
@@ -208,6 +210,50 @@ wait_for_mongod() {
     echo 'waiting for mongod...' >&2
     sleep 5
   done
+}
+
+
+add_mongo_services_user() {
+  docker run -i --rm \
+    --network host \
+    -u mongodb \
+    -v /home/mongodb:/home/mongodb \
+    -v /etc/mongodb:/etc/mongodb \
+    mongo:$${MONGO_VERSION} \
+    mongo \
+    admin <<EOF
+db.getSiblingDB("\$external").runCommand(
+  {
+    createUser: user: 'circle', pwd: $${mongo_circle_user_password.password},
+    roles: [  { role: 'readWrite', db: 'circle_ghe' },
+              { role: 'readWrite', db: 'build_state_dev_ghe' },
+              { role: 'readWrite', db: 'containers_dev_ghe' } ]
+  }
+)
+EOF
+}
+
+test_mongo_services_user() {
+  docker run -i --rm \
+    --network host \
+    -u mongodb \
+    -v /home/mongodb:/home/mongodb \
+    -v /etc/mongodb:/etc/mongodb \
+    mongo:$${MONGO_VERSION} \
+    mongo \
+      --authenticationDatabase admin \
+      --authenticationMechanism MONGODB-CR \
+      admin <<EOF
+db.getSiblingDB("\$external").auth(
+  {
+    mechanism: "MONGODB-CR",
+    user: "circle",
+    password: $${mongo_circle_user_password.password}
+  }
+)
+
+db.stats()
+EOF
 }
 
 
