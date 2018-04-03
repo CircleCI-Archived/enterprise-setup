@@ -14,7 +14,7 @@ data "template_file" "cloud_config" {
   count = "${var.num_instances}"
 }
 
-resource "mongo_circle_user_password" "password" {
+resource "random_string" "mongo_circle_user_password" {
   length = 20
   special = true
 }
@@ -30,7 +30,7 @@ data "template_file" "config" {
     mongo_device_path      = "${var.mongo_device_path}"
     mongo_mount_path       = "${var.mongo_mount_path}"
     mongo_domain           = "${var.mongo_domain}"
-    mongo_circle_user_password  = "${mongo_circle_user_password.password}"
+    mongo_circle_user_password  = "${random_string.mongo_circle_user_password.result}"
     num_instances          = "${var.num_instances}"
     is_master              = "${count.index == 0 ? "true" : "false"}"
 

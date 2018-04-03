@@ -221,15 +221,17 @@ add_mongo_services_user() {
     -v /etc/mongodb:/etc/mongodb \
     mongo:$${MONGO_VERSION} \
     mongo \
+    --ssl \
+    --sslCAFile /etc/mongodb/ca.pem \
+    --sslPEMKeyFile /etc/mongodb/root.pem \
     admin <<EOF
-db.getSiblingDB("\$external").runCommand(
-  {
-    createUser: user: 'circle', pwd: ${mongo_circle_user_password},
+db.getSiblingDB("\$external").runCommand({
+    createUser: 'circle',
+    pwd: '${mongo_circle_user_password}',
     roles: [  { role: 'readWrite', db: 'circle_ghe' },
-              { role: 'readWrite', db: 'build_state_dev_ghe' },
-              { role: 'readWrite', db: 'containers_dev_ghe' } ]
-  }
-)
+            { role: 'readWrite', db: 'build_state_dev_ghe' },
+            { role: 'readWrite', db: 'containers_dev_ghe' } ]
+})
 EOF
 }
 
@@ -241,9 +243,10 @@ test_mongo_services_user() {
     -v /etc/mongodb:/etc/mongodb \
     mongo:$${MONGO_VERSION} \
     mongo \
-      --authenticationDatabase admin \
-      --authenticationMechanism MONGODB-CR \
-      admin <<EOF
+    --ssl \
+    --sslCAFile /etc/mongodb/ca.pem \
+    --sslPEMKeyFile /etc/mongodb/root.pem \
+    admin <<EOF
 db.getSiblingDB("\$external").auth(
   {
     mechanism: "MONGODB-CR",
