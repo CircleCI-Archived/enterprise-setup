@@ -224,7 +224,7 @@ add_mongo_services_user() {
     admin <<EOF
 db.getSiblingDB("\$external").runCommand(
   {
-    createUser: user: 'circle', pwd: $${mongo_circle_user_password.password},
+    createUser: user: 'circle', pwd: ${mongo_circle_user_password},
     roles: [  { role: 'readWrite', db: 'circle_ghe' },
               { role: 'readWrite', db: 'build_state_dev_ghe' },
               { role: 'readWrite', db: 'containers_dev_ghe' } ]
@@ -248,7 +248,7 @@ db.getSiblingDB("\$external").auth(
   {
     mechanism: "MONGODB-CR",
     user: "circle",
-    password: $${mongo_circle_user_password.password}
+    password: ${mongo_circle_user_password}
   }
 )
 
