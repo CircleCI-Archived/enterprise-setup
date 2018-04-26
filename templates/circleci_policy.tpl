@@ -64,7 +64,7 @@
           {
               "Action": [
                  "sts:AssumeRole",
-		 "sts:GetFederationToken"
+                 "sts:GetFederationToken"
               ],
               "Resource": [
                   "arn:aws:iam::*:role/${role_name}"
