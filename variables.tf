@@ -22,6 +22,10 @@ variable "aws_ssh_key_name" {
   description = "The SSH key to be used for the instances"
 }
 
+variable "aws_ssl_cert" {
+  description = "The AWS SSL certificate to use"
+}
+
 variable "circle_secret_passphrase" {
   description = "Decryption key for secrets used by CircleCI machines"
 }
@@ -132,4 +136,3 @@ variable "ubuntu_ami" {
     us-west-2      = "ami-779a2d0f"
   }
 }
-

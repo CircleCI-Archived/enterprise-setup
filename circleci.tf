@@ -44,6 +44,8 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
+data "aws_caller_identity" "current" {}
+
 module "shutdown_sqs" {
   source = "./modules/aws_sqs"
   name   = "shutdown"
@@ -305,6 +307,113 @@ resource "aws_instance" "services" {
     prevent_destroy = false
   }
 }
+
+## Services Automatic AMI backup
+## Run the backup once a week and retain each backup for 90 days
+
+module "lambda_ami_backup" {
+  source = "git::https://github.com/cloudposse/tf_ami_backup.git?ref=tags/0.2.4"
+
+  name              = "services_backup"
+  stage             = ""
+  namespace         = "${var.prefix}"
+  region            = "${var.aws_region}"
+  ami_owner         = "${data.aws_caller_identity.current.account_id}"
+  instance_id       = "${aws_instance.services.id}"
+  retention_days    = "90"
+  backup_schedule   = "cron(00 23 * * 7 *)" # Machine will get rebooted once a week on Saturday night
+  cleanup_schedule  = "cron(05 23 * * 7 *)"
+  no_reboot         = "false"
+}
+
+##################################
+
+## Services ELB Stuff
+resource "aws_s3_bucket" "services_elb_access_logs" {
+  bucket = "${var.prefix}_services_elb_access_logs"
+  acl    = "private"
+}
+
+resource "aws_security_group" "services_elb_sg" {
+  name        = "${var.prefix}_services_elb_sg"
+  description = "SG for Services ELB"
+  vpc_id      = "${var.aws_vpc_id}"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8800
+    to_port     = 8800
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_elb" "services_elb" {
+  name                        = "${var.prefix}_services_elb"
+  subnets                     = ["${var.aws_subnet_id}"]
+  instances                   = ["${aws_instance.services.id}"]
+  security_groups             = ["${aws_security_group.services_elb_sg.id}"]
+  connection_draining         = true
+  connection_draining_timeout = 300
+
+  access_logs {
+    bucket = "${aws_s3_bucket.services_elb_access_logs.id}"
+  }
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  listener {
+    instance_port      = 443
+    instance_protocol  = "ssl"
+    lb_port            = 443
+    lb_protocol        = "ssl"
+    ssl_certificate_id = "${var.aws_ssl_cert}"
+  }
+
+  listener {
+    instance_port      = 8800
+    instance_protocol  = "https"
+    lb_port            = 8800
+    lb_protocol        = "https"
+    ssl_certificate_id = "${var.aws_ssl_cert}"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    target              = "HTTPS:443/"
+    interval            = 30
+  }
+}
+
+##################################
+
 
 resource "aws_route53_record" "services_route" {
   count   = "${var.enable_route}"
