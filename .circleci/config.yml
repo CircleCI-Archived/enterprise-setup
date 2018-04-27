@@ -13,13 +13,14 @@ jobs:
           command: |
             echo "aws_access_key = \"$CCIE_AWS_ACCESS_KEY\"" >> terraform.tfvars
             echo "aws_secret_key = \"$CCIE_AWS_SECRET_KEY\"" >> terraform.tfvars
-            echo "aws_region = \"us-west-2\"" >> terraform.tfvars
-            echo "aws_vpc_id = \"vpc-09e3a36c\"" >> terraform.tfvars
-            echo "aws_subnet_id = \"subnet-495dd410\"" >> terraform.tfvars
+            echo "aws_region = \"us-east-1\"" >> terraform.tfvars
+            echo "aws_vpc_id = \"vpc-06246260\"" >> terraform.tfvars
+            echo "aws_subnet_id = \"subnet-7cb43870\"" >> terraform.tfvars
             echo "aws_ssh_key_name = \"$CCIE_AWS_SSH_KEY\"" >> terraform.tfvars
-            echo "prefix = \"enterprise_setup_test\"" >> terraform.tfvars
-            echo "services_instance_type = \"m4.xlarge\"" >> terraform.tfvars
-            echo "builder_instance_type = \"r3.2xlarge\"" >> terraform.tfvars
+            echo "aws_ssl_cert = \"arn:aws:acm:us-east-1:825856751223:certificate/4886f041-d336-44e5-97cd-5fba85628e5b\"" >> terraform.tfvars
+            echo "prefix = \"prod_circleci\"" >> terraform.tfvars
+            echo "services_instance_type = \"m4.2xlarge\"" >> terraform.tfvars
+            echo "builder_instance_type = \"r3.4xlarge\"" >> terraform.tfvars
             echo "nomad_client_instance_type = \"m4.xlarge\"" >> terraform.tfvars
             echo "circle_secret_passphrase = \"$CCIE_SECRET_PASSPHRASE\"" >> terraform.tfvars
             echo "services_delete_on_termination = true" >> terraform.tfvars
@@ -92,7 +93,22 @@ jobs:
 
 workflows:
   version: 2
-  test:
+  release-pipeline:
     jobs:
-      - terraform
-      - validate_amis
+      - deploy-approval:
+          type: approval
+          filters:
+            branches:
+              only: master
+      - terraform:
+          requires:
+            - deploy-approval
+          filters:
+            branches:
+              only: master
+      - validate_amis:
+          requires:
+            - terraform
+          filters:
+            branches:
+              only: master
