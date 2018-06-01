@@ -18,7 +18,7 @@ jobs:
             echo "aws_subnet_id = \"subnet-495dd410\"" >> terraform.tfvars
             echo "aws_ssh_key_name = \"$CCIE_AWS_SSH_KEY\"" >> terraform.tfvars
             echo "prefix = \"enterprise_setup_test\"" >> terraform.tfvars
-            echo "services_instance_type = \"m4.xlarge\"" >> terraform.tfvars
+            echo "services_instance_type = \"m4.2xlarge\"" >> terraform.tfvars
             echo "builder_instance_type = \"r3.2xlarge\"" >> terraform.tfvars
             echo "nomad_client_instance_type = \"m4.xlarge\"" >> terraform.tfvars
             echo "circle_secret_passphrase = \"$CCIE_SECRET_PASSPHRASE\"" >> terraform.tfvars

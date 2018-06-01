@@ -275,7 +275,6 @@ resource "aws_security_group" "circleci_vm_sg" {
 }
 
 resource "aws_instance" "services" {
-  # Instance type - any of the c4 should do for now
   instance_type               = "${var.services_instance_type}"
   ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   key_name                    = "${var.aws_ssh_key_name}"

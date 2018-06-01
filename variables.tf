@@ -32,8 +32,8 @@ variable "services_ami" {
 }
 
 variable "services_instance_type" {
-  description = "instance type for the centralized services box.  We recommend a c4 instance"
-  default     = "c4.2xlarge"
+  description = "instance type for the centralized services box.  We recommend a m4.2xlarge instance, with 32G of RAM"
+  default     = "m4.2xlarge"
 }
 
 variable "builder_instance_type" {
