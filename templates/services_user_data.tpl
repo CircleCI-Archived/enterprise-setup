@@ -33,6 +33,11 @@ apt-get update
 apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
 
 echo "--------------------------------------------"
+echo "       Increasing JVM Heap Size"
+echo "--------------------------------------------"
+echo 'JAVA_OPTS="-Xms8g -Xmx8g"' >> /etc/environment
+
+echo "--------------------------------------------"
 echo "       Installing Replicated"
 echo "--------------------------------------------"
 sleep 3
