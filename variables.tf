@@ -123,6 +123,7 @@ variable "ubuntu_ami" {
     ap-northeast-2 = "ami-cd78d8a3"
     ap-southeast-1 = "ami-c38bf8bf"
     ap-southeast-2 = "ami-a437cac6"
+    ca-central-1   = "ami-c1a227a5"
     eu-central-1   = "ami-ff30a290"
     eu-west-1      = "ami-3cf36145"
     eu-west-2      = "ami-fd47a59a"
