@@ -39,9 +39,11 @@ echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
 export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+export INSTANCE_ID="$(curl http://169.254.169.254/latest/meta-data/instance-id)"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
 log_level = "DEBUG"
+name = "$INSTANCE_ID"
 
 data_dir = "/opt/nomad"
 datacenter = "us-east-1"
