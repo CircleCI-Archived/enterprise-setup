@@ -227,6 +227,14 @@ resource "aws_security_group" "circleci_users_sg" {
     to_port     = 3001
   }
 
+  # For receiving Nomad Telemetry via StatsD
+  ingress {
+    security_groups = ["${module.nomad.client_security_group_name}"]
+    protocol        = "udp"
+    from_port       = 8125
+    to_port         = 8125
+   }
+
   # For SSH traffic to builder boxes
   # TODO: Update once services box has ngrok
   ingress {
