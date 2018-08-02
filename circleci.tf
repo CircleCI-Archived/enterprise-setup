@@ -229,7 +229,7 @@ resource "aws_security_group" "circleci_users_sg" {
 
   # For receiving Nomad Telemetry via StatsD
   ingress {
-    security_groups = ["${module.nomad.client_security_group_name}"]
+    security_groups = ["${module.nomad.client_security_group_id}"]
     protocol        = "udp"
     from_port       = 8125
     to_port         = 8125

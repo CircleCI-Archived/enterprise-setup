@@ -2,8 +2,8 @@ output "asg_name" {
   value = "${aws_autoscaling_group.clients_asg.name}"
 }
 
-output "client_security_group_name" {
-  value = "${aws_security_group.nomad_sg.name}"
+output "client_security_group_id" {
+  value = "${aws_security_group.nomad_sg.id}"
 }
 
 output "ssh_security_group_name" {
