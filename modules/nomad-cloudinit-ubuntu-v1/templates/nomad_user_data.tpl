@@ -5,7 +5,6 @@ set -exu
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
 export no_proxy="${no_proxy}"
-export aws_instance_metadata_url="http://169.254.169.254"
 
 echo "-------------------------------------------"
 echo "     Performing System Updates"
@@ -40,11 +39,9 @@ echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
 export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
-export INSTANCE_ID="$(curl http://$aws_instance_metadata_url/latest/meta-data/instance-id)"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
 log_level = "DEBUG"
-name = "$INSTANCE_ID"
 
 data_dir = "/opt/nomad"
 datacenter = "us-east-1"
