@@ -119,22 +119,19 @@ variable "legacy_builder_spot_price" {
 
 variable "ubuntu_ami" {
   default = {
-    ap-northeast-1 = "ami-2d69f14b"
-    ap-northeast-2 = "ami-cd78d8a3"
-    ap-southeast-1 = "ami-c38bf8bf"
-    ap-southeast-2 = "ami-a437cac6"
-    eu-central-1   = "ami-ff30a290"
-    eu-west-1      = "ami-3cf36145"
-    sa-east-1      = "ami-24642648"
-
-    # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20180122
-    us-east-1      = "ami-263d0b5c"
-
-    # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20180122
-    us-east-2      = "ami-218da744"
-
-    us-west-1      = "ami-98595af8"
-    us-west-2      = "ami-779a2d0f"
+    # ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20180814
+    ap-northeast-1 = "ami-02115cef40fbb46a4"   
+    ap-northeast-2 = "ami-00ca7ffe117e2fe91"
+    ap-southeast-1 = "ami-03221428e6676db69"
+    ap-southeast-2 = "ami-059b78064586da1b7"
+    eu-central-1   = "ami-027583e616ca104df"
+    eu-west-1      = "ami-0181f8d9b6f098ec4"
+    eu-west-2      = "ami-c7ab5fa0"
+    sa-east-1      = "ami-08b78b890b5a86161"
+    us-east-1      = "ami-04169656fea786776"
+    us-east-2      = "ami-0552e3455b9bc8d50"
+    us-west-1      = "ami-059e7901352ebaef8"
+    us-west-2      = "ami-51537029"
   }
 }
 
