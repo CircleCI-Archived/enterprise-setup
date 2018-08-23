@@ -69,11 +69,12 @@ cat <<EOT > /etc/systemd/system/nomad.service
 [Unit]
 Description=Nomad
 Documentation=https://nomadproject.io/docs/
-
 [Service]
-ExecStart=/usr/bin/nomad agent -config /etc/nomad/config.hcl
+KillMode=process
+KillSignal=SIGINT
+ExecStart=/usr/bin/nomad agent -config /etc/nomad
+ExecReload=/bin/kill -HUP \$MAINPID
 LimitNOFILE=65536
-
 [Install]
 WantedBy=multi-user.target
 EOT
