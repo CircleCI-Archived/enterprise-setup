@@ -135,3 +135,48 @@ variable "ubuntu_ami" {
   }
 }
 
+### Data Persistence
+
+variable "application_data_ebs_size" {
+  description = ""
+  default = "200"
+}
+
+variable "application_data_ebs_iops" {
+  description = ""
+  default = "100"
+}
+
+variable "application_data_device_path" {
+  description = ""
+  default = "/dev/xvdi"
+}
+
+variable "application_data_mount_path" {
+  description = ""
+  default = "/data/circle"
+}
+
+variable "nomad_data_ebs_size" {
+  description = ""
+  default = "50"
+}
+
+variable "nomad_data_ebs_iops" {
+  description = ""
+  default = "100"
+}
+
+variable "nomad_data_device_path" {
+  description = ""
+  default = "/dev/xvdj"
+}
+
+variable "nomad_data_mount_path" {
+  description = ""
+  default = "/opt/nomad"
+}
+
+variable "force_detach_volumes" {
+  default = "false"
+}

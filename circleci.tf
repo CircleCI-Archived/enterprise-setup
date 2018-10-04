@@ -274,6 +274,59 @@ resource "aws_security_group" "circleci_vm_sg" {
   }
 }
 
+
+resource "aws_ebs_volume" "application_data" {
+  encrypted         = true
+  type              = "io1"
+  size              = "${var.application_data_ebs_size}"
+  iops              = "${var.application_data_ebs_iops}"
+  availability_zone = "${aws_instance.services.availability_zone}"
+
+  tags {
+    Name      = "${format("%s_application_data", var.prefix)}"
+    Role      = "services"
+    Terraform = "yes"
+  }
+
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes  = ["aws_instance.services"]
+  }
+}
+
+resource "aws_volume_attachment" "application_data" {
+  device_name  = "${var.application_data_device_path}"
+  volume_id    = "${element(aws_ebs_volume.application_data.*.id, count.index)}"
+  instance_id  = "${element(aws_instance.services.*.id, count.index)}"
+  force_detach = "${var.force_detach_volumes}"
+}
+
+resource "aws_ebs_volume" "nomad_data" {
+  encrypted         = true
+  type              = "io1"
+  size              = "${var.nomad_data_ebs_size}"
+  iops              = "${var.nomad_data_ebs_iops}"
+  availability_zone = "${aws_instance.services.availability_zone}"
+
+  tags {
+    Name      = "${format("%s_nomad_data", var.prefix)}"
+    Role      = "services"
+    Terraform = "yes"
+  }
+
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes  = ["aws_instance.services"]
+  }
+}
+
+resource "aws_volume_attachment" "nomad_data" {
+  device_name  = "${var.nomad_data_device_path}"
+  volume_id    = "${element(aws_ebs_volume.nomad_data.*.id, count.index)}"
+  instance_id  = "${element(aws_instance.services.*.id, count.index)}"
+  force_detach = "${var.force_detach_volumes}"
+}
+
 resource "aws_instance" "services" {
   instance_type               = "${var.services_instance_type}"
   ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"

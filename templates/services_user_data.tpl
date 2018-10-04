@@ -12,10 +12,43 @@ echo "     Performing System Updates"
 echo "-------------------------------------------"
 apt-get update && apt-get -y upgrade
 
+
+echo "--------------------------------------------"
+echo "       Add Block Devices"
+echo "--------------------------------------------"
+
+add_volume() {
+	local data_device_path="${1}"
+	local data_mount_path="${2}"
+	if ! blkid ${data_device_path}; then
+		mkfs -t ext4 ${data_device_path}
+	fi
+	if ! lsblk -o MOUNTPOINT | grep ${data_mount_path}; then
+		mkdir -p ${data_mount_path}
+		mount ${data_device_path} ${data_mount_path}
+		cat  <<EOF >> /etc/fstab
+UUID=$(blkid  -s UUID -o value ${data_device_path}) ${data_mount_path} ext4 defaults 0 0
+EOF
+	fi
+}
+add_volume ${application_data_device_path} ${application_data_mount_path}
+add_volume ${nomad_data_device_path} ${nomad_data_mount_path}
+
+if [[ ! -z "${sandbox_secure_domain}" ]]; then
+echo "--------------------------------------------"
+echo "       Installing Lego"
+echo "--------------------------------------------"
+
+wget https://github.com/xenolf/lego/releases/download/v0.4.1/lego_linux_amd64.tar.xz
+tar -xf lego_linux_amd64.tar.xz
+mv lego_linux_amd64 /usr/local/sbin/lego
+
 echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
 export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+
+
 
 echo "--------------------------------------------"
 echo "          Download Replicated"
@@ -37,6 +70,35 @@ echo "       Installing Replicated"
 echo "--------------------------------------------"
 sleep 3
 bash /tmp/get_replicated.sh local-address="$PRIVATE_IP" no-proxy no-docker
+
+echo "--------------------------------------------"
+echo "       Persist Replicated"
+echo "--------------------------------------------"
+
+until docker stop replicated replicated-operator replicated-ui; do
+	echo "...waiting to stop replicated"
+	sleep 5
+done
+
+if [[ ! -d /data/circle/replicated ]]; then
+	mv /var/lib/replicated /data/circle/replicated
+else
+	rm -r /var/lib/replicated
+fi
+
+if [[ ! -d /data/circle/replicated-operator ]]; then
+	mv /var/lib/replicated-operator /data/circle/replicated-operator
+else
+	rm -r /var/lib/replicated-operator
+fi
+ln -s /data/circle/replicated /var/lib/replicated
+ln -s /data/circle/replicated-operator /var/lib/replicated-operator
+
+until docker start replicated replicated-operator replicated-ui; do
+	echo "...waiting to start replicated"
+	sleep 5
+done
+
 
 echo "--------------------------------------------"
 echo "       Passing Variables"
