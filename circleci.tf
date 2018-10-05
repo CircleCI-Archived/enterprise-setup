@@ -15,7 +15,11 @@ data "template_file" "services_user_data" {
     http_proxy               = "${var.http_proxy}"
     https_proxy              = "${var.https_proxy}"
     no_proxy                 = "${var.no_proxy}"
-  }
+    application_data_device_path = "${var.application_data_device_path}"
+    application_data_mount_path = "${var.application_data_mount_path}"
+    nomad_data_device_path = "${var.nomad_data_device_path}"
+    nomad_data_mount_path = "${var.nomad_data_mount_path}"
+ }
 }
 
 data "template_file" "circleci_policy" {

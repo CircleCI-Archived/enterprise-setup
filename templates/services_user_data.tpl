@@ -18,30 +18,21 @@ echo "       Add Block Devices"
 echo "--------------------------------------------"
 
 add_volume() {
-	local data_device_path="${1}"
-	local data_mount_path="${2}"
-	if ! blkid ${data_device_path}; then
-		mkfs -t ext4 ${data_device_path}
+	local data_device_path="$1"
+	local data_mount_path="$2"
+	if ! blkid $data_device_path; then
+		mkfs -t ext4 $data_device_path
 	fi
-	if ! lsblk -o MOUNTPOINT | grep ${data_mount_path}; then
-		mkdir -p ${data_mount_path}
-		mount ${data_device_path} ${data_mount_path}
+	if ! lsblk -o MOUNTPOINT | grep $data_mount_path; then
+		mkdir -p $data_mount_path
+		mount $data_device_path $data_mount_path
 		cat  <<EOF >> /etc/fstab
-UUID=$(blkid  -s UUID -o value ${data_device_path}) ${data_mount_path} ext4 defaults 0 0
+UUID=$(blkid  -s UUID -o value $data_device_path) $data_mount_path ext4 defaults 0 0
 EOF
 	fi
 }
 add_volume ${application_data_device_path} ${application_data_mount_path}
 add_volume ${nomad_data_device_path} ${nomad_data_mount_path}
-
-if [[ ! -z "${sandbox_secure_domain}" ]]; then
-echo "--------------------------------------------"
-echo "       Installing Lego"
-echo "--------------------------------------------"
-
-wget https://github.com/xenolf/lego/releases/download/v0.4.1/lego_linux_amd64.tar.xz
-tar -xf lego_linux_amd64.tar.xz
-mv lego_linux_amd64 /usr/local/sbin/lego
 
 echo "--------------------------------------------"
 echo "       Setting Private IP"
