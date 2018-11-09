@@ -65,12 +65,16 @@ EOT
 echo "--------------------------------------"
 echo "      Creating nomad.conf"
 echo "--------------------------------------"
-cat <<EOT > /etc/init/nomad.conf
-start on filesystem or runlevel [2345]
-stop on shutdown
-script
-    exec nomad agent -config /etc/nomad/config.hcl
-end script
+cat <<EOT > /etc/systemd/system/nomad.service
+[Unit]
+Description="nomad"
+[Service]
+Restart=always
+RestartSec=30
+TimeoutStartSec=1m
+ExecStart=/usr/bin/nomad agent -config /etc/nomad/config.hcl
+[Install]
+WantedBy=multi-user.target
 EOT
 
 echo "--------------------------------------"
