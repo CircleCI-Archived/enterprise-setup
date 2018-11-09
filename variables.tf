@@ -119,19 +119,23 @@ variable "legacy_builder_spot_price" {
 
 variable "ubuntu_ami" {
   default = {
-    ap-northeast-1 = "ami-2d69f14b"
-    ap-northeast-2 = "ami-cd78d8a3"
-    ap-southeast-1 = "ami-c38bf8bf"
-    ap-southeast-2 = "ami-a437cac6"
-    ca-central-1   = "ami-c1a227a5"
-    eu-central-1   = "ami-ff30a290"
-    eu-west-1      = "ami-3cf36145"
-    eu-west-2      = "ami-fd47a59a"
-    sa-east-1      = "ami-24642648"
-    us-east-1      = "ami-0ce3bb76"
-    us-east-2      = "ami-01664c64"
-    us-west-1      = "ami-98595af8"
-    us-west-2      = "ami-779a2d0f"
+    ap-northeast-1 = "ami-032b53ea1222f69eb"
+    ap-northeast-2 = "ami-013dda6d4ad165475"
+    ap-northeast-3 = "ami-0e751e4aa374cd8c2"
+    ap-southeast-1 = "ami-0b4d63df52bb04cb3"
+    ap-southeast-2 = "ami-0df84623c5651856b"
+    ap-south-1     = "ami-0a01bf036d8cf964c"
+    ca-central-1   = "ami-0855ce2497d6ac2d9"
+    eu-central-1   = "ami-00259791f61937520"
+    eu-west-1      = "ami-00cc9e3eecbef4b46"
+    eu-west-2      = "ami-04a46267269408754"
+    eu-west-3      = "ami-0d682f9e8c835173d"
+    sa-east-1      = "ami-065d2aa938a7eb3eb"
+    us-east-1      = "ami-0f9351b59be17920e"
+    us-east-2      = "ami-0b19eeac8c68a0d2d"
+    us-west-1      = "ami-0e066bd33054ef120"
+    us-west-2      = "ami-0afae182eed9d2b46"
   }
 }
+
 
