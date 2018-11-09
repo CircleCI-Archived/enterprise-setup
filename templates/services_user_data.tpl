@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -exu
-REPLICATED_VERSION="2.10.3"
+REPLICATED_VERSION="2.29.0"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
