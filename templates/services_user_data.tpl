@@ -2,6 +2,8 @@
 
 set -exu
 REPLICATED_VERSION="2.29.0"
+DOCKER_VERSION="17.12.1"
+UNAME="$(uname -r)"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
@@ -25,12 +27,12 @@ curl -sSk -o /tmp/get_replicated.sh "https://get.replicated.com/docker?replicate
 echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
-apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
 apt-get install -y apt-transport-https ca-certificates curl
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+apt-get install -y "linux-image-$UNAME"
+apt-get -y install docker-ce="$DOCKER_VERSION~ce-0~ubuntu"
 
 echo "--------------------------------------------"
 echo "       Installing Replicated"
