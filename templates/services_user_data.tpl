@@ -17,7 +17,7 @@ apt-get update && apt-get -y upgrade
 echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 
 echo "--------------------------------------------"
 echo "          Download Replicated"
