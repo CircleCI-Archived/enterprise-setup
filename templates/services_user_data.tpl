@@ -7,6 +7,7 @@ UNAME="$(uname -r)"
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
 export no_proxy="${no_proxy}"
+export DEBIAN_FRONTEND=noninteractive
 
 echo "-------------------------------------------"
 echo "     Performing System Updates"
