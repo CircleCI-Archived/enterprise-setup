@@ -3,10 +3,12 @@
 set -exu
 
 BUILDER_IMAGE="circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37"
+UNAME="$(uname -r)"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
 export no_proxy="${no_proxy}"
+export DEBIAN_FRONTEND=noninteractive
 
 echo "-------------------------------------------"
 echo "     Performing System Updates"
@@ -16,12 +18,12 @@ apt-get update && apt-get -y upgrade
 echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
-apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
-apt-get install -y apt-transport-https ca-certificates curl
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+apt-get install -y "linux-image-$UNAME"
 apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial
 
 sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker

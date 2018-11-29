@@ -1,11 +1,13 @@
 #!/bin/bash
 
 set -exu
-REPLICATED_VERSION="2.10.3"
+REPLICATED_VERSION="2.29.0"
+UNAME="$(uname -r)"
 
 export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
 export no_proxy="${no_proxy}"
+export DEBIAN_FRONTEND=noninteractive
 
 echo "-------------------------------------------"
 echo "     Performing System Updates"
@@ -15,7 +17,7 @@ apt-get update && apt-get -y upgrade
 echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 
 echo "--------------------------------------------"
 echo "          Download Replicated"
@@ -25,12 +27,12 @@ curl -sSk -o /tmp/get_replicated.sh "https://get.replicated.com/docker?replicate
 echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
-apt-get install -y linux-image-extra-$(uname -r) linux-image-extra-virtual
-apt-get install -y apt-transport-https ca-certificates curl
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-trusty cgmanager
+apt-get install -y "linux-image-$UNAME"
+apt-get -y install docker-ce="17.12.1~ce-0~ubuntu"
 
 echo "--------------------------------------------"
 echo "       Installing Replicated"
