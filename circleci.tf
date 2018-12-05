@@ -33,8 +33,8 @@ data "template_file" "output" {
   template = "${file("templates/output.tpl")}"
 
   vars {
-    services_public_ip = "${aws_instance.services.public_ip}"
-    ssh_key            = "${var.aws_ssh_key_name}"
+    services_ip = "${var.is_public ? aws_instance.services.public_ip : aws_instance.services.private_ip}"
+    ssh_key     = "${var.aws_ssh_key_name}"
   }
 }
 
@@ -279,7 +279,7 @@ resource "aws_instance" "services" {
   ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
-  associate_public_ip_address = true
+  associate_public_ip_address = "${var.is_public ? true : false}"
   disable_api_termination     = "${var.services_disable_api_termination}"
   iam_instance_profile        = "${aws_iam_instance_profile.circleci_profile.name}"
 
@@ -375,9 +375,9 @@ output "success_message" {
 }
 
 output "install_url" {
-  value = "http://${aws_instance.services.public_ip}/"
+  value = "${var.is_public ? format("https://%s/", aws_instance.services.public_ip) : format("https://%s/", aws_instance.services.private_ip)}"
 }
 
-output "ssh-services" {
-  value = "ssh ubuntu@${aws_instance.services.public_ip}"
+output "ssh_services" {
+  value = "${var.is_public ? format("ssh ubuntu@%s", aws_instance.services.public_ip) : format("ssh ubuntu@%s", aws_instance.services.private_ip)}"
 }
