@@ -117,6 +117,11 @@ variable "legacy_builder_spot_price" {
   default = ""
 }
 
+variable "is_public" {
+  description = "Is the CircleCI services box public facing?"
+  default     = "true"
+}
+
 variable "ubuntu_ami" {
   default = {
     ap-northeast-1 = "ami-032b53ea1222f69eb"
