@@ -2,6 +2,10 @@ data "aws_subnet" "subnet" {
   id = "${var.aws_subnet_id}"
 }
 
+data "aws_vpc" "vpc" {
+  id = "${var.aws_vpc_id}"
+}
+
 data "template_file" "services_user_data" {
   template = "${file("templates/services_user_data.tpl")}"
 
@@ -237,6 +241,20 @@ resource "aws_security_group" "circleci_users_sg" {
   }
 }
 
+resource "aws_security_group" "circleci_logging_sg" {
+  name        = "${var.prefix}_logging_sg"
+  description = "SG representing logging rules of CircleCI Enterprise"
+
+  vpc_id = "${data.aws_vpc.vpc.id}"
+
+  ingress {
+    cidr_blocks = ["${data.aws_vpc.vpc.cidr_block}"]
+    protocol    = "tcp"
+    from_port   = 24224
+    to_port     = 24224
+  }
+}
+
 resource "aws_security_group" "circleci_vm_sg" {
   name        = "${var.prefix}_vm_sg"
   description = "SG for VMs allocated by CircleCI for Remote Docker and machine executor"
@@ -286,6 +304,7 @@ resource "aws_instance" "services" {
   vpc_security_group_ids = [
     "${aws_security_group.circleci_services_sg.id}",
     "${aws_security_group.circleci_users_sg.id}",
+    "${aws_security_group.circleci_logging_sg.id}",
   ]
 
   tags {

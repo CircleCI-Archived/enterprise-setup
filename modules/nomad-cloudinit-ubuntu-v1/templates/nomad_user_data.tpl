@@ -24,6 +24,17 @@ apt-get install -y "linux-image-$UNAME"
 apt-get update
 apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial
 
+# Enable docker fluentd logging driver
+cat <<EOF > /etc/docker/daemon.json
+{
+  "log-driver": "fluentd",
+  "log-opts": {
+    "fluentd-address": "${nomad_server}:24224",
+    "fluentd-async-connect": "true"
+  }
+}
+EOF
+
 sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
 sudo echo 'export no_proxy="${no_proxy}"' >> /etc/default/docker
