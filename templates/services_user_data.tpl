@@ -34,6 +34,51 @@ apt-get update
 apt-get install -y "linux-image-$UNAME"
 apt-get -y install docker-ce="17.12.1~ce-0~ubuntu"
 
+##### fluentd configuration #####
+curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-xenial-td-agent2.5.sh | sh
+
+# Enable docker fluentd logging driver
+cat <<EOF > /etc/docker/daemon.json
+{
+  "log-driver": "fluentd",
+  "log-opts": {
+    "fluentd-address": "${PRIVATE_IP}:24224"
+  }
+}
+EOF
+
+# fluentd configuration
+cat << EOF > /etc/td-agent/match-all.conf
+<match *.*>
+  @type stdout
+</match>
+<match **>
+  @type stdout
+</match>
+EOF
+
+cat <<EOF > /etc/td-agent/input-syslog.conf
+<source>
+  @type syslog
+  port 5140
+  bind 0.0.0.0
+  tag syslog
+  protocol_type tcp
+</source>
+EOF
+
+echo "@include match-all.conf" >> /etc/td-agent/td-agent.conf
+echo "@include input-syslog.conf" >> /etc/td-agent/td-agent.conf
+
+# start fluentd
+systemctl enable td-agent
+systemctl start td-agent
+
+# Restart docker to update logging driver to fluentd
+sudo service docker restart
+sleep 5
+##### end fluentd configuration #####
+
 echo "--------------------------------------------"
 echo "       Installing Replicated"
 echo "--------------------------------------------"
