@@ -42,7 +42,7 @@ cat <<EOF > /etc/docker/daemon.json
 {
   "log-driver": "fluentd",
   "log-opts": {
-    "fluentd-address": "${PRIVATE_IP}:24224"
+    "fluentd-address": "$PRIVATE_IP:24224"
   }
 }
 EOF
