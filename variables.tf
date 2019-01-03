@@ -56,6 +56,11 @@ variable "enable_nomad" {
   default     = 1
 }
 
+variable "nomad_client_ami" {
+  description = "Override Nomad Clients AMI lookup with provided AMI ID"
+  default     = ""
+}
+
 variable "nomad_client_instance_type" {
   description = "instance type for the nomad clients. It must be a valid aws instance type."
   default     = "m4.xlarge"

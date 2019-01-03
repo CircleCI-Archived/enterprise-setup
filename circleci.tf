@@ -384,7 +384,7 @@ module "nomad" {
   http_proxy            = "${var.http_proxy}"
   https_proxy           = "${var.https_proxy}"
   no_proxy              = "${var.no_proxy}"
-  ami_id                = "${(var.services_ami != "") ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
+  ami_id                = "${(var.nomad_client_ami != "") ? var.nomad_client_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
   services_private_ip   = "${aws_instance.services.private_ip}"
 }
