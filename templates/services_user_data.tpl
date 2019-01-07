@@ -79,6 +79,23 @@ sudo service docker restart
 sleep 5
 ##### end fluentd configuration #####
 
+# telegraf configuration for custom monitoring
+cat <<EOF > /etc/circleconfig/telegraf/telegraf.conf
+[global_tags]
+  service = "circleci"
+  type = "server"
+  env = "${var.env}"
+EOF
+
+cat <<EOF > /etc/circleconfig/telegraf/datadog.conf
+[[outputs.datadog]]
+  apikey = "${var.datadog_api_key}"
+EOF
+
+sudo docker restart telegraf
+
+#end telegraf configuration
+
 echo "--------------------------------------------"
 echo "       Installing Replicated"
 echo "--------------------------------------------"
