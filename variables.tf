@@ -127,6 +127,44 @@ variable "is_public" {
   default     = "true"
 }
 
+variable "tags" {
+  type        = "map"
+  description = "custom tags for services instance"
+  default     = {}
+}
+
+variable "enable_fluentd_logging" {
+  description = "Flag to enable fluentd logging"
+  default     = "false"
+}
+
+variable "enable_telegraf_metrics" {
+  description = "Flag to enable custom metrics using telegraf"
+  default     = "false"
+}
+
+variable "fluentd_config" {
+  description = "Fluentd configuration map"
+  type        = "map"
+  default     = {}
+}
+
+variable "telegraf_config" {
+  description = "Telegraf configuration map"
+  type        = "map"
+  default     = {}
+}
+
+variable "datadog_api_key" {
+  description = "Datadog API key for telegraf metrics configuration"
+  default     = ""
+}
+
+variable "fluentd_es_password" {
+  description = "Fluentd output Elasticsearch password"
+  default     = ""
+}
+
 variable "ubuntu_ami" {
   default = {
     ap-northeast-1 = "ami-032b53ea1222f69eb"
@@ -146,12 +184,4 @@ variable "ubuntu_ami" {
     us-west-1      = "ami-0e066bd33054ef120"
     us-west-2      = "ami-0afae182eed9d2b46"
   }
-}
-
-variable "datadog_api_key" {
-  description = "Datadog api key"
-}
-
-variable "env" {
-  description = "Environment"
 }
