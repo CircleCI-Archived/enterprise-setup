@@ -148,4 +148,10 @@ variable "ubuntu_ami" {
   }
 }
 
+variable "datadog_api_key" {
+  description = "Datadog api key"
+}
 
+variable "env" {
+  description = "Environment"
+}
