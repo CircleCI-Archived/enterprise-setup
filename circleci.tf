@@ -6,6 +6,7 @@ data "aws_vpc" "vpc" {
   id = "${var.aws_vpc_id}"
 }
 
+# TODO: switch to using template_cloudinit_config
 data "template_file" "services_user_data" {
   template = "${file("templates/services_user_data.tpl")}"
 
@@ -19,6 +20,15 @@ data "template_file" "services_user_data" {
     http_proxy               = "${var.http_proxy}"
     https_proxy              = "${var.https_proxy}"
     no_proxy                 = "${var.no_proxy}"
+    enable_fluentd_logging   = "${var.enable_fluentd_logging}"
+    es_host                  = "${lookup(var.fluentd_config, "es_host", "")}"
+    es_port                  = "${lookup(var.fluentd_config, "es_port", "9200")}"
+    es_scheme                = "${lookup(var.fluentd_config, "es_scheme", "https")}"
+    es_user                  = "${lookup(var.fluentd_config, "es_user", "")}"
+    es_password              = "${var.enable_fluentd_logging ? var.fluentd_es_password : ""}"
+    enable_telegraf_metrics  = "${var.enable_telegraf_metrics}"
+    env                      = "${lookup(var.telegraf_config, "env", "")}"
+    datadog_api_key          = "${var.enable_telegraf_metrics ? var.datadog_api_key : ""}"
   }
 }
 
@@ -307,9 +317,7 @@ resource "aws_instance" "services" {
     "${aws_security_group.circleci_logging_sg.id}",
   ]
 
-  tags {
-    Name = "${var.prefix}_services"
-  }
+  tags = "${merge(var.tags, map("Name", format("%s_services", var.prefix)))}"
 
   root_block_device {
     volume_type           = "gp2"

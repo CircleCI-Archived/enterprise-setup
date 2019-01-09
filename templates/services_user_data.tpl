@@ -35,6 +35,9 @@ apt-get install -y "linux-image-$UNAME"
 apt-get -y install docker-ce="17.12.1~ce-0~ubuntu"
 
 ##### fluentd configuration #####
+if [[ "${enable_fluentd_logging}" == "true" ]];
+then
+
 curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-xenial-td-agent2.5.sh | sh
 
 # Enable docker fluentd logging driver
@@ -67,6 +70,17 @@ cat <<EOF > /etc/td-agent/input-syslog.conf
 </source>
 EOF
 
+cat <<EOF > /etc/td-agent/output-elasticsearch.conf
+<match **>
+  @type elasticsearch
+  host ${es_host}
+  port ${es_port}
+  scheme ${es_scheme}
+  user ${es_user}
+  password ${es_password}
+</match>
+EOF
+
 echo "@include match-all.conf" >> /etc/td-agent/td-agent.conf
 echo "@include input-syslog.conf" >> /etc/td-agent/td-agent.conf
 
@@ -77,23 +91,29 @@ systemctl start td-agent
 # Restart docker to update logging driver to fluentd
 sudo service docker restart
 sleep 5
+
+fi
 ##### end fluentd configuration #####
 
 # telegraf configuration for custom monitoring
+if [[ "${enable_telegraf_metrics}" == "true" ]];
+then
+
 cat <<EOF > /etc/circleconfig/telegraf/telegraf.conf
 [global_tags]
   service = "circleci"
   type = "server"
-  env = "${var.env}"
+  env = "${env}"
 EOF
 
 cat <<EOF > /etc/circleconfig/telegraf/datadog.conf
 [[outputs.datadog]]
-  apikey = "${var.datadog_api_key}"
+  apikey = "${datadog_api_key}"
 EOF
 
 sudo docker restart telegraf
 
+fi
 #end telegraf configuration
 
 echo "--------------------------------------------"
