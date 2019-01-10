@@ -92,7 +92,7 @@ echo "@include output-elasticsearch.conf" >> /etc/td-agent/td-agent.conf
 
 # start fluentd
 systemctl enable td-agent
-systemctl start td-agent
+systemctl restart td-agent
 
 # Restart docker to update logging driver to fluentd
 sudo service docker restart
