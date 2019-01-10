@@ -38,28 +38,20 @@ apt-get -y install docker-ce="17.12.1~ce-0~ubuntu"
 if [[ "${enable_fluentd_logging}" == "true" ]];
 then
 
-curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-xenial-td-agent2.5.sh | sh
+curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-xenial-td-agent3.sh | sh
 
 # Enable docker fluentd logging driver
 cat <<EOF > /etc/docker/daemon.json
 {
   "log-driver": "fluentd",
   "log-opts": {
-    "fluentd-address": "$PRIVATE_IP:24224"
+    "fluentd-address": "$PRIVATE_IP:24224",
+    "fluentd-async-connect": "true"
   }
 }
 EOF
 
 # fluentd configuration
-cat << EOF > /etc/td-agent/match-all.conf
-<match *.*>
-  @type stdout
-</match>
-<match **>
-  @type stdout
-</match>
-EOF
-
 cat <<EOF > /etc/td-agent/input-syslog.conf
 <source>
   @type syslog
@@ -71,6 +63,14 @@ cat <<EOF > /etc/td-agent/input-syslog.conf
 EOF
 
 cat <<EOF > /etc/td-agent/output-elasticsearch.conf
+<filter **>
+  @type record_transformer
+  <record>
+    app "circleci"
+    env "${env}"
+  </record>
+</filter>
+
 <match **>
   @type elasticsearch
   host ${es_host}
@@ -78,11 +78,18 @@ cat <<EOF > /etc/td-agent/output-elasticsearch.conf
   scheme ${es_scheme}
   user ${es_user}
   password ${es_password}
+  logstash_format true
 </match>
 EOF
 
-echo "@include match-all.conf" >> /etc/td-agent/td-agent.conf
+# Remove existing lines as we restore from a AMI snapshot that would
+# already have these included
+sed -i '/@include match-all.conf/d' /etc/td-agent/td-agent.conf
+sed -i '/@include input-syslog.conf/d' /etc/td-agent/td-agent.conf
+sed -i '/@include output-elasticsearch.conf/d' /etc/td-agent/td-agent.conf
+
 echo "@include input-syslog.conf" >> /etc/td-agent/td-agent.conf
+echo "@include output-elasticsearch.conf" >> /etc/td-agent/td-agent.conf
 
 # start fluentd
 systemctl enable td-agent
