@@ -70,7 +70,6 @@ cat <<EOF > /etc/td-agent/output-elasticsearch.conf
     env "${env}"
   </record>
 </filter>
-
 <match **>
   @type elasticsearch
   host ${es_host}
