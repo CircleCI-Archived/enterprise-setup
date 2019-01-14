@@ -105,6 +105,9 @@ fi
 if [[ "${enable_telegraf_metrics}" == "true" ]];
 then
 
+# create directories to avoid failure on first installation
+mkdir -p /etc/circleconfig/telegraf
+
 cat <<EOF > /etc/circleconfig/telegraf/telegraf.conf
 [global_tags]
   service = "circleci"
@@ -117,7 +120,7 @@ cat <<EOF > /etc/circleconfig/telegraf/datadog.conf
   apikey = "${datadog_api_key}"
 EOF
 
-sudo docker restart telegraf
+sudo docker restart telegraf || echo "telegraf container doesnt exist"
 
 fi
 #end telegraf configuration
