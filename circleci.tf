@@ -276,7 +276,7 @@ resource "aws_security_group" "circleci_vm_sg" {
 
 resource "aws_instance" "services" {
   instance_type               = "${var.services_instance_type}"
-  ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
+  ami                         = "${var.services_ami != "" ? var.services_ami : data.aws_ami.ubuntu.id}"
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
   associate_public_ip_address = true
@@ -347,7 +347,7 @@ module "legacy_builder" {
 
   user_data                     = "${module.legacy_builder_user_data.rendered}"
   delete_volume_on_termination  = "${var.services_delete_on_termination}"
-  image_id                      = "${lookup(var.ubuntu_ami, var.aws_region)}"
+  image_id                      = "data.aws_ami.ubuntu.id"
   instance_type                 = "${var.builder_instance_type}"
   spot_price                    = "${var.legacy_builder_spot_price}"
   shutdown_queue_target_sqs_arn = "${module.shutdown_sqs.sqs_arn}"
@@ -365,7 +365,7 @@ module "nomad" {
   http_proxy            = "${var.http_proxy}"
   https_proxy           = "${var.https_proxy}"
   no_proxy              = "${var.no_proxy}"
-  ami_id                = "${(var.services_ami != "") ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
+  ami_id                = "${(var.services_ami != "") ? var.services_ami : data.aws_ami.ubuntu.id}"
   aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
   services_private_ip   = "${aws_instance.services.private_ip}"
 }
