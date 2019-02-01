@@ -110,9 +110,10 @@ mkdir -p /etc/circleconfig/telegraf
 
 cat <<EOF > /etc/circleconfig/telegraf/telegraf.conf
 [global_tags]
-  service = "circleci"
-  type = "server"
+  service = "circleci-server"
+  app = "circleci"
   env = "${env}"
+  host = "circleci-server-${env}"
 EOF
 
 cat <<EOF > /etc/circleconfig/telegraf/datadog.conf
