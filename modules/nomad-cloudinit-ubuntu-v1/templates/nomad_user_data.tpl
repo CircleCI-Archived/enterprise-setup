@@ -26,6 +26,8 @@ apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial
 
 # force docker to use userns-remap to mitigate CVE 2019-5736
 apt-get -y install jq
+mkdir -p /etc/docker
+[ -f /etc/docker/daemon.json ] || echo '{}' > /etc/docker/daemon.json
 tmp=$(mktemp)
 cp /etc/docker/daemon.json /etc/docker/daemon.json.orig
 jq '."userns-remap"= "default"' /etc/docker/daemon.json > "$tmp" && mv "$tmp" /etc/docker/daemon.json
