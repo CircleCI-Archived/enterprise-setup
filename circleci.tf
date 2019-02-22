@@ -329,11 +329,21 @@ module "legacy_builder_user_data" {
 module "legacy_builder" {
   source = "./modules/legacy-builder"
 
+<<<<<<< HEAD
   prefix                    = "${var.prefix}"
   name                      = "builders"
   aws_subnet_id             = "${var.aws_subnet_id}"
   aws_ssh_key_name          = "${var.aws_ssh_key_name}"
   aws_instance_profile_name = "${aws_iam_instance_profile.circleci_profile.name}"
+=======
+curl -sSL https://get.docker.com | sh
+sudo docker pull circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4
+sudo docker run -d -v /var/run/docker.sock:/var/run/docker.sock \
+    -e CIRCLE_CONTAINER_IMAGE_URI="docker://circleci/build-image:ubuntu-14.04-XXL-1167-271bbe4" \
+    -e CIRCLE_SECRET_PASSPHRASE='${var.circle_secret_passphrase}' \
+    -e SERVICES_PRIVATE_IP='${aws_instance.services.private_ip}'  \
+    circleci/builder-base:1.1
+>>>>>>> origin/DefaultDockerInstall
 
   builder_security_group_ids = [
     "${aws_security_group.circleci_builders_sg.id}",
