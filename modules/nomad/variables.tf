@@ -22,11 +22,6 @@ variable "os" {
 
 variable "instance_type" {
   default = "m4.xlarge"
-  ce_email = "${var.ce_email}"
-  ce_purpose = "${var.ce_purpose}"
-  customer = "${var.customer}"
-  ce_schedule = "${var.ce_schedule}"
-  ce_duration = "${var.ce_duration}"
 }
 
 variable "services_private_ip" {
@@ -44,3 +39,9 @@ variable "desired_instances" {
 variable "http_proxy" {}
 variable "https_proxy" {}
 variable "no_proxy" {}
+
+variable "ce_email" {}
+variable "ce_purpose" {}
+variable "customer" {}
+variable "ce_schedule" {}
+variable "ce_duration" {}

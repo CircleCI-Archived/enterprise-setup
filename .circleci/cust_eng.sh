@@ -12,14 +12,25 @@ function add_tags_to_services {
     ' ./circleci.tf
 }
 
-function add_tags_to_nomad_clients {
-    sed -i.bak '/default = "m4.xlarge"/a\
-    \ \ ce_email = "${var.ce_email}"\
-    \ \ ce_purpose = "${var.ce_purpose}"\
-    \ \ customer = "${var.customer}"\
-    \ \ ce_schedule = "${var.ce_schedule}"\
-    \ \ ce_duration = "${var.ce_duration}"\
-    ' ./modules/nomad/variables.tf
+function add_tags_to_nomad_lc {
+    sed -i.bak '/user_data = "${module.cloudinit.rendered}"/a\
+    \
+    \ \ tag {\
+    \ \ \ \ ce_email = "${var.ce_email}"\
+    \ \ \ \ ce_purpose = "${var.ce_purpose}"\
+    \ \ \ \ customer = "${var.customer}"\
+    \ \ \ \ ce_schedule = "${var.ce_schedule}"\
+    \ \ \ \ ce_duration = "${var.ce_duration}"\
+    \ \ }\
+    ' ./modules/nomad/main.tf
+}
+
+function add_tags_variable_to_services {
+
+}
+
+function add_tags_variable_to_nomad_lc {
+    
 }
 
 function add_tagging_stanza() {
@@ -48,6 +59,6 @@ EOF
 ) >> ./terraform.tfvars
 }
 
-add_tagging_stanza
-add_tags_to_services
-add_tags_to_nomad_clients
+# add_tagging_stanza
+# add_tags_to_services
+add_tags_to_nomad_lc
