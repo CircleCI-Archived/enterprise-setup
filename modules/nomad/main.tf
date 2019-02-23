@@ -86,9 +86,11 @@ resource "aws_autoscaling_group" "clients_asg" {
   desired_capacity     = "${var.desired_instances}"
   force_delete         = true
 
-  tag {
-    key                 = "Name"
-    value               = "${var.prefix}-nomad-client"
-    propagate_at_launch = "true"
-  }
+  tags = [
+    {
+      key                 = "Name"
+      value               = "${var.prefix}-nomad-client"
+      propagate_at_launch = "true"
+    },
+  ]
 }
