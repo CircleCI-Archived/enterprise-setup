@@ -12,16 +12,33 @@ function add_tags_to_services {
     ' ./circleci.tf
 }
 
-function add_tags_to_nomad_lc {
-    sed -i.bak '/user_data = "${module.cloudinit.rendered}"/a\
-    \
-    \ \ tag {\
-    \ \ \ \ ce_email = "${var.ce_email}"\
-    \ \ \ \ ce_purpose = "${var.ce_purpose}"\
-    \ \ \ \ customer = "${var.customer}"\
-    \ \ \ \ ce_schedule = "${var.ce_schedule}"\
-    \ \ \ \ ce_duration = "${var.ce_duration}"\
-    \ \ }\
+function add_tags_to_nomad_asg {
+    sed -i.bak '/tags = \[/a\
+    \ \ \ \ {\
+    \ \ \ \ \ \ key                 = "ce_email"\
+    \ \ \ \ \ \ value               = "${var.ce_email}"\
+    \ \ \ \ \ \ propagate_at_launch = "true"\
+    \ \ \ \ },\
+    \ \ \ \ {\
+    \ \ \ \ \ \ key                 = "ce_purpose"\
+    \ \ \ \ \ \ value               = "${var.ce_purpose}"\
+    \ \ \ \ \ \ propagate_at_launch = "true"\
+    \ \ \ \ },\
+    \ \ \ \ {\
+    \ \ \ \ \ \ key                 = "customer"\
+    \ \ \ \ \ \ value               = "${var.customer}"\
+    \ \ \ \ \ \ propagate_at_launch = "true"\
+    \ \ \ \ },\
+    \ \ \ \ {\
+    \ \ \ \ \ \ key                 = "ce_schedule"\
+    \ \ \ \ \ \ value               = "${var.ce_schedule}"\
+    \ \ \ \ \ \ propagate_at_launch = "true"\
+    \ \ \ \ },\
+    \ \ \ \ {\
+    \ \ \ \ \ \ key                 = "ce_duration"\
+    \ \ \ \ \ \ value               = "${var.ce_duration}"\
+    \ \ \ \ \ \ propagate_at_launch = "true"\
+    \ \ \ \ },\
     ' ./modules/nomad/main.tf
 }
 
@@ -89,10 +106,11 @@ EOF
 function add_ce_tagging() {
     add_tagging_stanza
     add_tags_to_services
-    add_tags_to_nomad_lc
+    add_tags_to_nomad_asg
     add_vars_to_services
     add_vars_to_nomad_lc
     add_vars_to_nomad_module
 }
 
-add_ce_tagging
+# add_ce_tagging
+add_tags_to_nomad_asg
