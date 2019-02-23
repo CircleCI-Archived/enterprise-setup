@@ -39,9 +39,3 @@ variable "desired_instances" {
 variable "http_proxy" {}
 variable "https_proxy" {}
 variable "no_proxy" {}
-
-variable "ce_email" {}
-variable "ce_purpose" {}
-variable "customer" {}
-variable "ce_schedule" {}
-variable "ce_duration" {}

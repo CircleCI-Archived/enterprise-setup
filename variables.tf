@@ -137,5 +137,3 @@ variable "ubuntu_ami" {
     us-west-2      = "ami-0afae182eed9d2b46"
   }
 }
-
-

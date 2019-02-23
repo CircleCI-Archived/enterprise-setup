@@ -25,12 +25,39 @@ function add_tags_to_nomad_lc {
     ' ./modules/nomad/main.tf
 }
 
-function add_tags_variable_to_services {
+function add_vars_to_services {
+    (cat <<EOF
 
+variable "ce_email" {}
+variable "ce_purpose" {}
+variable "customer" {}
+variable "ce_schedule" {}
+variable "ce_duration" {}
+EOF
+) >> ./variables.tf
 }
 
-function add_tags_variable_to_nomad_lc {
-    
+function add_vars_to_nomad_lc {
+    (cat <<EOF
+
+variable "ce_email" {}
+variable "ce_purpose" {}
+variable "customer" {}
+variable "ce_schedule" {}
+variable "ce_duration" {}
+EOF
+) >> ./modules/nomad/variables.tf   
+}
+
+# TODO: connect to circleci.tf
+function add_vars_to_nomad_module {
+    sed -i.bak '/module "nomad" {/a\
+    \ \ ce_email              = "${var.ce_email}"\
+    \ \ ce_purpose            = "${var.ce_purpose}"\
+    \ \ customer              = "${var.customer}"\
+    \ \ ce_schedule           = "${var.ce_schedule}"\
+    \ \ ce_duration           = "${var.ce_duration}"\
+    ' ./circleci.tf
 }
 
 function add_tagging_stanza() {
@@ -59,6 +86,13 @@ EOF
 ) >> ./terraform.tfvars
 }
 
-# add_tagging_stanza
-# add_tags_to_services
-add_tags_to_nomad_lc
+function add_ce_tagging() {
+    add_tagging_stanza
+    add_tags_to_services
+    add_tags_to_nomad_lc
+    add_vars_to_services
+    add_vars_to_nomad_lc
+    add_vars_to_nomad_module
+}
+
+add_ce_tagging

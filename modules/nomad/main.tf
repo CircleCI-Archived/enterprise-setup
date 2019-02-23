@@ -71,14 +71,6 @@ resource "aws_launch_configuration" "clients_lc" {
 
   user_data = "${module.cloudinit.rendered}"
 
-  tag {
-    ce_email = "${var.ce_email}"
-    ce_purpose = "${var.ce_purpose}"
-    customer = "${var.customer}"
-    ce_schedule = "${var.ce_schedule}"
-    ce_duration = "${var.ce_duration}"
-  }
-
   lifecycle {
     create_before_destroy = true
   }
