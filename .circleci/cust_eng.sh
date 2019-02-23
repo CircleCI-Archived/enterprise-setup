@@ -112,5 +112,4 @@ function add_ce_tagging() {
     add_vars_to_nomad_module
 }
 
-# add_ce_tagging
-add_tags_to_nomad_asg
+add_ce_tagging
