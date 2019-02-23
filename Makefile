@@ -10,4 +10,7 @@ dev:
 	@rsync -aq terraform.tfvars-dev.template terraform.tfvars
 
 ce:
+	@terraform get
+	@if [ -f terraform.tfvars ]; then mv terraform.tfvars terraform.tfvars-`date "+%Y-%m-%d-%H:%M:%S"`; fi
+	@rsync -aq terraform.tfvars.template terraform.tfvars
 	@./.circleci/cust_eng.sh
