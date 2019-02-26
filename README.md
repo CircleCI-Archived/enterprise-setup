@@ -13,7 +13,7 @@ This package allows you to easily orchestrate your CCIE cluster in AWS using Ter
 ### Basic
 
 1. Clone or download this repository
-1. Execute `make init` or save a copy of `terraform.tfvars.template` to `terraform.tfvars`
+1. Execute `make ce` or save a copy of `terraform.tfvars.template` to `terraform.tfvars`. Alternatively, execute `make init` and run `./.circleci/cust_eng.sh` to insert tags for customer engineering.
 1. Fill in the configuration vars in `terraform.tfvars` for your cluster. see [Configuration](#configuration)
 1. Run `terraform init` to install Terraform plugins.
 1. Run `terraform apply`
@@ -45,6 +45,16 @@ To configure the cluster that terraform will create, simply fill out the terrafo
   | aws_subnet_id | The subnet-id to be used for the instance |
   | aws_ssh_key_name |  The SSH key to be used for the instances|
   | circle_secret_passphrase | Decryption key for secrets used by CircleCI machines |
+  
+Customer Engineering vars:
+
+  | Var      | Value | Required? | Penalty |
+  | -------- | ----- | --------- | --------|
+  | ce_email | Your e-mail address | Y | Termination|
+  | ce_purpose | Short note on use | N | |
+  | customer | SF Account Name | N |
+  | ce_schedule | \[Core hours (default), Always\] | Y | Stopped instance
+  | ce_duration | \[Day (default), Week, Month, Persistent\] | Y | Termination
 
 Optional vars:
 
