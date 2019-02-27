@@ -41,6 +41,11 @@ sudo echo 'export no_proxy="${no_proxy}"' >> /etc/default/docker
 sudo service docker restart
 sleep 5
 
+# Elasticsearch containers require mmapfs limits to increase, otherwise any CircleCI pipelines
+# running E2E tests involving Elasticsearch will not work. ES exits with error code 78
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+sudo sysctl -w vm.max_map_count=262144
+
 echo "--------------------------------------"
 echo "         Installing nomad"
 echo "--------------------------------------"
