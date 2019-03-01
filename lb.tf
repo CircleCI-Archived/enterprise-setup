@@ -5,7 +5,7 @@ resource "aws_lb" "lb" {
   name            = "${var.prefix}-circle-lb"
   internal        = false
   security_groups = ["${aws_security_group.lb_ingress.id}"]
-  subnets         = ["${var.aws_subnet_id}", "${var.aws_subnet_id2}"]
+  subnets         = ["${var.aws_elb_subnets}"]
 
   #access_logs {
   #  bucket  = "${module.aws_logs.aws_logs_bucket}"
@@ -30,6 +30,21 @@ resource "aws_lb_listener" "https" {
 }
 
 #
+# Setup HTTPS :8800 listener with acm created certificate for admin page
+#
+resource "aws_lb_listener" "https8800" {
+  load_balancer_arn = "${aws_lb.lb.arn}"
+  port              = "8800"
+  protocol          = "HTTPS"
+  certificate_arn   = "arn:aws:acm:us-west-2:027086599304:certificate/2c9be172-3edc-4919-adf1-39cce85deca9"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.https8800.arn}"
+  }
+}
+
+#
 # Configure HTTP :80 listener
 #
 resource "aws_lb_listener" "http" {
@@ -50,6 +65,13 @@ resource "aws_lb_target_group" "https" {
   vpc_id   = "${var.aws_vpc_id}"
 }
 
+resource "aws_lb_target_group" "https8800" {
+  name     = "${var.prefix}-lb-8800"
+  port     = 8800
+  protocol = "HTTPS"
+  vpc_id   = "${var.aws_vpc_id}"
+}
+
 resource "aws_lb_target_group" "http" {
   name     = "${var.prefix}-lb-80"
   port     = 80
@@ -61,6 +83,12 @@ resource "aws_lb_target_group_attachment" "https" {
   target_group_arn = "${aws_lb_target_group.https.arn}"
   target_id        = "${aws_instance.services.id}"
   port             = 443
+}
+
+resource "aws_lb_target_group_attachment" "https8800" {
+  target_group_arn = "${aws_lb_target_group.https8800.arn}"
+  target_id        = "${aws_instance.services.id}"
+  port             = 8800
 }
 
 resource "aws_lb_target_group_attachment" "http" {
@@ -89,6 +117,13 @@ resource "aws_security_group" "lb_ingress" {
     protocol    = "tcp"
     from_port   = 443
     to_port     = 443
+  }
+
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 8800
+    to_port     = 8800
   }
 
   egress {
