@@ -22,7 +22,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get install -y "linux-image-$UNAME"
 apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial
+apt-get -y install docker-ce=17.12.1~ce-0~ubuntu
 
 # Enable docker fluentd logging driver
 cat <<EOF > /etc/docker/daemon.json
