@@ -78,6 +78,7 @@ resource "aws_s3_bucket" "circleci_bucket" {
   }
 
   force_destroy = "${var.force_destroy_s3_bucket}"
+  tags          = "${var.tags}"
 }
 
 ## IAM for instances
@@ -119,6 +120,8 @@ resource "aws_security_group" "circleci_builders_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "circleci_services_sg" {
@@ -139,6 +142,8 @@ resource "aws_security_group" "circleci_services_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
 
   # If using github.com (not GitHub Enterprise) whitelist GitHub cidr block
   # https://help.github.com/articles/what-ip-addresses-does-github-use-that-i-should-whitelist/
@@ -168,6 +173,8 @@ resource "aws_security_group" "circleci_builders_admin_sg" {
     from_port       = 443
     to_port         = 443
   }
+
+  tags = "${var.tags}"
 }
 
 #
@@ -249,6 +256,8 @@ resource "aws_security_group" "circleci_users_sg" {
     from_port   = 64535
     to_port     = 65535
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "circleci_logging_sg" {
@@ -263,6 +272,8 @@ resource "aws_security_group" "circleci_logging_sg" {
     from_port   = 24224
     to_port     = 24224
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "circleci_vm_sg" {
@@ -300,6 +311,15 @@ resource "aws_security_group" "circleci_vm_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
+}
+
+locals {
+  circleci_backup_tags = {
+    circleci_backup = "enabled"
+    service         = "circleci-server"
+  }
 }
 
 resource "aws_instance" "services" {
@@ -317,7 +337,7 @@ resource "aws_instance" "services" {
     "${aws_security_group.circleci_logging_sg.id}",
   ]
 
-  tags = "${merge(var.tags, map("Name", format("%s_services", var.prefix)))}"
+  tags = "${merge(var.tags, local.circleci_backup_tags, map("name", format("%s_services", var.prefix), ))}"
 
   root_block_device {
     volume_type           = "gp2"
