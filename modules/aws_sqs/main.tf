@@ -1,9 +1,11 @@
 resource "aws_sqs_queue" "mod_queue" {
   name = "${var.prefix}_${var.name}_queue"
+  tags = "${var.tags}"
 }
 
 resource "aws_iam_role" "mod_role" {
   name = "${var.prefix}_${var.name}_queue_role"
+  tags = "${var.tags}"
 
   assume_role_policy = <<EOF
 {

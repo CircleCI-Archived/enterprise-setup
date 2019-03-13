@@ -62,6 +62,7 @@ module "shutdown_sqs" {
   source = "./modules/aws_sqs"
   name   = "shutdown"
   prefix = "${var.prefix}"
+  tags   = "${var.tags}"
 }
 
 # Single general-purpose bucket
@@ -399,6 +400,7 @@ module "legacy_builder" {
   spot_price                    = "${var.legacy_builder_spot_price}"
   shutdown_queue_target_sqs_arn = "${module.shutdown_sqs.sqs_arn}"
   shutdown_queue_role_arn       = "${module.shutdown_sqs.queue_role_arn}"
+  tags                          = "${var.tags}"
 }
 
 module "nomad" {
@@ -417,6 +419,7 @@ module "nomad" {
   services_private_ip   = "${aws_instance.services.private_ip}"
   desired_instances     = "${var.desired_nomad_instances}"
   max_instances         = "${var.max_nomad_instances}"
+  tags                  = "${var.tags}"
 }
 
 output "success_message" {

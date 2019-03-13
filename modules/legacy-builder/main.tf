@@ -32,11 +32,7 @@ resource "aws_autoscaling_group" "mod_asg" {
   desired_capacity     = "${var.asg_desired_size}"
   force_delete         = true
 
-  tag {
-    key                 = "Name"
-    value               = "${var.prefix}_${var.name}"
-    propagate_at_launch = "true"
-  }
+  tags = "${merge(var.tags, map("key", "name", "value", "${var.prefix}_${var.name}", "propagate_at_launch", true))}"
 }
 
 resource "aws_autoscaling_lifecycle_hook" "mod_shutdown_hook" {
@@ -46,4 +42,5 @@ resource "aws_autoscaling_lifecycle_hook" "mod_shutdown_hook" {
   lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
   notification_target_arn = "${var.shutdown_queue_target_sqs_arn}"
   role_arn                = "${var.shutdown_queue_role_arn}"
+  tags                    = "${var.tags}"
 }

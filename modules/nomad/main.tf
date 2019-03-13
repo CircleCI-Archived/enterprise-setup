@@ -33,6 +33,8 @@ resource "aws_security_group" "nomad_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "ssh_sg" {
@@ -54,6 +56,8 @@ resource "aws_security_group" "ssh_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_launch_configuration" "clients_lc" {
@@ -86,9 +90,5 @@ resource "aws_autoscaling_group" "clients_asg" {
   desired_capacity     = "${var.desired_instances}"
   force_delete         = true
 
-  tag {
-    key                 = "Name"
-    value               = "${var.prefix}-nomad-client"
-    propagate_at_launch = "true"
-  }
+  tags = "${merge(var.tags, map("key", "name", "value", "${var.prefix}-nomad-client", "propagate_at_launch", true))}"
 }
