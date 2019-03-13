@@ -22,6 +22,20 @@ resource "aws_launch_configuration" "mod_lc" {
   }
 }
 
+locals {
+  merge_tags = "${merge(var.tags, map("name", "${var.prefix}_${var.name}"))}"
+}
+
+data "null_data_source" "tags" {
+  count = "${length(keys(local.merge_tags))}"
+
+  inputs = {
+    key                 = "${element(keys(local.merge_tags)), count.index)}"
+    value               = "${element(values(local.merge_tags)), count.index)}"
+    propagate_at_launch = true
+  }
+}
+
 resource "aws_autoscaling_group" "mod_asg" {
   name = "${var.prefix}_${var.name}_asg"
 
@@ -32,7 +46,9 @@ resource "aws_autoscaling_group" "mod_asg" {
   desired_capacity     = "${var.asg_desired_size}"
   force_delete         = true
 
-  tags = "${merge(var.tags, map("key", "name", "value", "${var.prefix}_${var.name}", "propagate_at_launch", true))}"
+  tags = ["${data.null_data_source.tags.*.outputs}"]
+
+  #tags = ["${concat(list(data.null_data_source.tags.*.outputs), list(map("key", "name", "value", "${var.prefix}_${var.name}", "propagate_at_launch", true)))}"]
 }
 
 resource "aws_autoscaling_lifecycle_hook" "mod_shutdown_hook" {
@@ -42,5 +58,4 @@ resource "aws_autoscaling_lifecycle_hook" "mod_shutdown_hook" {
   lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
   notification_target_arn = "${var.shutdown_queue_target_sqs_arn}"
   role_arn                = "${var.shutdown_queue_role_arn}"
-  tags                    = "${var.tags}"
 }

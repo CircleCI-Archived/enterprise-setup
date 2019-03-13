@@ -41,4 +41,8 @@ variable "https_proxy" {}
 variable "no_proxy" {}
 
 # Recources tags
-variable "tags" {}
+variable "tags" {
+  type        = "map"
+  description = "custom tags for services instance"
+  default     = {}
+}
