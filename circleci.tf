@@ -88,6 +88,7 @@ resource "aws_iam_role" "circleci_role" {
   name               = "${var.prefix}_role"
   path               = "/"
   assume_role_policy = "${file("files/circleci_role.json")}"
+  tags               = "${var.tags}"
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
