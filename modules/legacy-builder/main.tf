@@ -30,8 +30,8 @@ data "null_data_source" "tags" {
   count = "${length(keys(local.merge_tags))}"
 
   inputs = {
-    key                 = "${element(keys(local.merge_tags)), count.index)}"
-    value               = "${element(values(local.merge_tags)), count.index)}"
+    key                 = "${element(keys(local.merge_tags), count.index)}"
+    value               = "${element(values(local.merge_tags), count.index)}"
     propagate_at_launch = true
   }
 }
