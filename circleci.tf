@@ -62,6 +62,7 @@ module "shutdown_sqs" {
   source = "./modules/aws_sqs"
   name   = "shutdown"
   prefix = "${var.prefix}"
+  tags   = "${var.tags}"
 }
 
 # Single general-purpose bucket
@@ -78,6 +79,7 @@ resource "aws_s3_bucket" "circleci_bucket" {
   }
 
   force_destroy = "${var.force_destroy_s3_bucket}"
+  tags          = "${var.tags}"
 }
 
 ## IAM for instances
@@ -86,6 +88,7 @@ resource "aws_iam_role" "circleci_role" {
   name               = "${var.prefix}_role"
   path               = "/"
   assume_role_policy = "${file("files/circleci_role.json")}"
+  tags               = "${var.tags}"
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
@@ -119,6 +122,8 @@ resource "aws_security_group" "circleci_builders_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "circleci_services_sg" {
@@ -139,6 +144,8 @@ resource "aws_security_group" "circleci_services_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
 
   # If using github.com (not GitHub Enterprise) whitelist GitHub cidr block
   # https://help.github.com/articles/what-ip-addresses-does-github-use-that-i-should-whitelist/
@@ -168,6 +175,8 @@ resource "aws_security_group" "circleci_builders_admin_sg" {
     from_port       = 443
     to_port         = 443
   }
+
+  tags = "${var.tags}"
 }
 
 #
@@ -249,6 +258,8 @@ resource "aws_security_group" "circleci_users_sg" {
     from_port   = 64535
     to_port     = 65535
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "circleci_logging_sg" {
@@ -263,6 +274,8 @@ resource "aws_security_group" "circleci_logging_sg" {
     from_port   = 24224
     to_port     = 24224
   }
+
+  tags = "${var.tags}"
 }
 
 resource "aws_security_group" "circleci_vm_sg" {
@@ -300,6 +313,14 @@ resource "aws_security_group" "circleci_vm_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = "${var.tags}"
+}
+
+locals {
+  circleci_backup_tags = {
+    circleci_backup = "enabled"
+  }
 }
 
 resource "aws_instance" "services" {
@@ -317,7 +338,7 @@ resource "aws_instance" "services" {
     "${aws_security_group.circleci_logging_sg.id}",
   ]
 
-  tags = "${merge(var.tags, map("Name", format("%s_services", var.prefix)))}"
+  tags = "${merge(var.tags, local.circleci_backup_tags, map("name", format("%s_services", var.prefix)))}"
 
   root_block_device {
     volume_type           = "gp2"
@@ -379,6 +400,7 @@ module "legacy_builder" {
   spot_price                    = "${var.legacy_builder_spot_price}"
   shutdown_queue_target_sqs_arn = "${module.shutdown_sqs.sqs_arn}"
   shutdown_queue_role_arn       = "${module.shutdown_sqs.queue_role_arn}"
+  tags                          = "${var.tags}"
 }
 
 module "nomad" {
@@ -397,6 +419,7 @@ module "nomad" {
   services_private_ip   = "${aws_instance.services.private_ip}"
   desired_instances     = "${var.desired_nomad_instances}"
   max_instances         = "${var.max_nomad_instances}"
+  tags                  = "${var.tags}"
 }
 
 output "success_message" {

@@ -31,3 +31,10 @@ variable "spot_price" {}
 
 variable "shutdown_queue_target_sqs_arn" {}
 variable "shutdown_queue_role_arn" {}
+
+# Recources tags
+variable "tags" {
+  type        = "map"
+  description = "custom tags for services instance"
+  default     = {}
+}

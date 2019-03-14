@@ -39,3 +39,10 @@ variable "desired_instances" {
 variable "http_proxy" {}
 variable "https_proxy" {}
 variable "no_proxy" {}
+
+# Recources tags
+variable "tags" {
+  type        = "map"
+  description = "custom tags for services instance"
+  default     = {}
+}
