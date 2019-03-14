@@ -80,6 +80,16 @@ resource "aws_launch_configuration" "clients_lc" {
   }
 }
 
+data "null_data_source" "tags" {
+  count = "${length(keys(var.tags))}"
+
+  inputs = {
+    key                 = "${element(keys(var.tags), count.index)}"
+    value               = "${element(values(var.tags), count.index)}"
+    propagate_at_launch = true
+  }
+}
+
 resource "aws_autoscaling_group" "clients_asg" {
   count                = "${var.enabled}"
   name                 = "${var.prefix}_nomad_clients_asg"
@@ -90,5 +100,5 @@ resource "aws_autoscaling_group" "clients_asg" {
   desired_capacity     = "${var.desired_instances}"
   force_delete         = true
 
-  tags = ["${merge(var.tags, map("key", "name", "value", "${var.prefix}-nomad-client", "propagate_at_launch", true))}"]
+  tags = ["${data.null_data_source.tags.*.outputs}"]
 }

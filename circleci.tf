@@ -338,7 +338,7 @@ resource "aws_instance" "services" {
     "${aws_security_group.circleci_logging_sg.id}",
   ]
 
-  tags = "${merge(var.tags, local.circleci_backup_tags, map("name", format("%s_services", var.prefix), ))}"
+  tags = "${merge(var.tags, local.circleci_backup_tags, map("name", format("%s_services", var.prefix)))}"
 
   root_block_device {
     volume_type           = "gp2"

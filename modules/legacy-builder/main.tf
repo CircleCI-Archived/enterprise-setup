@@ -47,8 +47,6 @@ resource "aws_autoscaling_group" "mod_asg" {
   force_delete         = true
 
   tags = ["${data.null_data_source.tags.*.outputs}"]
-
-  #tags = ["${concat(list(data.null_data_source.tags.*.outputs), list(map("key", "name", "value", "${var.prefix}_${var.name}", "propagate_at_launch", true)))}"]
 }
 
 resource "aws_autoscaling_lifecycle_hook" "mod_shutdown_hook" {
