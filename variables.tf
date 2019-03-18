@@ -56,10 +56,6 @@ variable "enable_nomad" {
   default     = 1
 }
 
-variable "desired_nomad_instances" {
-  default = "1"
-}
-
 variable "max_nomad_instances" {
   default = "2"
 }
