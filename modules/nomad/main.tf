@@ -80,12 +80,16 @@ resource "aws_launch_configuration" "clients_lc" {
   }
 }
 
+locals {
+  merge_tags = "${merge(var.tags, map("name", "${var.prefix}-nomad-client"))}"
+}
+
 data "null_data_source" "tags" {
-  count = "${length(keys(var.tags))}"
+  count = "${length(keys(local.merge_tags))}"
 
   inputs = {
-    key                 = "${element(keys(var.tags), count.index)}"
-    value               = "${element(values(var.tags), count.index)}"
+    key                 = "${element(keys(local.merge_tags), count.index)}"
+    value               = "${element(values(local.merge_tags), count.index)}"
     propagate_at_launch = true
   }
 }
