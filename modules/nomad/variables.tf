@@ -32,10 +32,6 @@ variable "max_instances" {
   default = "2"
 }
 
-variable "desired_instances" {
-  default = "1"
-}
-
 variable "http_proxy" {}
 variable "https_proxy" {}
 variable "no_proxy" {}

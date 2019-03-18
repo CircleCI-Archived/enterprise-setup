@@ -101,7 +101,6 @@ resource "aws_autoscaling_group" "clients_asg" {
   launch_configuration = "${aws_launch_configuration.clients_lc.name}"
   max_size             = "${var.max_instances}"
   min_size             = 0
-  desired_capacity     = "${var.desired_instances}"
   force_delete         = true
 
   tags = ["${data.null_data_source.tags.*.outputs}"]
