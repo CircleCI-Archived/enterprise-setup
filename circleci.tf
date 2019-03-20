@@ -279,7 +279,7 @@ resource "aws_instance" "services" {
   ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
-  associate_public_ip_address = true
+  #associate_public_ip_address = true
   disable_api_termination     = "${var.services_disable_api_termination}"
   iam_instance_profile        = "${aws_iam_instance_profile.circleci_profile.name}"
 
