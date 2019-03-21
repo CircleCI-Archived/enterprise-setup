@@ -2,6 +2,8 @@
 
 This package allows you to easily orchestrate your CCIE cluster in AWS using Terraform.
 
+**Note: This is only meant to be used for the intial setup of CircleCI and is not meant to be used for the ongoing maintinance of CircleCI.**
+
 # Getting Started
 
 ## Pre Reqs
