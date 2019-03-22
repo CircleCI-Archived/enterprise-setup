@@ -4,6 +4,8 @@ This package allows you to easily orchestrate your CCIE cluster in AWS using Ter
 
 **Note: This is only meant to be used for the intial setup of CircleCI and is not meant to be used for the ongoing maintinance of CircleCI.**
 
+**Note: Master is the only supported branch. All other branches off this repo should not be considered stable, and used at your own risk.**
+
 # Getting Started
 
 ## Pre Reqs
