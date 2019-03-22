@@ -39,3 +39,12 @@ variable "desired_instances" {
 variable "http_proxy" {}
 variable "https_proxy" {}
 variable "no_proxy" {}
+
+
+variable "common_tags" {
+  type = "map"
+}
+
+variable "common_tags_list" {
+  type = "list"
+}

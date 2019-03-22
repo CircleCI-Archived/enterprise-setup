@@ -48,6 +48,7 @@ module "shutdown_sqs" {
   source = "./modules/aws_sqs"
   name   = "shutdown"
   prefix = "${var.prefix}"
+  common_tags = "${local.common_tags}"
 }
 
 # Single general-purpose bucket
@@ -63,7 +64,15 @@ resource "aws_s3_bucket" "circleci_bucket" {
     max_age_seconds = 3600
   }
 
-  force_destroy = "${var.force_destroy_s3_bucket}"
+  force_destroy = "${var.force_destroy_s3_bucket}"  
+
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "Name", "Eddie CCIE Bucket"
+    )
+  )}"
 }
 
 ## IAM for instances
@@ -105,6 +114,11 @@ resource "aws_security_group" "circleci_builders_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags
+  )}"
 }
 
 resource "aws_security_group" "circleci_services_sg" {
@@ -125,22 +139,26 @@ resource "aws_security_group" "circleci_services_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags
+  )}"
 
   # If using github.com (not GitHub Enterprise) whitelist GitHub cidr block
   # https://help.github.com/articles/what-ip-addresses-does-github-use-that-i-should-whitelist/
   #
-  #ingress {
-  #    security_groups = ["192.30.252.0/22"]
-  #    protocol = "tcp"
-  #    from_port = 443
-  #    to_port = 443
-  #}
-  #ingress {
-  #    security_groups = ["192.30.252.0/22"]
-  #    protocol = "tcp"
-  #    from_port = 80
-  #    to_port = 80
-  #}
+  ingress {
+     cidr_blocks = ["192.30.252.0/22"]
+     protocol = "tcp"
+     from_port = 443
+     to_port = 443
+  }
+  ingress {
+     cidr_blocks = ["192.30.252.0/22"]
+     protocol = "tcp"
+     from_port = 80
+     to_port = 80
+  }
 }
 
 resource "aws_security_group" "circleci_builders_admin_sg" {
@@ -154,6 +172,10 @@ resource "aws_security_group" "circleci_builders_admin_sg" {
     from_port       = 443
     to_port         = 443
   }
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags
+  )}"
 }
 
 #
@@ -235,6 +257,10 @@ resource "aws_security_group" "circleci_users_sg" {
     from_port   = 64535
     to_port     = 65535
   }
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags
+  )}"
 }
 
 resource "aws_security_group" "circleci_vm_sg" {
@@ -272,6 +298,10 @@ resource "aws_security_group" "circleci_vm_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags
+  )}"
 }
 
 resource "aws_instance" "services" {
@@ -288,9 +318,13 @@ resource "aws_instance" "services" {
     "${aws_security_group.circleci_users_sg.id}",
   ]
 
-  tags {
-    Name = "${var.prefix}_services"
-  }
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags,
+    map(
+      "Name" , "${var.prefix}_services"
+    )
+  )}"
 
   root_block_device {
     volume_type           = "gp2"
@@ -303,6 +337,7 @@ resource "aws_instance" "services" {
   lifecycle {
     prevent_destroy = false
   }
+ 
 }
 
 resource "aws_route53_record" "services_route" {
@@ -312,6 +347,10 @@ resource "aws_route53_record" "services_route" {
   type    = "A"
   ttl     = "300"
   records = ["${aws_instance.services.public_ip}"]
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    local.common_tags
+  )}"
 }
 
 ## Builders ASG
@@ -368,6 +407,8 @@ module "nomad" {
   ami_id                = "${(var.services_ami != "") ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
   services_private_ip   = "${aws_instance.services.private_ip}"
+  common_tags           = "${local.common_tags}"
+  common_tags_list      = "${local.common_tags_list}"
 }
 
 output "success_message" {

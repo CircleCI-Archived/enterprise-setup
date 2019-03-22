@@ -33,6 +33,11 @@ resource "aws_security_group" "nomad_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    var.common_tags
+  )}"
 }
 
 resource "aws_security_group" "ssh_sg" {
@@ -54,6 +59,10 @@ resource "aws_security_group" "ssh_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    var.common_tags
+  )}"
 }
 
 resource "aws_launch_configuration" "clients_lc" {
@@ -85,10 +94,13 @@ resource "aws_autoscaling_group" "clients_asg" {
   min_size             = 0
   desired_capacity     = "${var.desired_instances}"
   force_delete         = true
-
-  tag {
-    key                 = "Name"
-    value               = "${var.prefix}-nomad-client"
-    propagate_at_launch = "true"
-  }
+  
+  //  Apply common tags in tags.tf and any custom ones speicfic to this resource. 
+  // ASGs are unique in that they want a list of maps.
+  tags = ["${
+    concat(
+      var.common_tags_list,
+      list(map("key", "Name", "value", "${var.prefix}-nomad-client", "propagate_at_launch", true))
+    )
+    }"]
 }

@@ -1,5 +1,9 @@
 resource "aws_sqs_queue" "mod_queue" {
   name = "${var.prefix}_${var.name}_queue"
+//  Apply common tags in tags.tf and any custom ones speicfic to this resource
+  tags = "${merge(
+    var.common_tags
+  )}"
 }
 
 resource "aws_iam_role" "mod_role" {
