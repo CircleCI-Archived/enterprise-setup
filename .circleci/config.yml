@@ -27,7 +27,11 @@ jobs:
             echo 'https_proxy = ""' >> terraform.tfvars
             echo 'no_proxy = ""' >> terraform.tfvars
 
-      - run: terraform get
+      - run:
+          name: Initialize Directory & Modules
+          command: |
+            terraform get
+            terraform init
 
       - run:
           name: Validate the configuration
