@@ -3,7 +3,7 @@ version: 2
 jobs:
   terraform:
     docker:
-      - image: hashicorp/terraform:0.9.9
+      - image: hashicorp/terraform:0.11.13
     working_directory: ~/terraform
     steps:
       - checkout
