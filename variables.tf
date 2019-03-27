@@ -1,3 +1,4 @@
+/* CMS: Disable secret passing into this module
 variable "aws_access_key" {
   description = "Access key used to create instances"
 }
@@ -5,7 +6,7 @@ variable "aws_access_key" {
 variable "aws_secret_key" {
   description = "Secret key used to create instances"
 }
-
+*/
 variable "aws_region" {
   description = "Region where instances get created"
 }
@@ -16,10 +17,6 @@ variable "aws_vpc_id" {
 
 variable "aws_subnet_id" {
   description = "The subnet-id to be used for the instance"
-}
-
-variable "aws_elb_subnets" {
-  type = "list"
 }
 
 variable "aws_ssh_key_name" {

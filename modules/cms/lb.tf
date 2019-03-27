@@ -2,16 +2,30 @@
 # Configure an ELB in the public subnet
 #
 resource "aws_lb" "lb" {
-  name            = "${var.prefix}-circle-lb"
+  name            = "${local.prefix}-circle-lb"
   internal        = false
   security_groups = ["${aws_security_group.lb_ingress.id}"]
-  subnets         = ["${var.aws_elb_subnets}"]
+  subnets         = ["${module.network.public_subnet_ids}"]
+  tags            = "${module.tags.application_tags}"
 
   #access_logs {
   #  bucket  = "${module.aws_logs.aws_logs_bucket}"
-  #  prefix  = "${var.prefix}-circle"
+  #  prefix  = "${local.prefix}-circle"
   #  enabled = true
   #}
+}
+
+#
+# Setup an ACM certificate for this environment
+#
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "${var.fqdn}"
+  validation_method = "DNS"
+  tags              = "${module.tags.application_tags}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 #
@@ -21,7 +35,7 @@ resource "aws_lb_listener" "https" {
   load_balancer_arn = "${aws_lb.lb.arn}"
   port              = "443"
   protocol          = "HTTPS"
-  certificate_arn   = "arn:aws:acm:us-west-2:027086599304:certificate/2c9be172-3edc-4919-adf1-39cce85deca9"
+  certificate_arn   = "${aws_acm_certificate.cert.arn}"
 
   default_action {
     type             = "forward"
@@ -36,7 +50,7 @@ resource "aws_lb_listener" "https8800" {
   load_balancer_arn = "${aws_lb.lb.arn}"
   port              = "8800"
   protocol          = "HTTPS"
-  certificate_arn   = "arn:aws:acm:us-west-2:027086599304:certificate/2c9be172-3edc-4919-adf1-39cce85deca9"
+  certificate_arn   = "${aws_acm_certificate.cert.arn}"
 
   default_action {
     type             = "forward"
@@ -59,41 +73,44 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_lb_target_group" "https" {
-  name     = "${var.prefix}-lb-443"
+  name     = "${local.prefix}-lb-443"
   port     = 443
   protocol = "HTTPS"
-  vpc_id   = "${var.aws_vpc_id}"
+  vpc_id   = "${module.network.vpc_id}"
+  tags     = "${module.tags.application_tags}"
 }
 
 resource "aws_lb_target_group" "https8800" {
-  name     = "${var.prefix}-lb-8800"
+  name     = "${local.prefix}-lb-8800"
   port     = 8800
   protocol = "HTTPS"
-  vpc_id   = "${var.aws_vpc_id}"
+  vpc_id   = "${module.network.vpc_id}"
+  tags     = "${module.tags.application_tags}"
 }
 
 resource "aws_lb_target_group" "http" {
-  name     = "${var.prefix}-lb-80"
+  name     = "${local.prefix}-lb-80"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${var.aws_vpc_id}"
+  vpc_id   = "${module.network.vpc_id}"
+  tags     = "${module.tags.application_tags}"
 }
 
 resource "aws_lb_target_group_attachment" "https" {
   target_group_arn = "${aws_lb_target_group.https.arn}"
-  target_id        = "${aws_instance.services.id}"
+  target_id        = "${module.circleci.aws_instance_id}"
   port             = 443
 }
 
 resource "aws_lb_target_group_attachment" "https8800" {
   target_group_arn = "${aws_lb_target_group.https8800.arn}"
-  target_id        = "${aws_instance.services.id}"
+  target_id        = "${module.circleci.aws_instance_id}"
   port             = 8800
 }
 
 resource "aws_lb_target_group_attachment" "http" {
   target_group_arn = "${aws_lb_target_group.http.arn}"
-  target_id        = "${aws_instance.services.id}"
+  target_id        = "${module.circleci.aws_instance_id}"
   port             = 80
 }
 
@@ -101,8 +118,9 @@ resource "aws_lb_target_group_attachment" "http" {
 # All all inbound to 80 and 443
 #
 resource "aws_security_group" "lb_ingress" {
-  name   = "${var.prefix}-lb-ingress"
-  vpc_id = "${var.aws_vpc_id}"
+  name   = "${local.prefix}-lb-ingress"
+  vpc_id = "${module.network.vpc_id}"
+  tags   = "${module.tags.application_tags}"
 
   # For Web traffic to services
   ingress {
@@ -127,10 +145,10 @@ resource "aws_security_group" "lb_ingress" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    security_groups = ["${aws_security_group.circleci_users_sg.id}"]
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${module.circleci.circleci_users_sg_id}"]
   }
 }
 

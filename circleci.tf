@@ -3,7 +3,8 @@ data "aws_subnet" "subnet" {
 }
 
 data "template_file" "services_user_data" {
-  template = "${file("templates/services_user_data.tpl")}"
+  // CMS: add path.module
+  template = "${file("${path.module}/templates/services_user_data.tpl")}"
 
   vars {
     circle_secret_passphrase = "${var.circle_secret_passphrase}"
@@ -19,7 +20,8 @@ data "template_file" "services_user_data" {
 }
 
 data "template_file" "circleci_policy" {
-  template = "${file("templates/circleci_policy.tpl")}"
+  // CMS: add path.module
+  template = "${file("${path.module}/templates/circleci_policy.tpl")}"
 
   vars {
     bucket_arn    = "${aws_s3_bucket.circleci_bucket.arn}"
@@ -30,19 +32,21 @@ data "template_file" "circleci_policy" {
 }
 
 data "template_file" "output" {
-  template = "${file("templates/output.tpl")}"
+  // CMS: add path.module
+  template = "${file("${path.module}/templates/output.tpl")}"
 
   vars {
     services_public_ip = "${aws_instance.services.public_ip}"
     ssh_key            = "${var.aws_ssh_key_name}"
   }
 }
-
+/* CMS: remove AWS configuration in module
 provider "aws" {
   access_key = "${var.aws_access_key}"
   secret_key = "${var.aws_secret_key}"
   region     = "${var.aws_region}"
 }
+*/
 
 module "shutdown_sqs" {
   source = "./modules/aws_sqs"
@@ -71,7 +75,8 @@ resource "aws_s3_bucket" "circleci_bucket" {
 resource "aws_iam_role" "circleci_role" {
   name               = "${var.prefix}_role"
   path               = "/"
-  assume_role_policy = "${file("files/circleci_role.json")}"
+  // CMS: add path.module
+  assume_role_policy = "${file("${path.module}/files/circleci_role.json")}"
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
@@ -279,6 +284,7 @@ resource "aws_instance" "services" {
   ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   key_name                    = "${var.aws_ssh_key_name}"
   subnet_id                   = "${var.aws_subnet_id}"
+  // CMS: disable public IP
   #associate_public_ip_address = true
   disable_api_termination     = "${var.services_disable_api_termination}"
   iam_instance_profile        = "${aws_iam_instance_profile.circleci_profile.name}"

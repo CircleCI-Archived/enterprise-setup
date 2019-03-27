@@ -6,5 +6,7 @@
 *.tfvars
 .ansible/
 **.retry
-/.terraform
 .DS_Store
+.terraform
+terraform.tfstate.*.backup
+terraform.tfstate.backup
