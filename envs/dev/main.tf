@@ -30,20 +30,6 @@ output "elb_name" {
 }
 
 #
-# SES txt verification record
-#
-output "ses_verification_token" {
-  value = "${module.app.ses_verification_token}"
-}
-
-#
-# DKIM verification keys
-#
-output "ses_dkim_tokens" {
-  value = "${module.app.ses_dkim_tokens}"
-}
-
-#
 # Configure providers for this bootstrap. These are the latest versions as of 1/10/2019
 #
 provider "aws" {
