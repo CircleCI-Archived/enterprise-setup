@@ -24,6 +24,14 @@ apt-get install -y "linux-image-$UNAME"
 apt-get update
 apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial
 
+# force docker to use userns-remap to mitigate CVE 2019-5736
+apt-get -y install jq
+mkdir -p /etc/docker
+[ -f /etc/docker/daemon.json ] || echo '{}' > /etc/docker/daemon.json
+tmp=$(mktemp)
+cp /etc/docker/daemon.json /etc/docker/daemon.json.orig
+jq '.["userns-remap"]="default"' /etc/docker/daemon.json > "$tmp" && mv "$tmp" /etc/docker/daemon.json
+
 sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
 sudo echo 'export no_proxy="${no_proxy}"' >> /etc/default/docker
