@@ -30,7 +30,7 @@ mkdir -p /etc/docker
 [ -f /etc/docker/daemon.json ] || echo '{}' > /etc/docker/daemon.json
 tmp=$(mktemp)
 cp /etc/docker/daemon.json /etc/docker/daemon.json.orig
-jq '."userns-remap"= "default"' /etc/docker/daemon.json > "$tmp" && mv "$tmp" /etc/docker/daemon.json
+jq '.["userns-remap"]="default"' /etc/docker/daemon.json > "$tmp" && mv "$tmp" /etc/docker/daemon.json
 
 sudo echo 'export http_proxy="${http_proxy}"' >> /etc/default/docker
 sudo echo 'export https_proxy="${https_proxy}"' >> /etc/default/docker
