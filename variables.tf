@@ -7,6 +7,11 @@ variable "aws_secret_key" {
   description = "Secret key used to create instances"
 }
 */
+variable "arn_prefix" {
+  default     = "aws"
+  description = "ARN Prefix to use, aws for commercial, aws-us-gov for govcloud"
+}
+
 variable "aws_region" {
   description = "Region where instances get created"
 }
@@ -138,5 +143,3 @@ variable "ubuntu_ami" {
     us-west-2      = "ami-0afae182eed9d2b46"
   }
 }
-
-

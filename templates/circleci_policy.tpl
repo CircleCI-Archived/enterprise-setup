@@ -35,7 +35,7 @@
                   "ec2:CreateTags"
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ec2:${aws_region}:*"
+              "Resource": "arn:${arn_prefix}:ec2:${aws_region}:*"
           },
           {
               "Action": [
@@ -54,7 +54,7 @@
                   "ec2:DeleteVolume"
               ],
               "Effect": "Allow",
-              "Resource": "arn:aws:ec2:${aws_region}:*:*/*",
+              "Resource": "arn:${arn_prefix}:ec2:${aws_region}:*:*/*",
               "Condition": {
                   "StringEquals": {
                       "ec2:ResourceTag/ManagedBy": "circleci-vm-service"
@@ -66,7 +66,7 @@
                  "sts:AssumeRole"
               ],
               "Resource": [
-                  "arn:aws:iam::*:role/${role_name}"
+                  "arn:${arn_prefix}:iam::*:role/${role_name}"
               ],
               "Effect": "Allow"
           }

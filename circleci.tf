@@ -28,6 +28,8 @@ data "template_file" "circleci_policy" {
     sqs_queue_arn = "${module.shutdown_sqs.sqs_arn}"
     role_name     = "${aws_iam_role.circleci_role.name}"
     aws_region    = "${var.aws_region}"
+    // CMS: Add arn prefix for govcloud
+    arn_prefix    = "${var.arn_prefix}"
   }
 }
 

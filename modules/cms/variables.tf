@@ -11,3 +11,7 @@ variable "aws_ssh_key_name" {
   description = "Optional ssh key to install"
   default     = ""
 }
+
+variable "application" {
+  default = "circleci"
+}
