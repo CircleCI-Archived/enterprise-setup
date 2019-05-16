@@ -16,6 +16,11 @@ echo "-------------------------------------------"
 apt-get update && apt-get -y upgrade
 
 echo "--------------------------------------"
+echo "        Set clocksource to tsc"
+echo "--------------------------------------"
+echo "tsc" > /sys/devices/system/clocksource/clocksource0/current_clocksource
+
+echo "--------------------------------------"
 echo "        Creating timesyncd.conf"
 echo "--------------------------------------"
 cat <<EOT > /etc/systemd/timesyncd.conf
