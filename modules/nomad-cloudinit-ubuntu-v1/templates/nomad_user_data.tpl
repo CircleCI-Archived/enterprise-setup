@@ -15,6 +15,20 @@ echo "-------------------------------------------"
 apt-get update && apt-get -y upgrade
 
 echo "--------------------------------------"
+echo "        Creating timesyncd.conf"
+echo "--------------------------------------"
+cat <<EOT > /etc/systemd/timesyncd.conf
+[Time]
+NTP=169.254.169.123
+#FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
+EOT
+
+echo "--------------------------------------"
+echo "           Restart timesyncd"
+echo "--------------------------------------"
+sudo systemctl restart systemd-timesyncd.service
+
+echo "--------------------------------------"
 echo "        Installing Docker"
 echo "--------------------------------------"
 apt-get install -y apt-transport-https ca-certificates curl software-properties-common
