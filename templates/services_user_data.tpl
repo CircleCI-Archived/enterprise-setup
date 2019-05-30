@@ -14,6 +14,29 @@ echo "     Performing System Updates"
 echo "-------------------------------------------"
 apt-get update && apt-get -y upgrade
 
+echo "--------------------------------------"
+echo "        Installing NTP"
+echo "--------------------------------------"
+apt-get install -y ntp
+
+# Use AWS NTP config for EC2 instances and default for non-AWS
+if [ -f /sys/hypervisor/uuid ] && [ `head -c 3 /sys/hypervisor/uuid` == ec2 ]; then
+cat <<EOT > /etc/ntp.conf
+driftfile /var/lib/ntp/ntp.drift
+disable monitor
+
+restrict default ignore
+restrict 127.0.0.1 mask 255.0.0.0
+restrict 169.254.169.123 nomodify notrap
+
+server 169.254.169.123 prefer iburst
+EOT
+else
+  echo "USING DEFAULT NTP CONFIGURATION"
+fi
+
+service ntp restart
+
 echo "--------------------------------------------"
 echo "       Setting Private IP"
 echo "--------------------------------------------"
