@@ -61,7 +61,7 @@ echo "--------------------------------------------"
 shared_config_dir=/etc/circleconfig/shared
 mkdir -p $shared_config_dir
 touch $shared_config_dir/postgresql
-echo 'export POSTGRES_HOST="${postgres_rds_host}"' > $shared_config_dir/postgresql
-echo 'export POSTGRES_PORT="${postgres_rds_port}"' > $shared_config_dir/postgresql
-echo 'export POSTGRES_USER="${postgres_user}"' > $shared_config_dir/postgresql
-echo 'export POSTGRES_PASSWORD="${postgres_password}"' > $shared_config_dir/postgresql
+echo 'export POSTGRES_HOST="${postgres_rds_host}"' >> $shared_config_dir/postgresql
+echo 'export POSTGRES_PORT="${postgres_rds_port}"' >> $shared_config_dir/postgresql
+echo 'export POSTGRES_USER="${postgres_user}"' >> $shared_config_dir/postgresql
+echo 'export POSTGRES_PASSWORD="${postgres_password}"' >> $shared_config_dir/postgresql
