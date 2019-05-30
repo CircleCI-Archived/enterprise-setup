@@ -1,6 +1,6 @@
 locals {
   # UPDATE: set this to your stack (dev,prod,imp, etc)
-  stack = "dev"
+  stack       = "dev"
   application = "common-services"
 
   # UPDATE: set this to the front facing fqdn of your installation
@@ -8,10 +8,11 @@ locals {
 }
 
 module "app" {
-  source = "../../modules/cms"
-  stack  = "${local.stack}"
-  fqdn   = "${local.fqdn}"
-  application = "${local.application}"
+  source       = "../../modules/cms"
+  stack        = "${local.stack}"
+  fqdn         = "${local.fqdn}"
+  application  = "${local.application}"
+  rds_instance = "db.m5.large"
 
   # Optional, install an ssh key
   aws_ssh_key_name = "circleci"
