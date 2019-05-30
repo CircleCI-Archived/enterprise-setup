@@ -7,9 +7,10 @@ locals {
 }
 
 module "app" {
-  source = "../../modules/cms"
-  stack  = "${local.stack}"
-  fqdn   = "${local.fqdn}"
+  source       = "../../modules/cms"
+  stack        = "${local.stack}"
+  fqdn         = "${local.fqdn}"
+  rds_instance = "db.m5.large"
 
   # Optional, install an ssh key
   aws_ssh_key_name = "circleci"
