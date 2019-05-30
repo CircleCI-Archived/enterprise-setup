@@ -65,3 +65,9 @@ echo 'export POSTGRES_HOST="${postgres_rds_host}"' >> $shared_config_dir/postgre
 echo 'export POSTGRES_PORT="${postgres_rds_port}"' >> $shared_config_dir/postgresql
 echo 'export POSTGRES_USER="${postgres_user}"' >> $shared_config_dir/postgresql
 echo 'export POSTGRES_PASSWORD="${postgres_password}"' >> $shared_config_dir/postgresql
+# These variables are not required, but they allow a developer to access rds postgres by
+# simply running `psql` from the services host
+echo 'PGHOST=${postgres_rds_host}' >> /etc/environment
+echo 'PGPORT=${postgres_rds_port}' >> /etc/environment
+echo 'PGUSER=${postgres_user}' >> /etc/environment
+echo 'PGPASSWORD=${postgres_password}' >> /etc/environment
