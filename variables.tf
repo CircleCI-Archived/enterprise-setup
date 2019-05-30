@@ -143,3 +143,21 @@ variable "ubuntu_ami" {
     us-west-2      = "ami-0afae182eed9d2b46"
   }
 }
+
+variable "postgres_rds_host" {
+  description = "DNS for the RDS host. e.g. circleci-dev-db.c3qg1rzruhwh.us-west-2.rds.amazonaws.com"
+}
+
+variable "postgres_rds_port" {
+  description = "port used by the postgres db"
+  default = "5432"
+}
+
+variable "postgres_user" {
+  description = "postgres user for circleci application"
+  default = "circle"
+}
+
+variable "postgres_password" {
+  description = "the postgres login password used by the postgres_user"
+}

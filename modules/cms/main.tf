@@ -13,7 +13,7 @@ locals {
 # Here we treat the main circle config in the root of enterprise-setup
 # as a module. Rather than configuring these through tfvars as circle
 # setup is normally done, we do a mix of hard coding and variable passing
-# here. 
+# here.
 module "circleci" {
   source        = "../../"
   aws_vpc_id    = "${module.network.vpc_id}"
@@ -38,6 +38,12 @@ module "circleci" {
     # hvm ebs xenial 2018-11-06
     us-gov-west-1 = "ami-3a86f05b"
   }
+
+  # postgres variables
+  postgres_rds_host = "${module.rds_postgres.this_db_instance_endpoint}"
+  postgres_rds_port = "${module.rds_postgres.this_db_instance_port}"
+  postgres_user     = "${module.rds_postgres.this_db_instance_username}"
+  postgres_password = "${module.rds_postgres.this_db_instance_password}"
 }
 
 data "aws_region" "current" {}

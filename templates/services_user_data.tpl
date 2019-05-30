@@ -54,3 +54,14 @@ echo '${vm_sg_id}' > $config_dir/vm_sg_id
 echo '${http_proxy}' > $config_dir/http_proxy
 echo '${https_proxy}' > $config_dir/https_proxy
 echo '${no_proxy}' > $config_dir/no_proxy
+
+echo "--------------------------------------------"
+echo "       Setting RDS Postgres variables"
+echo "--------------------------------------------"
+shared_config_dir=/etc/circleconfig/shared
+mkdir -p $shared_config_dir
+touch $shared_config_dir/postgresql
+echo 'export POSTGRES_HOST="${postgres_rds_host}"' > $shared_config_dir/postgresql
+echo 'export POSTGRES_PORT="${postgres_rds_port}"' > $shared_config_dir/postgresql
+echo 'export POSTGRES_USER="${postgres_user}"' > $shared_config_dir/postgresql
+echo 'export POSTGRES_PASSWORD="${postgres_password}"' > $shared_config_dir/postgresql

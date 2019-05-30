@@ -16,6 +16,10 @@ data "template_file" "services_user_data" {
     http_proxy               = "${var.http_proxy}"
     https_proxy              = "${var.https_proxy}"
     no_proxy                 = "${var.no_proxy}"
+    postgres_rds_host        = "${var.postgres_rds_host}"
+    postgres_rds_port        = "${var.postgres_rds_port}"
+    postgres_user            = "${var.postgres_user}"
+    postgres_password        = "${var.postgres_password}"
   }
 }
 
