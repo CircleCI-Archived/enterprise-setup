@@ -31,6 +31,12 @@ variable "rds_allocated_storage" {
   default     = 100
 }
 
+variable "rds_snapshot_identifier" {
+  type = "string"
+  description = "Starts the db populated with data from an existing snapshot."
+  default = ""
+}
+
 variable "application" {
   default = "circleci"
 }

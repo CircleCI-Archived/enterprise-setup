@@ -56,6 +56,8 @@ module "rds_postgres" {
   major_engine_version = "10.6"
   # Snapshot name upon DB deletion
   # final_snapshot_identifier = "circleci"
+  # Starts the db populated with data from an existing snapshot
+  snapshot_identifier = "${var.rds_snapshot_identifier}"
   # Database Deletion Protection
   deletion_protection = true
   # Enable enhanced monitoring
