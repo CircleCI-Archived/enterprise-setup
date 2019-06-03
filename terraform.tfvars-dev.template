@@ -17,3 +17,8 @@ no_proxy = ""
 
 # Use this var if you have multiple installation within one AWS region
 # prefix = "..."
+
+# Allows for easy AWS cleanup during Terraform destruction.
+force_destroy_s3_bucket = "true"
+services_disable_api_termination = "false"
+services_delete_on_termination = "true"
