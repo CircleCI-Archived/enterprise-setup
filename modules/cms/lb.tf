@@ -124,24 +124,10 @@ resource "aws_security_group" "lb_ingress" {
 
   # For Web traffic to services
   ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks =  ["${var.ingress_ips}"]
     protocol    = "tcp"
     from_port   = 443
     to_port     = 443
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    protocol    = "tcp"
-    from_port   = 8800
-    to_port     = 8800
   }
 
   egress {
@@ -162,4 +148,3 @@ resource "aws_security_group" "lb_ingress" {
 #  default_allow  = false
 #  allow_elb      = true
 #}
-

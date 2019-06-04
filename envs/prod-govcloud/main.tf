@@ -12,7 +12,8 @@ module "app" {
   stack  = "${local.stack}"
   fqdn   = "${local.fqdn}"
   application = "${local.application}"
-
+  ingress_ips = ["192.30.252.0/22", "185.199.108.0/22", "140.82.112.0/20", "52.20.26.200/32", "34.196.35.156/32"]
+  
   # Optional, install an ssh key
   aws_ssh_key_name = "circleci"
 }
