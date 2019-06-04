@@ -55,7 +55,8 @@ module "tags" {
 }
 
 module "network" {
-  source      = "git@github.com:CMSgov/CMS-AWS-West-Pipelines.git//terraform/modules/network-v4"
+  # source      = "git@github.com:CMSgov/CMS-AWS-West-Pipelines.git//terraform/modules/network-v4"
+  source      = "../../../CMS-AWS-West-Pipelines/terraform/modules/network"
   application = "${var.application}"
   stack       = "${var.stack}"
 }
