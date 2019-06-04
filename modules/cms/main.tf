@@ -40,7 +40,7 @@ module "circleci" {
   }
 
   # postgres variables
-  postgres_rds_host = "${module.rds_postgres.this_db_instance_endpoint}"
+  postgres_rds_host = "${module.rds_postgres.this_db_instance_address}"
   postgres_rds_port = "${module.rds_postgres.this_db_instance_port}"
   postgres_user     = "${module.rds_postgres.this_db_instance_username}"
   postgres_password = "${module.rds_postgres.this_db_instance_password}"
