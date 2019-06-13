@@ -29,14 +29,14 @@ We use Terraform to automate parts of the infrastructure for your CircleCI Serve
 
 ### Teardown
 
-1. First you need to manually disable the termination protection on the Services machine from the AWS Management Console (If you set `services_termination_protection_disabled=false` in `terraform.tfvars`, skip this step.). To do this:
+1. First you need to manually disable the termination protection on the Services machine from the AWS Management Console (If you set `services_disable_api_termination = "false"` in `terraform.tfvars`, skip this step.). To do this:
 
     1. Navigate to the EC2 Dashboard and locate the Services machine instance
     1. Click to select it
     1. Click Actions > Instance Settings > Change Termination Protection
 
 
-1. Navigate to the S3 dashboard, locate the S3 bucket associated with your CircleCI cluster and delete it/its contents (If you set `force_destroy_s3_bucket=true` in `terraform.tfvars`, skip this step.).
+1. Navigate to the S3 dashboard, locate the S3 bucket associated with your CircleCI cluster and delete it/its contents (If you set `force_destroy_s3_bucket = "true"` in `terraform.tfvars`, skip this step.).
 1. From a terminal, navigate to your clone of our `enterprise-setup` repo and run `terraform destroy` to destroy all EC2 instances, IAM roles, ASGs and Launch configurations created by `terraform apply`.
 
 ## Configuration
@@ -70,4 +70,3 @@ Optional vars:
   | services_user_data_enabled | Set to 0 to disable automated installation on Services Box | 1 |
   | force_destroy_s3_bucket | Add/Remove ability to forcefully destroy S3 bucket | false |
   | services_disable_api_termination | Protect the services instance from API termination | true |
-  | services_termination_protection_disabled | Disables termination protection on the Services Machine instance | false |
