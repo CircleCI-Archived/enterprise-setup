@@ -100,7 +100,7 @@ resource "aws_autoscaling_group" "clients_asg" {
   vpc_zone_identifier  = ["${var.aws_subnet_id}"]
   launch_configuration = "${aws_launch_configuration.clients_lc.name}"
   max_size             = "${var.max_instances}"
-  min_size             = 0
+  min_size             = 2
   force_delete         = true
 
   tags = ["${data.null_data_source.tags.*.outputs}"]
