@@ -317,6 +317,12 @@ resource "aws_security_group" "circleci_vm_sg" {
   tags = "${var.tags}"
 }
 
+locals {
+  circleci_backup_tags = {
+    circleci_backup = "enabled"
+  }
+}
+
 resource "aws_instance" "services" {
   instance_type               = "${var.services_instance_type}"
   ami                         = "${var.services_ami != "" ? var.services_ami : lookup(var.ubuntu_ami, var.aws_region)}"
@@ -332,7 +338,7 @@ resource "aws_instance" "services" {
     "${aws_security_group.circleci_logging_sg.id}",
   ]
 
-  tags = "${merge(var.tags, map("circleci_backup", "enabled"), map("name", format("%s_services", var.prefix)))}"
+  tags = "${merge(var.tags, local.circleci_backup_tags, map("name", format("%s_services", var.prefix)))}"
 
   root_block_device {
     volume_type           = "gp2"
