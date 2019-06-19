@@ -417,7 +417,8 @@ module "nomad" {
   ami_id                = "${(var.nomad_client_ami != "") ? var.nomad_client_ami : lookup(var.ubuntu_ami, var.aws_region)}"
   aws_subnet_cidr_block = "${data.aws_subnet.subnet.cidr_block}"
   services_private_ip   = "${aws_instance.services.private_ip}"
-  max_instances         = "${var.max_nomad_instances}"
+  min_instances         = "${var.nomad_min_instances}"
+  max_instances         = "${var.nomad_max_instances}"
   tags                  = "${var.tags}"
 }
 
