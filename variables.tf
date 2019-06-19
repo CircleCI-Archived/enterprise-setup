@@ -60,8 +60,12 @@ variable "desired_nomad_instances" {
   default = 1
 }
 
-variable "max_nomad_instances" {
+variable "nomad_min_instances" {
   default = "2"
+}
+
+variable "nomad_max_instances" {
+  default = "4"
 }
 
 variable "nomad_client_ami" {

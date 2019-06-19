@@ -28,8 +28,12 @@ variable "services_private_ip" {
   default = ""
 }
 
-variable "max_instances" {
+variable "min_instances" {
   default = "2"
+}
+
+variable "max_instances" {
+  default = "4"
 }
 
 variable "http_proxy" {}
