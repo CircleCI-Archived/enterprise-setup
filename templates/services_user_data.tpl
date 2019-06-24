@@ -71,3 +71,41 @@ echo 'PGHOST=${postgres_rds_host}' >> /etc/environment
 echo 'PGPORT=${postgres_rds_port}' >> /etc/environment
 echo 'PGUSER=${postgres_user}' >> /etc/environment
 echo 'PGPASSWORD=${postgres_password}' >> /etc/environment
+
+echo "--------------------------------------------"
+echo "       Provisioning RDS Postgres tables"
+echo "--------------------------------------------"
+# When running postgres locally, this step was handled by a script called init-dbs.sh which
+# the docker container would run on boot. Since postgres is now hosted in RDS, we'll need
+# to run this ourselves.
+
+# Install psql
+apt-get install -y postgresql-client-common postgresql-client-9.5
+
+# load the variables used by the below script, specifically POSTGRES_USER
+source $shared_config_dir/postgresql
+# Export the variables required to connect via psql (varibales in /etc/environment will not be
+# picked up until starting a new terminal session, so we don't have access to those yet)
+export PGHOST=${postgres_rds_host}
+export PGPORT=${postgres_rds_port}
+export PGUSER=${postgres_user}
+export PGPASSWORD=${postgres_password}
+
+# copied verbatim from init-dbs.sh script in the circleci postgres docker container
+create_db() {
+  db="$@"
+  echo "Creating DB $db"
+  if ! `psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -c "SELECT 1 FROM pg_database WHERE datname = '$db'" | grep -q 1`; then
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -c "create database $db"
+  else
+    echo "DB already exists"
+  fi
+}
+
+create_db vms
+create_db conductor_production
+create_db contexts_service_production
+create_db cron_service_production
+create_db domain
+create_db federations
+create_db permissions
