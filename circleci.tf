@@ -400,6 +400,7 @@ module "legacy_builder" {
   spot_price                    = "${var.legacy_builder_spot_price}"
   shutdown_queue_target_sqs_arn = "${module.shutdown_sqs.sqs_arn}"
   shutdown_queue_role_arn       = "${module.shutdown_sqs.queue_role_arn}"
+  enabled_metrics               = "${var.builder_enabled_metrics}"
   tags                          = "${var.tags}"
 }
 
@@ -419,6 +420,7 @@ module "nomad" {
   services_private_ip   = "${aws_instance.services.private_ip}"
   min_instances         = "${var.nomad_min_instances}"
   max_instances         = "${var.nomad_max_instances}"
+  enabled_metrics       = "${var.nomad_enabled_metrics}"
   tags                  = "${var.tags}"
 }
 

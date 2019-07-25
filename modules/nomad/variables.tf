@@ -36,6 +36,11 @@ variable "max_instances" {
   default = "4"
 }
 
+variable "enabled_metrics" {
+  type    = "list"
+  default = []
+}
+
 variable "http_proxy" {}
 variable "https_proxy" {}
 variable "no_proxy" {}
