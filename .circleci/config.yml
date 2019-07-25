@@ -94,5 +94,5 @@ workflows:
   version: 2
   test:
     jobs:
-      - terraform
+      # - terraform
       - validate_amis
