@@ -11,6 +11,11 @@ variable "asg_max_size" {}
 variable "asg_min_size" {}
 variable "asg_desired_size" {}
 
+variable "enabled_metrics" {
+  type    = "list"
+  default = []
+}
+
 variable "user_data" {}
 
 variable "builder_security_group_ids" {

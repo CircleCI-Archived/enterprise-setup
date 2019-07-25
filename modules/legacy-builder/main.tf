@@ -44,6 +44,7 @@ resource "aws_autoscaling_group" "mod_asg" {
   max_size             = "${var.asg_max_size}"
   min_size             = "${var.asg_min_size}"
   desired_capacity     = "${var.asg_desired_size}"
+  enabled_metrics      = "${var.enabled_metrics}"
   force_delete         = true
 
   tags = ["${data.null_data_source.tags.*.outputs}"]

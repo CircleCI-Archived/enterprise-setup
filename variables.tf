@@ -51,6 +51,11 @@ variable "desired_builders_count" {
   default     = "1"
 }
 
+variable "builder_enabled_metrics" {
+  type    = "list"
+  default = []
+}
+
 variable "enable_nomad" {
   description = "enable running 2.0 builds"
   default     = 1
@@ -66,6 +71,11 @@ variable "nomad_min_instances" {
 
 variable "nomad_max_instances" {
   default = "4"
+}
+
+variable "nomad_enabled_metrics" {
+  type    = "list"
+  default = []
 }
 
 variable "nomad_client_ami" {
