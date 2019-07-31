@@ -12,7 +12,9 @@ This package allows you to easily orchestrate your CircleCI Server cluster in AW
 
 We use Terraform to automate parts of the infrastructure for your CircleCI Server install, so you will need to install this first:
 
-* [Terraform](https://www.terraform.io/downloads.html)
+**Note:  We are currently working on updating the scripts for Terraform v0.12.  Please use the latest patch release of v0.11 until then.**
+
+* [Terraform v 0.11](https://releases.hashicorp.com/terraform/)
 
 ## Installation
 
