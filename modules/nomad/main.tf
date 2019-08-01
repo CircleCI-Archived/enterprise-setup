@@ -1,22 +1,22 @@
 module "cloudinit" {
   source            = "../nomad-cloudinit-ubuntu-v1"
-  server_private_ip = "${var.services_private_ip}"
-  http_proxy        = "${var.http_proxy}"
-  https_proxy       = "${var.https_proxy}"
-  no_proxy          = "${var.no_proxy}"
+  server_private_ip = var.services_private_ip
+  http_proxy        = var.http_proxy
+  https_proxy       = var.https_proxy
+  no_proxy          = var.no_proxy
 }
 
 resource "aws_security_group" "nomad_sg" {
-  count       = "${var.enabled}"
+  count       = var.enabled
   name        = "${var.prefix}_nomad_sg"
   description = "SG for CircleCI nomad server/client"
-  vpc_id      = "${var.aws_vpc_id}"
+  vpc_id      = var.aws_vpc_id
 
   ingress {
     from_port   = 4646
     to_port     = 4648
     protocol    = "tcp"
-    cidr_blocks = ["${var.aws_subnet_cidr_block}"]
+    cidr_blocks = [var.aws_subnet_cidr_block]
   }
 
   # For SSHing into 2.0 build
@@ -36,10 +36,10 @@ resource "aws_security_group" "nomad_sg" {
 }
 
 resource "aws_security_group" "ssh_sg" {
-  count       = "${var.enabled}"
+  count       = var.enabled
   name        = "${var.prefix}_ssh_sg"
   description = "SG for SSH access"
-  vpc_id      = "${var.aws_vpc_id}"
+  vpc_id      = var.aws_vpc_id
 
   ingress {
     from_port   = 22
@@ -57,19 +57,19 @@ resource "aws_security_group" "ssh_sg" {
 }
 
 resource "aws_launch_configuration" "clients_lc" {
-  count         = "${var.enabled}"
-  instance_type = "${var.instance_type}"
-  image_id      = "${var.ami_id}"
-  key_name      = "${var.aws_ssh_key_name}"
+  count         = var.enabled
+  instance_type = var.instance_type
+  image_id      = var.ami_id
+  key_name      = var.aws_ssh_key_name
 
-  root_block_device = {
+  root_block_device {
     volume_type = "gp2"
     volume_size = "200"
   }
 
-  security_groups = ["${aws_security_group.nomad_sg.id}", "${aws_security_group.ssh_sg.id}"]
+  security_groups = [aws_security_group.nomad_sg[0].id, aws_security_group.ssh_sg[0].id]
 
-  user_data = "${module.cloudinit.rendered}"
+  user_data = module.cloudinit.rendered
 
   lifecycle {
     create_before_destroy = true
@@ -77,13 +77,13 @@ resource "aws_launch_configuration" "clients_lc" {
 }
 
 resource "aws_autoscaling_group" "clients_asg" {
-  count                = "${var.enabled}"
+  count                = var.enabled
   name                 = "${var.prefix}_nomad_clients_asg"
-  vpc_zone_identifier  = ["${var.aws_subnet_id}"]
-  launch_configuration = "${aws_launch_configuration.clients_lc.name}"
-  max_size             = "${var.max_instances}"
+  vpc_zone_identifier  = [var.aws_subnet_id]
+  launch_configuration = aws_launch_configuration.clients_lc[0].name
+  max_size             = var.max_instances
   min_size             = 0
-  desired_capacity     = "${var.desired_instances}"
+  desired_capacity     = var.desired_instances
   force_delete         = true
 
   tag {
@@ -92,3 +92,4 @@ resource "aws_autoscaling_group" "clients_asg" {
     propagate_at_launch = "true"
   }
 }
+

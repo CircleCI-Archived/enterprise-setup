@@ -3,10 +3,15 @@ variable "services_private_ip" {
   default     = ""
 }
 
-variable "circle_secret_passphrase" {}
+variable "circle_secret_passphrase" {
+}
 
-variable "http_proxy" {}
+variable "http_proxy" {
+}
 
-variable "https_proxy" {}
+variable "https_proxy" {
+}
 
-variable "no_proxy" {}
+variable "no_proxy" {
+}
+
