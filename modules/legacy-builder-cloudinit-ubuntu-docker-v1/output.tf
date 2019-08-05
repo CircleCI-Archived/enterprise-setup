@@ -1,3 +1,4 @@
 output "rendered" {
-  value = "${data.template_file.mod.rendered}"
+  value = data.template_file.mod.rendered
 }
+

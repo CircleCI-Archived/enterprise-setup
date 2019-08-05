@@ -9,12 +9,20 @@ variable "enabled" {
   default = "1"
 }
 
-variable "aws_vpc_id" {}
-variable "aws_ssh_key_name" {}
-variable "aws_subnet_id" {}
-variable "aws_subnet_cidr_block" {}
+variable "aws_vpc_id" {
+}
 
-variable "ami_id" {}
+variable "aws_ssh_key_name" {
+}
+
+variable "aws_subnet_id" {
+}
+
+variable "aws_subnet_cidr_block" {
+}
+
+variable "ami_id" {
+}
 
 variable "os" {
   default = "ubuntu"
@@ -36,6 +44,12 @@ variable "desired_instances" {
   default = "1"
 }
 
-variable "http_proxy" {}
-variable "https_proxy" {}
-variable "no_proxy" {}
+variable "http_proxy" {
+}
+
+variable "https_proxy" {
+}
+
+variable "no_proxy" {
+}
+

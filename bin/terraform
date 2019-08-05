@@ -22,7 +22,7 @@ brew_install_terraform() {
 install_local_terraform() {
     platform="$1"
     tempfile=$(mktemp)
-    curl -o $tempfile "https://releases.hashicorp.com/terraform/0.10.8/terraform_0.10.8_${platform}_amd64.zip"
+    curl -o $tempfile "https://releases.hashicorp.com/terraform/0.12.4/terraform_0.12.4_${platform}_amd64.zip"
     mkdir -p .dependencies
     unzip $tempfile -d .dependencies
 }

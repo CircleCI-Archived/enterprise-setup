@@ -3,10 +3,12 @@ version: 2
 jobs:
   terraform:
     docker:
-      - image: hashicorp/terraform:0.9.9
+      - image: hashicorp/terraform:0.12.4
     working_directory: ~/terraform
     steps:
       - checkout
+
+      - run: terraform init
 
       - run:
           name: Generate the tfvars file
