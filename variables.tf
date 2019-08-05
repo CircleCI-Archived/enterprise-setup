@@ -110,7 +110,7 @@ variable "no_proxy" {
 
 variable "services_user_data_enabled" {
   description = "Disable User Data for Services Box"
-  default     = "1"
+  default     = "true"
 }
 
 variable "legacy_builder_spot_price" {
