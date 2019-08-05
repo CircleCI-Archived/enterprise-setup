@@ -69,6 +69,6 @@ Optional vars:
   | enable_route | Enable creating a Route53 route for the Services box | 0 |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
-  | services_user_data_enabled | Set to 0 to disable automated installation on Services Box | 1 |
+  | services_user_data_enabled | Enable/disable automated installation on Services Box | true |
   | force_destroy_s3_bucket | Add/Remove ability to forcefully destroy S3 bucket | false |
   | services_disable_api_termination | Protect the services instance from API termination | true |
