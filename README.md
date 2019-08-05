@@ -14,6 +14,8 @@ We use Terraform to automate parts of the infrastructure for your CircleCI Serve
 
 * [Terraform](https://www.terraform.io/downloads.html)
 
+**Note: This script only supports terraform version 0.12 and higher. Please update to the most recent version before fetching from upstream.**
+
 ## Installation
 
 ### Basic
