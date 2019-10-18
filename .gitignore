@@ -8,3 +8,4 @@
 **.retry
 /.terraform
 .DS_Store
+thumbs.db
