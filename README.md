@@ -2,9 +2,9 @@
 
 This package allows you to easily orchestrate your CircleCI Server cluster in AWS using Terraform. For a full step by step guide to installing CircleCI Server with Terraform, see our [installation guide](https://circleci.com/docs/2.0/circleci-install-doc-v2-17.pdf#section=administration).
 
-**Note: This is only meant to be used for the initial setup of CircleCI Server and is not meant to be used for the ongoing maintenance of CircleCI Server.**
+**Note: This is only meant to be used for the initial setup of CircleCI Server and is not meant to be used for the ongoing maintenance of the CircleCI Server.**
 
-**Note: Master is the only supported branch. All other branches off this repo should not be considered stable, and used at your own risk.**
+**Note: Master is the only supported branch. All other branches of this repo should not be considered stable, and is to be used at your own risk.**
 
 # Getting Started
 
