@@ -79,7 +79,7 @@ cat <<EOT > /etc/nomad/config.hcl
 log_level = "DEBUG"
 name = "$INSTANCE_ID"
 data_dir = "/opt/nomad"
-datacenter = "us-east-1"
+datacenter = "default"
 advertise {
     http = "$PRIVATE_IP"
     rpc = "$PRIVATE_IP"
