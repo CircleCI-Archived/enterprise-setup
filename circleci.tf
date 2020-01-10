@@ -22,6 +22,7 @@ data "template_file" "circleci_policy" {
   template = file("templates/circleci_policy.tpl")
 
   vars = {
+    aws_partition = var.enable_govcloud == true ? "aws-us-gov" : "aws"
     bucket_arn    = aws_s3_bucket.circleci_bucket.arn
     sqs_queue_arn = module.shutdown_sqs.sqs_arn
     role_name     = aws_iam_role.circleci_role.name

@@ -22,6 +22,11 @@ variable "aws_ssh_key_name" {
   description = "The SSH key to be used for the instances"
 }
 
+variable "enable_govcloud" {
+  description = "Allows deployment into AWS GovCloud"
+  default = "false"
+}
+
 variable "circle_secret_passphrase" {
   description = "Decryption key for secrets used by CircleCI machines"
 }
