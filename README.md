@@ -59,10 +59,10 @@ Optional vars:
 
   | Var      | Description | Default |
   | -------- | ----------- | ------- |
-  | services_instance_type | Instance type for the centralized services box.  We recommend a m4 instance | m4.2xlarge |
-  | builder_instance_type | Instance type for the 1.0 builder machines.  We recommend a r3 instance | r3.2xlarge |
+  | services_instance_type | Instance type for the centralized services box.  We recommend a m4 instance | m5.2xlarge |
+  | builder_instance_type | Instance type for the 1.0 builder machines.  We recommend a r3 instance | r5.2xlarge |
   | max_builders_count | Max number of 1.0 builders | 2 |
-  | nomad_client_instance_type | Instance type for the nomad clients (2.0 builders). We recommend a XYZ instance | m4.xlarge |
+  | nomad_client_instance_type | Instance type for the nomad clients (2.0 builders). We recommend a XYZ instance | m5.xlarge |
   | max_clients_count | Max number of nomad clients | 2 |
   | prefix   | Prefix for resource names | circleci |
   | enable_nomad | Provisions a nomad cluster for CCIE v2 | 1 |
