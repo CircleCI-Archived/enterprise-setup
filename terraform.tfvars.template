@@ -13,9 +13,9 @@ aws_ssh_key_name = "..."
 # 2. Required CircleCI Configuration
 #####################################
 
-services_instance_type = "m4.2xlarge"
-builder_instance_type = "r3.4xlarge"
-nomad_client_instance_type = "m4.2xlarge"
+services_instance_type = "m5.2xlarge"
+builder_instance_type = "r5.2xlarge"
+nomad_client_instance_type = "m5.2xlarge"
 
 # Passphrase used for encryping/decrypting secrets—must not be blank
 circle_secret_passphrase = "..."

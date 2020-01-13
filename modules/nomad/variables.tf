@@ -29,7 +29,7 @@ variable "os" {
 }
 
 variable "instance_type" {
-  default = "m4.xlarge"
+  default = "m5.xlarge"
 }
 
 variable "services_private_ip" {

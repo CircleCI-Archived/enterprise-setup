@@ -22,6 +22,11 @@ variable "aws_ssh_key_name" {
   description = "The SSH key to be used for the instances"
 }
 
+variable "enable_govcloud" {
+  description = "Allows deployment into AWS GovCloud"
+  default = "false"
+}
+
 variable "circle_secret_passphrase" {
   description = "Decryption key for secrets used by CircleCI machines"
 }
@@ -33,12 +38,12 @@ variable "services_ami" {
 
 variable "services_instance_type" {
   description = "instance type for the centralized services box.  We recommend a m4.2xlarge instance, with 32G of RAM"
-  default     = "m4.2xlarge"
+  default     = "m5.2xlarge"
 }
 
 variable "builder_instance_type" {
   description = "instance type for the builder machines.  We recommend a r3 instance"
-  default     = "r3.2xlarge"
+  default     = "r5.2xlarge"
 }
 
 variable "max_builders_count" {
@@ -58,7 +63,7 @@ variable "enable_nomad" {
 
 variable "nomad_client_instance_type" {
   description = "instance type for the nomad clients. It must be a valid aws instance type."
-  default     = "m4.xlarge"
+  default     = "m5.2xlarge"
 }
 
 variable "prefix" {
