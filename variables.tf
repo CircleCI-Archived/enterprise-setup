@@ -63,7 +63,7 @@ variable "enable_nomad" {
 
 variable "nomad_client_instance_type" {
   description = "instance type for the nomad clients. It must be a valid aws instance type."
-  default     = "m5.xlarge"
+  default     = "m5.2xlarge"
 }
 
 variable "prefix" {
