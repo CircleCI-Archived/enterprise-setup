@@ -72,7 +72,7 @@ mv nomad /usr/bin
 echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+export PRIVATE_IP="$(/sbin/ip route get ${nomad_server} | head -n 1 | awk '{ print $5 }')"
 export INSTANCE_ID="$(curl $aws_instance_metadata_url/latest/meta-data/instance-id)"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
