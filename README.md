@@ -62,6 +62,7 @@ Optional vars:
   | prefix   | Prefix for resource names | circleci |
   | enable_nomad | Provisions a nomad cluster for CCIE v2 | 1 |
   | enable_route | Enable creating a Route53 route for the Services box | 0 |
+  | enable_govcloud | Allows deployment into AWS GovCloud | false |
   | route_name | Route name to configure for Services box | "" |
   | route_zone_id | Zone to configure route in | "" |
   | services_user_data_enabled | Set to 0 to disable automated installation on Services Box | 1 |
