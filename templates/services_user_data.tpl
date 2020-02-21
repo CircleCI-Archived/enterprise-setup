@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -exu
-REPLICATED_VERSION="2.38.0"
+REPLICATED_VERSION="2.42.2"
 UNAME="$(uname -r)"
 
 export http_proxy="${http_proxy}"
