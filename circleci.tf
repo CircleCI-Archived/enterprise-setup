@@ -1,14 +1,14 @@
-data "aws_web_subnet" "subnet" {
+data "aws_subnet" "web_subnet" {
   id = var.aws_web_subnet_id
 }
 
-data "aws_public_subnet" "subnet" {
+data "aws_subnet" "public_subnet" {
   id = var.aws_public_subnet_id
 }
-data "aws_app_subnet" "subnet" {
+data "aws_subnet" "app_subnet" {
   id = var.aws_app_subnet_id
 }
-data "aws_data_subnet" "subnet" {
+data "aws_subnet" "data_subnet" {
   id = var.aws_data_subnet_id
 }
 
@@ -21,7 +21,7 @@ data "template_file" "services_user_data" {
     sqs_queue_url            = module.shutdown_sqs.sqs_id
     s3_bucket                = aws_s3_bucket.circleci_bucket.id
     aws_region               = var.aws_region
-    subnet_id                = var.aws_subnet_id
+    subnet_id                = var.aws_app_subnet_id
     vm_sg_id                 = aws_security_group.circleci_vm_sg.id
     http_proxy               = var.http_proxy
     https_proxy              = var.https_proxy
@@ -50,11 +50,18 @@ data "template_file" "output" {
   }
 }
 
-#make default profile be the resource admin profile
+#make the resource admin profile the default
 provider "aws" {
-  aws_profile = var.aws_profile_ra
+  profile = var.aws_profile_ra
   region     = var.aws_region
 }
+
+provider "aws" {
+  alias = "iam"
+  profile = var.aws_profile_iam
+  region     = var.aws_region
+}
+
 
 module "shutdown_sqs" {
   source = "./modules/aws_sqs"
@@ -84,29 +91,19 @@ resource "aws_iam_role" "circleci_role" {
   name               = "${var.prefix}_role"
   path               = "/"
   assume_role_policy = file("files/circleci_role.json")
-  provider "aws" {
-    aws_profile = var.aws_profile_iam
-    region     = var.aws_region
-  }
+  provider = aws.iam
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
   name   = "${var.prefix}_policy"
   role   = aws_iam_role.circleci_role.id
   policy = data.template_file.circleci_policy.rendered
-  provider "aws" {
-    aws_profile = var.aws_profile_iam
-    region     = var.aws_region
-  }
 }
 
 resource "aws_iam_instance_profile" "circleci_profile" {
   name = "${var.prefix}_profile"
   role = aws_iam_role.circleci_role.name
-  provider "aws" {
-    aws_profile = var.aws_profile_iam
-    region     = var.aws_region
-  }
+  provider = aws.iam
 }
 
 ## Configure the services machine
@@ -220,7 +217,7 @@ resource "aws_security_group" "circleci_users_sg" {
 
   # For Nomad server in 2.0 clustered installation
   ingress {
-    cidr_blocks = [data.aws_subnet.subnet.cidr_block]
+    cidr_blocks = [data.aws_subnet.app_subnet.cidr_block]
     protocol    = "tcp"
     from_port   = 4647
     to_port     = 4647
@@ -228,7 +225,7 @@ resource "aws_security_group" "circleci_users_sg" {
 
   # For output-processor in 2.0 clustered installation
   ingress {
-    cidr_blocks = [data.aws_subnet.subnet.cidr_block]
+    cidr_blocks = [data.aws_subnet.app_subnet.cidr_block]
     protocol    = "tcp"
     from_port   = 8585
     to_port     = 8585
@@ -236,7 +233,7 @@ resource "aws_security_group" "circleci_users_sg" {
 
   # For embedded storage in 2.0 clustered installation
   ingress {
-    cidr_blocks = [data.aws_subnet.subnet.cidr_block]
+    cidr_blocks = [data.aws_subnet.app_subnet.cidr_block]
     protocol    = "tcp"
     from_port   = 7171
     to_port     = 7171
@@ -244,7 +241,7 @@ resource "aws_security_group" "circleci_users_sg" {
 
   # For build-agent to talk to vm-service
   ingress {
-    cidr_blocks = [data.aws_subnet.subnet.cidr_block]
+    cidr_blocks = [data.aws_subnet.app_subnet.cidr_block]
     protocol    = "tcp"
     from_port   = 3001
     to_port     = 3001
@@ -301,7 +298,7 @@ resource "aws_instance" "services" {
   instance_type               = var.services_instance_type
   ami                         = var.services_ami != "" ? var.services_ami : var.ubuntu_ami[var.aws_region]
   key_name                    = var.aws_ssh_key_name
-  subnet_id                   = var.aws_subnet_id
+  subnet_id                   = var.aws_app_subnet_id
   associate_public_ip_address = true
   disable_api_termination     = var.services_disable_api_termination
   iam_instance_profile        = aws_iam_instance_profile.circleci_profile.name
@@ -354,7 +351,7 @@ module "legacy_builder" {
 
   prefix                    = var.prefix
   name                      = "builders"
-  aws_subnet_id             = var.aws_subnet_id
+  aws_subnet_id             = var.aws_app_subnet_id
   aws_ssh_key_name          = var.aws_ssh_key_name
   aws_instance_profile_name = aws_iam_instance_profile.circleci_profile.name
 
@@ -383,13 +380,13 @@ module "nomad" {
   prefix                = var.prefix
   instance_type         = var.nomad_client_instance_type
   aws_vpc_id            = var.aws_vpc_id
-  aws_subnet_id         = var.aws_subnet_id
+  aws_subnet_id         = var.aws_app_subnet_id
   aws_ssh_key_name      = var.aws_ssh_key_name
   http_proxy            = var.http_proxy
   https_proxy           = var.https_proxy
   no_proxy              = var.no_proxy
   ami_id                = var.services_ami != "" ? var.services_ami : var.ubuntu_ami[var.aws_region]
-  aws_subnet_cidr_block = data.aws_subnet.subnet.cidr_block
+  aws_subnet_cidr_block = data.aws_subnet.app_subnet.cidr_block
   services_private_ip   = aws_instance.services.private_ip
 }
 

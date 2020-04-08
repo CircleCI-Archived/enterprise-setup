@@ -1,5 +1,9 @@
-variable "aws_profile" {
-  description = "name of the profile to be used"
+variable "aws_profile_iam" {
+  description = "name of the iam profile to be used"
+}
+
+variable "aws_profile_ra" {
+  description = "name of the resource profile to be used"
 }
 
 variable "aws_region" {
