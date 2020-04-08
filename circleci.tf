@@ -1,6 +1,17 @@
-data "aws_subnet" "subnet" {
-  id = var.aws_subnet_id
+data "aws_web_subnet" "subnet" {
+  id = var.aws_web_subnet_id
 }
+
+data "aws_public_subnet" "subnet" {
+  id = var.aws_public_subnet_id
+}
+data "aws_app_subnet" "subnet" {
+  id = var.aws_app_subnet_id
+}
+data "aws_data_subnet" "subnet" {
+  id = var.aws_data_subnet_id
+}
+
 
 data "template_file" "services_user_data" {
   template = file("templates/services_user_data.tpl")
@@ -39,12 +50,9 @@ data "template_file" "output" {
   }
 }
 
-# Access Secret Key and ID should be set using envvars
-# AWS_ACCESS_KEY_ID
-# AWS_SECRET_ACCESS_KEY
+#make default profile be the resource admin profile
 provider "aws" {
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  aws_profile = var.aws_profile_ra
   region     = var.aws_region
 }
 
@@ -76,17 +84,29 @@ resource "aws_iam_role" "circleci_role" {
   name               = "${var.prefix}_role"
   path               = "/"
   assume_role_policy = file("files/circleci_role.json")
+  provider "aws" {
+    aws_profile = var.aws_profile_iam
+    region     = var.aws_region
+  }
 }
 
 resource "aws_iam_role_policy" "circleci_policy" {
   name   = "${var.prefix}_policy"
   role   = aws_iam_role.circleci_role.id
   policy = data.template_file.circleci_policy.rendered
+  provider "aws" {
+    aws_profile = var.aws_profile_iam
+    region     = var.aws_region
+  }
 }
 
 resource "aws_iam_instance_profile" "circleci_profile" {
   name = "${var.prefix}_profile"
   role = aws_iam_role.circleci_role.name
+  provider "aws" {
+    aws_profile = var.aws_profile_iam
+    region     = var.aws_region
+  }
 }
 
 ## Configure the services machine

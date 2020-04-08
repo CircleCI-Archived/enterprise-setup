@@ -1,9 +1,5 @@
-variable "aws_access_key" {
-  description = "Access key used to create instances"
-}
-
-variable "aws_secret_key" {
-  description = "Secret key used to create instances"
+variable "aws_profile" {
+  description = "name of the profile to be used"
 }
 
 variable "aws_region" {
@@ -14,8 +10,20 @@ variable "aws_vpc_id" {
   description = "The VPC ID where the instances should reside"
 }
 
-variable "aws_subnet_id" {
-  description = "The subnet-id to be used for the instance"
+variable "aws_web_subnet_id" {
+  description = "The subnet-id to be used for web instances"
+}
+
+variable "aws_public_subnet_id" {
+  description = "The subnet-id to be used for public (ALB) instances"
+}
+
+variable "aws_app_subnet_id" {
+  description = "The subnet-id to be used for application server instances"
+}
+
+variable "aws_data_subnet_id" {
+  description = "The subnet-id to be used for data server instances"
 }
 
 variable "aws_ssh_key_name" {
