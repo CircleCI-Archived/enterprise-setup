@@ -26,6 +26,7 @@ data "template_file" "circleci_policy" {
     bucket_arn    = aws_s3_bucket.circleci_bucket.arn
     sqs_queue_arn = module.shutdown_sqs.sqs_arn
     role_name     = aws_iam_role.circleci_role.name
+    role_path     = aws_iam_role.circleci_role.path
     aws_region    = var.aws_region
   }
 }

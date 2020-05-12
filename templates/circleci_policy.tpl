@@ -63,10 +63,11 @@
           },
           {
               "Action": [
+                 "iam:GetRole",
                  "sts:AssumeRole"
               ],
               "Resource": [
-                  "arn:${aws_partition}:iam::*:role/${role_name}"
+                  "arn:${aws_partition}:iam::*:role${role_path}${role_name}"
               ],
               "Effect": "Allow"
           }
