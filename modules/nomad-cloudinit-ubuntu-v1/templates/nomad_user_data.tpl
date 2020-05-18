@@ -45,7 +45,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get install -y "linux-image-$UNAME"
 apt-get update
-apt-get -y install docker-ce=17.12.1~ce-0~ubuntu
+apt-get -y install docker-ce=5:18.09.9~3-0~ubuntu-xenial
 
 # Enable docker fluentd logging driver
 cat <<EOF > /etc/docker/daemon.json
@@ -81,7 +81,7 @@ echo "--------------------------------------"
 echo "         Installing nomad"
 echo "--------------------------------------"
 apt-get install -y zip
-curl -o nomad.zip https://releases.hashicorp.com/nomad/0.5.6/nomad_0.5.6_linux_amd64.zip
+curl -o nomad.zip https://releases.hashicorp.com/nomad/0.9.3/nomad_0.9.3_linux_amd64.zip
 unzip nomad.zip
 mv nomad /usr/bin
 
@@ -89,6 +89,8 @@ echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
 export PRIVATE_IP="$(/usr/bin/curl -s $aws_instance_metadata_url/latest/meta-data/local-ipv4)"
+# latest change from circle, but we will keep as is
+# export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 export INSTANCE_ID="$(curl $aws_instance_metadata_url/latest/meta-data/instance-id)"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
