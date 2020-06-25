@@ -17,7 +17,7 @@ services_instance_type = "m5.2xlarge"
 builder_instance_type = "r5.2xlarge"
 nomad_client_instance_type = "m5.2xlarge"
 
-# Passphrase used for encryping/decrypting secrets—must not be blank
+# Passphrase used for encrypting/decrypting secrets—must not be blank
 circle_secret_passphrase = "..."
 
 #####################################
