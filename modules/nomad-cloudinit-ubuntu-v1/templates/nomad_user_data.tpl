@@ -6,6 +6,8 @@ export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
 export no_proxy="${no_proxy}"
 export aws_instance_metadata_url="http://169.254.169.254"
+export PUBLIC_IP="$(curl $aws_instance_metadata_url/latest/meta-data/public-ipv4)"
+export PRIVATE_IP="$(curl $aws_instance_metadata_url/latest/meta-data/local-ipv4)"
 export DEBIAN_FRONTEND=noninteractive
 UNAME="$(uname -r)"
 
@@ -62,6 +64,17 @@ sudo service docker restart
 sleep 5
 
 echo "--------------------------------------"
+echo " Populating /etc/circleci/public-ipv4"
+echo "--------------------------------------"
+if ! (echo $PUBLIC_IP | grep -qP "^[\d.]+$")
+then
+  echo "Setting the IPv4 address below in /etc/circleci/public-ipv4."
+  echo "This address will be used in builds with \"Rebuild with SSH\"."
+  mkdir -p /etc/circleci
+  echo $PRIVATE_IP | tee /etc/circleci/public-ipv4
+fi
+
+echo "--------------------------------------"
 echo "         Installing nomad"
 echo "--------------------------------------"
 apt-get install -y zip
@@ -72,7 +85,6 @@ mv nomad /usr/bin
 echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 export INSTANCE_ID="$(curl $aws_instance_metadata_url/latest/meta-data/instance-id)"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
