@@ -44,3 +44,7 @@ You can view their names and descriptions in [variables.tf](variables.tf).
 ### Teardown
 
 You can find teardown instructions at https://circleci.com/docs/2.0/aws-teardown/
+
+## Upgrade
+
+If you want to upgrade from a previous installation, please follow these [upgrade instructions](https://circleci.com/docs/2.0/updating-server/#section=server-administration)
