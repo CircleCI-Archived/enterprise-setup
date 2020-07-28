@@ -22,9 +22,11 @@ data "template_file" "circleci_policy" {
   template = file("templates/circleci_policy.tpl")
 
   vars = {
+    aws_partition = var.enable_govcloud == true ? "aws-us-gov" : "aws"
     bucket_arn    = aws_s3_bucket.circleci_bucket.arn
     sqs_queue_arn = module.shutdown_sqs.sqs_arn
     role_name     = aws_iam_role.circleci_role.name
+    role_path     = aws_iam_role.circleci_role.path
     aws_region    = var.aws_region
   }
 }
@@ -132,13 +134,13 @@ resource "aws_security_group" "circleci_services_sg" {
   # https://help.github.com/articles/what-ip-addresses-does-github-use-that-i-should-whitelist/
   #
   #ingress {
-  #    security_groups = ["192.30.252.0/22"]
+  #    cidr_blocks = ["192.30.252.0/22"]
   #    protocol = "tcp"
   #    from_port = 443
   #    to_port = 443
   #}
   #ingress {
-  #    security_groups = ["192.30.252.0/22"]
+  #    cidr_blocks = ["192.30.252.0/22"]
   #    protocol = "tcp"
   #    from_port = 80
   #    to_port = 80

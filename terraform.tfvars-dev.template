@@ -4,9 +4,9 @@ aws_region = "..."
 aws_vpc_id = "..."
 aws_subnet_id = "..."
 aws_ssh_key_name = "..."
-services_instance_type = "m4.2xlarge"
-builder_instance_type = "t2.2xlarge"
-nomad_client_instance_type = "t2.2xlarge"
+services_instance_type = "t3.2xlarge"
+builder_instance_type = "t3.2xlarge"
+nomad_client_instance_type = "t3.2xlarge"
 desired_builders_count = "1"
 
 # Passphrase used for encryping/decrypting secrets—must not be blank

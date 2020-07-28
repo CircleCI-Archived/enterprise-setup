@@ -6,6 +6,8 @@ export http_proxy="${http_proxy}"
 export https_proxy="${https_proxy}"
 export no_proxy="${no_proxy}"
 export aws_instance_metadata_url="http://169.254.169.254"
+export PUBLIC_IP="$(curl $aws_instance_metadata_url/latest/meta-data/public-ipv4)"
+export PRIVATE_IP="$(curl $aws_instance_metadata_url/latest/meta-data/local-ipv4)"
 export DEBIAN_FRONTEND=noninteractive
 UNAME="$(uname -r)"
 
@@ -45,7 +47,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 apt-get install -y "linux-image-$UNAME"
 apt-get update
-apt-get -y install docker-ce=17.03.2~ce-0~ubuntu-xenial
+apt-get -y install docker-ce=5:18.09.9~3-0~ubuntu-xenial
 
 # force docker to use userns-remap to mitigate CVE 2019-5736
 apt-get -y install jq
@@ -62,24 +64,34 @@ sudo service docker restart
 sleep 5
 
 echo "--------------------------------------"
+echo " Populating /etc/circleci/public-ipv4"
+echo "--------------------------------------"
+if ! (echo $PUBLIC_IP | grep -qP "^[\d.]+$")
+then
+  echo "Setting the IPv4 address below in /etc/circleci/public-ipv4."
+  echo "This address will be used in builds with \"Rebuild with SSH\"."
+  mkdir -p /etc/circleci
+  echo $PRIVATE_IP | tee /etc/circleci/public-ipv4
+fi
+
+echo "--------------------------------------"
 echo "         Installing nomad"
 echo "--------------------------------------"
 apt-get install -y zip
-curl -o nomad.zip https://releases.hashicorp.com/nomad/0.5.6/nomad_0.5.6_linux_amd64.zip
+curl -o nomad.zip https://releases.hashicorp.com/nomad/0.11.3/nomad_0.11.3_linux_amd64.zip
 unzip nomad.zip
 mv nomad /usr/bin
 
 echo "--------------------------------------"
 echo "      Creating config.hcl"
 echo "--------------------------------------"
-export PRIVATE_IP="$(/sbin/ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
 export INSTANCE_ID="$(curl $aws_instance_metadata_url/latest/meta-data/instance-id)"
 mkdir -p /etc/nomad
 cat <<EOT > /etc/nomad/config.hcl
 log_level = "DEBUG"
 name = "$INSTANCE_ID"
 data_dir = "/opt/nomad"
-datacenter = "us-east-1"
+datacenter = "default"
 advertise {
     http = "$PRIVATE_IP"
     rpc = "$PRIVATE_IP"
