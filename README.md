@@ -12,7 +12,7 @@ Please refer to our prerequisites documentation here: https://circleci.com/docs/
 
 ## Installation
 
-You can find instructions here: https://circleci.com/docs/2.0/aws/
+You can find instructions here: https://circleci.com/docs/2.0/aws/.
 
 ### Variables
 
