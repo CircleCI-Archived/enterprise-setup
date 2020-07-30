@@ -43,4 +43,4 @@ You can find teardown instructions at https://circleci.com/docs/2.0/aws-teardown
 
 ## Upgrade
 
-If you want to upgrade from a previous installation, please follow these [upgrade instructions](https://circleci.com/docs/2.0/updating-server/#section=server-administration)
+If you want to upgrade an existing installation from a previous version, follow these [upgrade instructions](https://circleci.com/docs/2.0/updating-server/#section=server-administration).
