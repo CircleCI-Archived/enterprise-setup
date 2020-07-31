@@ -8,7 +8,7 @@ This package allows you to easily orchestrate your CircleCI Server cluster in AW
 
 ## Prerequisites and Requirements
 
-Please refer to our prerequisites documentation here: https://circleci.com/docs/2.0/aws-prereq
+Please refer to our prerequisites documentation here: https://circleci.com/docs/2.0/aws-prereq.
 
 ## Installation
 
