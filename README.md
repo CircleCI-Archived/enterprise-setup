@@ -1,6 +1,6 @@
 # CircleCI Server Setup
 
-This package allows you to easily orchestrate your CircleCI Server cluster in AWS using Terraform.
+This package allows you to orchestrate your CircleCI Server cluster in AWS using Terraform.
 
 **Note: This is only meant to be used for the initial setup of CircleCI Server and is not meant to be used for the ongoing maintenance of the CircleCI Server.**
 
