@@ -24,7 +24,7 @@ EOF
 
 resource "aws_iam_role_policy" "mod_role_policy" {
   name = "${var.prefix}_${var.name}_queue_role"
-  role = "${aws_iam_role.mod_role.id}"
+  role = aws_iam_role.mod_role.id
 
   policy = <<EOF
 {
