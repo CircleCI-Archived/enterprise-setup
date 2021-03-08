@@ -10,13 +10,6 @@
          ]
       },
       {
-          "Action" : [
-              "sqs:*"
-          ],
-          "Effect" : "Allow",
-          "Resource" : ["${sqs_queue_arn}"]
-      },
-      {
           "Action": [
               "ec2:Describe*",
               "ec2:CreateTags",
@@ -27,7 +20,6 @@
           "Resource": ["*"],
           "Effect": "Allow"
       },
-
       {
               "Action": [
                   "ec2:RunInstances",

@@ -1,2 +1,0 @@
-variable "prefix" {}
-variable "name" {}

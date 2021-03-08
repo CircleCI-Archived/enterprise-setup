@@ -7,7 +7,6 @@ data "template_file" "services_user_data" {
 
   vars = {
     circle_secret_passphrase = var.circle_secret_passphrase
-    sqs_queue_url            = module.shutdown_sqs.sqs_id
     s3_bucket                = aws_s3_bucket.circleci_bucket.id
     aws_region               = var.aws_region
     subnet_id                = var.aws_subnet_id
@@ -24,7 +23,6 @@ data "template_file" "circleci_policy" {
   vars = {
     aws_partition = var.enable_govcloud == true ? "aws-us-gov" : "aws"
     bucket_arn    = aws_s3_bucket.circleci_bucket.arn
-    sqs_queue_arn = module.shutdown_sqs.sqs_arn
     role_name     = aws_iam_role.circleci_role.name
     role_path     = aws_iam_role.circleci_role.path
     aws_region    = var.aws_region
@@ -47,12 +45,6 @@ provider "aws" {
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
   region     = var.aws_region
-}
-
-module "shutdown_sqs" {
-  source = "./modules/aws_sqs"
-  name   = "shutdown"
-  prefix = var.prefix
 }
 
 # Single general-purpose bucket
@@ -354,8 +346,6 @@ module "legacy_builder" {
   image_id                      = var.ubuntu_ami[var.aws_region]
   instance_type                 = var.builder_instance_type
   spot_price                    = var.legacy_builder_spot_price
-  shutdown_queue_target_sqs_arn = module.shutdown_sqs.sqs_arn
-  shutdown_queue_role_arn       = module.shutdown_sqs.queue_role_arn
 }
 
 module "nomad" {
