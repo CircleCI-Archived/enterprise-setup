@@ -45,10 +45,3 @@ variable "instance_type" {
 # Spot Price to use for builders or nil to use on demands
 variable "spot_price" {
 }
-
-variable "shutdown_queue_target_sqs_arn" {
-}
-
-variable "shutdown_queue_role_arn" {
-}
-

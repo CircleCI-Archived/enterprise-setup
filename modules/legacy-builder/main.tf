@@ -38,13 +38,3 @@ resource "aws_autoscaling_group" "mod_asg" {
     propagate_at_launch = "true"
   }
 }
-
-resource "aws_autoscaling_lifecycle_hook" "mod_shutdown_hook" {
-  name                    = "${var.prefix}_${var.name}_shutdown_hook"
-  autoscaling_group_name  = aws_autoscaling_group.mod_asg.name
-  heartbeat_timeout       = 3600
-  lifecycle_transition    = "autoscaling:EC2_INSTANCE_TERMINATING"
-  notification_target_arn = var.shutdown_queue_target_sqs_arn
-  role_arn                = var.shutdown_queue_role_arn
-}
-
